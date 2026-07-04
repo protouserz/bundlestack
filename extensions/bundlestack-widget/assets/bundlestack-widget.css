@@ -1,0 +1,41 @@
+.bundlestack-widget {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.bundlestack-widget__heading {
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+.bundlestack-widget__tier {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.bundlestack-widget__tier:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.bundlestack-widget__tier-label {
+  font-weight: 500;
+}
+
+.bundlestack-widget__tier-discount {
+  color: #008060;
+  font-weight: 600;
+}
+
+.bundlestack-widget__loading,
+.bundlestack-widget__empty {
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0;
+}

@@ -1,0 +1,37 @@
+{% comment %}
+  BundleStack quantity break widget.
+  Add to product page via Theme Editor → Apps → BundleStack widget.
+{% endcomment %}
+
+<div
+  id="bundlestack-widget-{{ block.id }}"
+  class="bundlestack-widget"
+  {% if product %}
+    data-product-id="gid://shopify/Product/{{ product.id }}"
+  {% endif %}
+  data-proxy-path="/apps/bundlestack/offers"
+>
+  <p class="bundlestack-widget__heading">{{ block.settings.heading }}</p>
+  <div class="bundlestack-widget__tiers" aria-live="polite">
+    <p class="bundlestack-widget__loading">{{ 'bundlestack.widget.loading' | t }}</p>
+  </div>
+</div>
+
+<script src="{{ 'bundlestack-widget.js' | asset_url }}" defer></script>
+<link rel="stylesheet" href="{{ 'bundlestack-widget.css' | asset_url }}">
+
+{% schema %}
+{
+  "name": "BundleStack offers",
+  "target": "section",
+  "templates": ["product"],
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Buy more, save more"
+    }
+  ]
+}
+{% endschema %}

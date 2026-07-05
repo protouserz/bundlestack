@@ -9,6 +9,16 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createOffer, parseOfferForm, updateOfferDiscountIds, type DiscountTier } from "../models/bundle.server";
 import { replaceOfferDiscounts } from "../models/discount.server";
+import { ProductPickerField } from "../components/ProductPickerField";
+
+const fieldStyle = {
+  width: "100%",
+  maxWidth: "100%",
+  padding: "8px",
+  marginTop: "8px",
+  display: "block",
+  boxSizing: "border-box" as const,
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -78,116 +88,108 @@ export default function NewOffer() {
   return (
     <s-page heading="Create quantity break">
       <Form method="post">
-        <input type="hidden" name="tiers" value={JSON.stringify(tiers)} />
+        <s-stack direction="block" gap="large">
+          <input type="hidden" name="tiers" value={JSON.stringify(tiers)} />
 
-        <s-section heading="Offer details">
-          {actionData?.error && (
-            <s-banner tone="critical">{actionData.error}</s-banner>
-          )}
+          <s-section heading="Offer details">
+            <s-stack direction="block" gap="large">
+              {actionData?.error && (
+                <s-banner tone="critical">{actionData.error}</s-banner>
+              )}
 
-          <s-stack direction="block" gap="base">
-            <label>
-              <s-text>Offer title</s-text>
-              <input
-                name="title"
-                required
-                placeholder="Buy more, save more"
-                style={{ width: "100%", padding: "8px", marginTop: "4px" }}
-              />
-            </label>
+              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+                <s-text>Offer title</s-text>
+                <input
+                  name="title"
+                  required
+                  placeholder="Buy more, save more"
+                  style={fieldStyle}
+                />
+              </label>
 
-            <label>
-              <s-text>Status</s-text>
-              <select
-                name="status"
-                defaultValue="draft"
-                style={{ width: "100%", padding: "8px", marginTop: "4px" }}
-              >
-                <option value="draft">Draft</option>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-              </select>
-            </label>
+              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+                <s-text>Status</s-text>
+                <select
+                  name="status"
+                  defaultValue="draft"
+                  style={fieldStyle}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                </select>
+              </label>
 
-            <label>
-              <s-text>Product IDs (one per line or comma-separated)</s-text>
-              <textarea
-                name="productIds"
-                required
-                rows={4}
-                placeholder="gid://shopify/Product/123456789"
-                style={{ width: "100%", padding: "8px", marginTop: "4px" }}
-              />
-              <s-text tone="neutral">
-                Paste Shopify product GIDs from your admin. Product picker coming
-                in v2.
-              </s-text>
-            </label>
-          </s-stack>
-        </s-section>
+              <s-stack direction="block" gap="base">
+                <s-text>Products</s-text>
+                <ProductPickerField />
+              </s-stack>
+            </s-stack>
+          </s-section>
 
-        <s-section heading="Quantity tiers">
-          <s-stack direction="block" gap="base">
-            {tiers.map((tier, index) => (
-              <s-box
-                key={index}
-                padding="base"
-                borderWidth="base"
-                borderRadius="base"
-              >
-                <s-stack direction="inline" gap="base">
-                  <label>
-                    Min qty
-                    <input
-                      type="number"
-                      min={2}
-                      value={tier.minQty}
-                      onChange={(e) => updateTier(index, "minQty", e.target.value)}
-                      style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
-                    />
-                  </label>
-                  <label>
-                    Discount %
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={tier.discountValue}
-                      onChange={(e) =>
-                        updateTier(index, "discountValue", e.target.value)
-                      }
-                      style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
-                    />
-                  </label>
-                  <label>
-                    Label
-                    <input
-                      value={tier.label ?? ""}
-                      onChange={(e) => updateTier(index, "label", e.target.value)}
-                      style={{ width: "160px", padding: "8px", marginLeft: "8px" }}
-                    />
-                  </label>
-                  {tiers.length > 1 && (
-                    <s-button type="button" variant="tertiary" onClick={() => removeTier(index)}>
-                      Remove
-                    </s-button>
-                  )}
-                </s-stack>
-              </s-box>
-            ))}
-            <s-button type="button" variant="secondary" onClick={addTier}>
-              Add tier
+          <s-section heading="Quantity tiers">
+            <s-stack direction="block" gap="large">
+              {tiers.map((tier, index) => (
+                <s-box
+                  key={index}
+                  padding="base"
+                  borderWidth="base"
+                  borderRadius="base"
+                >
+                  <s-stack direction="inline" gap="base">
+                    <label>
+                      Min qty
+                      <input
+                        type="number"
+                        min={2}
+                        value={tier.minQty}
+                        onChange={(e) => updateTier(index, "minQty", e.target.value)}
+                        style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
+                      />
+                    </label>
+                    <label>
+                      Discount %
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={tier.discountValue}
+                        onChange={(e) =>
+                          updateTier(index, "discountValue", e.target.value)
+                        }
+                        style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
+                      />
+                    </label>
+                    <label>
+                      Label
+                      <input
+                        value={tier.label ?? ""}
+                        onChange={(e) => updateTier(index, "label", e.target.value)}
+                        style={{ width: "160px", padding: "8px", marginLeft: "8px" }}
+                      />
+                    </label>
+                    {tiers.length > 1 && (
+                      <s-button type="button" variant="tertiary" onClick={() => removeTier(index)}>
+                        Remove
+                      </s-button>
+                    )}
+                  </s-stack>
+                </s-box>
+              ))}
+              <s-button type="button" variant="secondary" onClick={addTier}>
+                Add tier
+              </s-button>
+            </s-stack>
+          </s-section>
+
+          <s-stack direction="inline" gap="base" paddingBlockStart="large">
+            <s-button type="submit" {...(isSubmitting ? { loading: true } : {})}>
+              Save offer
+            </s-button>
+            <s-button href="/app/offers" variant="tertiary">
+              Cancel
             </s-button>
           </s-stack>
-        </s-section>
-
-        <s-stack direction="inline" gap="base">
-          <s-button type="submit" {...(isSubmitting ? { loading: true } : {})}>
-            Save offer
-          </s-button>
-          <s-button href="/app/offers" variant="tertiary">
-            Cancel
-          </s-button>
         </s-stack>
       </Form>
     </s-page>

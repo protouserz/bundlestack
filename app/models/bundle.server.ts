@@ -1,4 +1,5 @@
 import prisma from "../db.server";
+import { getPlanForRevenue } from "../billing.server";
 
 export type DiscountTier = {
   minQty: number;
@@ -137,10 +138,7 @@ export async function getActiveOffersForProduct(shop: string, productId: string)
 }
 
 export async function getShopStats(shop: string) {
-  const [offers, settings] = await Promise.all([
-    prisma.bundleOffer.findMany({ where: { shop } }),
-    prisma.shopSettings.findUnique({ where: { shop } }),
-  ]);
+  const offers = await prisma.bundleOffer.findMany({ where: { shop } });
 
   const activeOffers = offers.filter((o) => o.status === "active").length;
   const totalRevenue = offers.reduce((sum, o) => sum + o.revenueGenerated, 0);
@@ -149,7 +147,7 @@ export async function getShopStats(shop: string) {
     totalOffers: offers.length,
     activeOffers,
     totalRevenue,
-    billingPlan: settings?.billingPlan ?? "free",
+    billingPlan: getPlanForRevenue(totalRevenue),
   };
 }
 
@@ -179,7 +177,16 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
   }
 
   if (productIds.length === 0) {
-    throw new Response("At least one product ID is required", { status: 400 });
+    throw new Response("Select at least one product", { status: 400 });
+  }
+
+  for (const id of productIds) {
+    if (!/^gid:\/\/shopify\/Product\/\d+$/.test(id)) {
+      throw new Response(
+        `Invalid product ID "${id}". Use the product picker — theme or collection IDs are not supported.`,
+        { status: 400 },
+      );
+    }
   }
 
   if (tiers.length === 0) {
@@ -187,4 +194,43 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
   }
 
   return { title, status, productIds, tiers };
+}
+
+export async function cleanupShopData(shop: string) {
+  await prisma.bundleOffer.deleteMany({ where: { shop } });
+  await prisma.shopSettings.deleteMany({ where: { shop } });
+}
+
+export async function listOffersRaw(shop: string) {
+  return prisma.bundleOffer.findMany({ where: { shop } });
+}
+
+export async function fetchProductTitles(
+  admin: { graphql: (query: string, options?: { variables?: Record<string, unknown> }) => Promise<Response> },
+  productIds: string[],
+) {
+  if (productIds.length === 0) return [];
+
+  const response = await admin.graphql(
+    `#graphql
+      query productTitles($ids: [ID!]!) {
+        nodes(ids: $ids) {
+          ... on Product {
+            id
+            title
+          }
+        }
+      }`,
+    { variables: { ids: productIds } },
+  );
+
+  const json = await response.json();
+  const nodes = json.data?.nodes ?? [];
+
+  return nodes
+    .filter((node: { id?: string; title?: string } | null) => node?.id)
+    .map((node: { id: string; title: string }) => ({
+      id: node.id,
+      title: node.title,
+    }));
 }

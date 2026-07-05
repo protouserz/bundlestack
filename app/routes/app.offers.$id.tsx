@@ -9,6 +9,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
   deleteOffer,
+  fetchProductTitles,
   getOffer,
   parseOfferForm,
   removeOfferRecord,
@@ -17,16 +18,28 @@ import {
   type DiscountTier,
 } from "../models/bundle.server";
 import { deleteShopifyDiscounts, replaceOfferDiscounts } from "../models/discount.server";
+import { ProductPickerField } from "../components/ProductPickerField";
+
+const fieldStyle = {
+  width: "100%",
+  maxWidth: "100%",
+  padding: "8px",
+  marginTop: "8px",
+  display: "block",
+  boxSizing: "border-box" as const,
+};
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const offer = await getOffer(session.shop, params.id!);
 
   if (!offer) {
     throw new Response("Not found", { status: 404 });
   }
 
-  return { offer };
+  const products = await fetchProductTitles(admin, offer.productIds);
+
+  return { offer, products };
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -68,7 +81,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function EditOffer() {
-  const { offer } = useLoaderData<typeof loader>();
+  const { offer, products } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -87,106 +100,102 @@ export default function EditOffer() {
   };
 
   return (
-    <s-page heading={`Edit: ${offer.title}`}>
+    <s-page heading="Edit offer">
       <Form method="post">
-        <input type="hidden" name="tiers" value={JSON.stringify(tiers)} />
+        <s-stack direction="block" gap="large">
+          <input type="hidden" name="tiers" value={JSON.stringify(tiers)} />
 
-        <s-section heading="Offer details">
-          {actionData?.error && (
-            <s-banner tone="critical">{actionData.error}</s-banner>
-          )}
+          <s-section heading="Offer details">
+            <s-stack direction="block" gap="large">
+              {actionData?.error && (
+                <s-banner tone="critical">{actionData.error}</s-banner>
+              )}
 
-          <s-stack direction="block" gap="base">
-            <label>
-              <s-text>Offer title</s-text>
-              <input
-                name="title"
-                required
-                defaultValue={offer.title}
-                style={{ width: "100%", padding: "8px", marginTop: "4px" }}
-              />
-            </label>
+              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+                <s-text>Offer title</s-text>
+                <input
+                  name="title"
+                  required
+                  defaultValue={offer.title}
+                  style={fieldStyle}
+                />
+              </label>
 
-            <label>
-              <s-text>Status</s-text>
-              <select
-                name="status"
-                defaultValue={offer.status}
-                style={{ width: "100%", padding: "8px", marginTop: "4px" }}
-              >
-                <option value="draft">Draft</option>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-              </select>
-            </label>
+              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+                <s-text>Status</s-text>
+                <select
+                  name="status"
+                  defaultValue={offer.status}
+                  style={fieldStyle}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                </select>
+              </label>
 
-            <label>
-              <s-text>Product IDs</s-text>
-              <textarea
-                name="productIds"
-                required
-                rows={4}
-                defaultValue={offer.productIds.join("\n")}
-                style={{ width: "100%", padding: "8px", marginTop: "4px" }}
-              />
-            </label>
+              <s-stack direction="block" gap="base">
+                <s-text>Products</s-text>
+                <ProductPickerField initialProducts={products} />
+              </s-stack>
+            </s-stack>
+          </s-section>
+
+          <s-section heading="Quantity tiers">
+            <s-stack direction="block" gap="large">
+              {tiers.map((tier, index) => (
+                <s-box
+                  key={index}
+                  padding="base"
+                  borderWidth="base"
+                  borderRadius="base"
+                >
+                  <s-stack direction="inline" gap="base">
+                    <label>
+                      Min qty
+                      <input
+                        type="number"
+                        min={2}
+                        value={tier.minQty}
+                        onChange={(e) => updateTier(index, "minQty", e.target.value)}
+                        style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
+                      />
+                    </label>
+                    <label>
+                      Discount %
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={tier.discountValue}
+                        onChange={(e) =>
+                          updateTier(index, "discountValue", e.target.value)
+                        }
+                        style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
+                      />
+                    </label>
+                    <label>
+                      Label
+                      <input
+                        value={tier.label ?? ""}
+                        onChange={(e) => updateTier(index, "label", e.target.value)}
+                        style={{ width: "160px", padding: "8px", marginLeft: "8px" }}
+                      />
+                    </label>
+                  </s-stack>
+                </s-box>
+              ))}
+            </s-stack>
+          </s-section>
+
+          <s-stack direction="inline" gap="base" paddingBlockStart="large">
+            <s-button type="submit" {...(isSubmitting ? { loading: true } : {})}>
+              Save changes
+            </s-button>
+            <s-button href="/app/offers" variant="tertiary">
+              Back
+            </s-button>
           </s-stack>
-        </s-section>
-
-        <s-section heading="Quantity tiers">
-          <s-stack direction="block" gap="base">
-            {tiers.map((tier, index) => (
-              <s-box
-                key={index}
-                padding="base"
-                borderWidth="base"
-                borderRadius="base"
-              >
-                <s-stack direction="inline" gap="base">
-                  <label>
-                    Min qty
-                    <input
-                      type="number"
-                      min={2}
-                      value={tier.minQty}
-                      onChange={(e) => updateTier(index, "minQty", e.target.value)}
-                      style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
-                    />
-                  </label>
-                  <label>
-                    Discount %
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={tier.discountValue}
-                      onChange={(e) =>
-                        updateTier(index, "discountValue", e.target.value)
-                      }
-                      style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
-                    />
-                  </label>
-                  <label>
-                    Label
-                    <input
-                      value={tier.label ?? ""}
-                      onChange={(e) => updateTier(index, "label", e.target.value)}
-                      style={{ width: "160px", padding: "8px", marginLeft: "8px" }}
-                    />
-                  </label>
-                </s-stack>
-              </s-box>
-            ))}
-          </s-stack>
-        </s-section>
-
-        <s-stack direction="inline" gap="base">
-          <s-button type="submit" {...(isSubmitting ? { loading: true } : {})}>
-            Save changes
-          </s-button>
-          <s-button href="/app/offers" variant="tertiary">
-            Back
-          </s-button>
         </s-stack>
       </Form>
 
@@ -197,7 +206,7 @@ export default function EditOffer() {
         </s-paragraph>
       </s-section>
 
-      <s-section slot="aside" heading="Danger zone">
+      <s-section slot="aside" heading="Danger zone" paddingBlockStart="large">
         <Form method="post">
           <input type="hidden" name="intent" value="delete" />
           <s-button type="submit" tone="critical" variant="tertiary">

@@ -157,6 +157,54 @@ export async function replaceOfferDiscounts(
   return syncOfferDiscounts(admin, offer);
 }
 
+export async function cleanupAllShopDiscounts(
+  admin: AdminApiContext,
+  shop: string,
+) {
+  const { listOffersRaw } = await import("./bundle.server");
+  const offers = await listOffersRaw(shop);
+
+  const ids = offers.flatMap((offer) => {
+    try {
+      return JSON.parse(offer.discountIds) as string[];
+    } catch {
+      return [];
+    }
+  });
+
+  await deleteShopifyDiscounts(admin, ids);
+  await deleteOrphanedOfferDiscountsForShop(admin);
+}
+
+async function deleteOrphanedOfferDiscountsForShop(admin: AdminApiContext) {
+  const response = await admin.graphql(
+    `#graphql
+      query listAutomaticDiscounts {
+        discountNodes(first: 100) {
+          nodes {
+            id
+            discount {
+              ... on DiscountAutomaticBasic {
+                title
+              }
+            }
+          }
+        }
+      }`,
+  );
+
+  const json = await response.json();
+  const nodes = json.data?.discountNodes?.nodes ?? [];
+
+  const toDelete = nodes
+    .filter((node: { discount?: { title?: string } }) =>
+      node.discount?.title?.startsWith("BundleStack "),
+    )
+    .map((node: { id: string }) => node.id);
+
+  await deleteShopifyDiscounts(admin, toDelete);
+}
+
 function parseDiscountIds(raw: string | null | undefined): string[] {
   if (!raw) return [];
   try {

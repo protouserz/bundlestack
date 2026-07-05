@@ -1,23 +1,25 @@
-export type BillingPlan = "free" | "starter" | "scale" | "pro";
+import {
+  PLAN_LABELS,
+  PLAN_PRICES,
+  PLAN_THRESHOLDS,
+  type BillingPlan,
+} from "./billing.plans";
 
-const PLAN_THRESHOLDS: Record<BillingPlan, number> = {
-  free: 0,
-  starter: 1000,
-  scale: 5000,
-  pro: Infinity,
-};
-
-export const PLAN_PRICES: Record<BillingPlan, number> = {
-  free: 0,
-  starter: 14.99,
-  scale: 29.99,
-  pro: 59.99,
-};
+export type { BillingPlan } from "./billing.plans";
+export {
+  PLAN_FEATURES,
+  PLAN_LABELS,
+  PLAN_ORDER,
+  PLAN_PRICES,
+  PLAN_REVENUE_CAPS,
+  PLAN_THRESHOLDS,
+  formatPlanPrice,
+} from "./billing.plans";
 
 export function getPlanForRevenue(revenueGenerated: number): BillingPlan {
-  if (revenueGenerated >= PLAN_THRESHOLDS.scale) return "pro";
-  if (revenueGenerated >= PLAN_THRESHOLDS.starter) return "scale";
-  if (revenueGenerated > 0) return "starter";
+  if (revenueGenerated >= PLAN_THRESHOLDS.pro) return "pro";
+  if (revenueGenerated >= PLAN_THRESHOLDS.scale) return "scale";
+  if (revenueGenerated >= PLAN_THRESHOLDS.starter) return "starter";
   return "free";
 }
 
@@ -28,5 +30,51 @@ export function getNextPlan(current: BillingPlan): BillingPlan | null {
   return null;
 }
 
-// Wire up Shopify Billing API in v2 — see:
-// https://shopify.dev/docs/apps/launch/billing
+export type BillingSummary = {
+  plan: BillingPlan;
+  planLabel: string;
+  monthlyPrice: number;
+  revenueGenerated: number;
+  nextPlan: BillingPlan | null;
+  nextPlanLabel: string | null;
+  nextPlanPrice: number | null;
+  revenueUntilNextTier: number | null;
+  progressToNextTier: number;
+  alertAtEightyPercent: boolean;
+};
+
+export function getBillingSummary(revenueGenerated: number): BillingSummary {
+  const plan = getPlanForRevenue(revenueGenerated);
+  const nextPlan = getNextPlan(plan);
+  const monthlyPrice = PLAN_PRICES[plan];
+
+  let revenueUntilNextTier: number | null = null;
+  let progressToNextTier = 100;
+
+  if (nextPlan) {
+    const nextThreshold = PLAN_THRESHOLDS[nextPlan];
+    const currentThreshold = PLAN_THRESHOLDS[plan];
+    revenueUntilNextTier = Math.max(0, nextThreshold - revenueGenerated);
+    const range = nextThreshold - currentThreshold;
+    progressToNextTier =
+      range > 0
+        ? Math.min(100, ((revenueGenerated - currentThreshold) / range) * 100)
+        : 100;
+  }
+
+  const alertAtEightyPercent =
+    nextPlan !== null && progressToNextTier >= 80 && progressToNextTier < 100;
+
+  return {
+    plan,
+    planLabel: PLAN_LABELS[plan],
+    monthlyPrice,
+    revenueGenerated,
+    nextPlan,
+    nextPlanLabel: nextPlan ? PLAN_LABELS[nextPlan] : null,
+    nextPlanPrice: nextPlan ? PLAN_PRICES[nextPlan] : null,
+    revenueUntilNextTier,
+    progressToNextTier: Math.round(Math.max(0, progressToNextTier)),
+    alertAtEightyPercent,
+  };
+}

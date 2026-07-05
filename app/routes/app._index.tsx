@@ -1,31 +1,159 @@
-import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { Link, useLoaderData } from "react-router";
+import type {
+  ActionFunctionArgs,
+  HeadersFunction,
+  LoaderFunctionArgs,
+} from "react-router";
+import { Link, useFetcher, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { getBillingSummary } from "../billing.server";
 import { ensureShopSettings, getShopStats, listOffers } from "../models/bundle.server";
+import {
+  getShopHealth,
+  syncAllActiveOfferDiscounts,
+  type HealthFixAction,
+} from "../models/health.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
 
   await ensureShopSettings(shop);
 
-  const [stats, offers] = await Promise.all([
+  const [stats, offers, health] = await Promise.all([
     getShopStats(shop),
     listOffers(shop),
+    getShopHealth(admin, shop),
   ]);
 
-  return { stats, offers: offers.slice(0, 5) };
+  const billing = getBillingSummary(stats.totalRevenue);
+
+  return {
+    stats,
+    billing,
+    health,
+    offers: offers.slice(0, 5),
+  };
 };
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { admin, session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "sync-discounts") {
+    const { synced, failed } = await syncAllActiveOfferDiscounts(
+      admin,
+      session.shop,
+    );
+
+    if (failed.length > 0) {
+      return {
+        fixResult: {
+          success: false,
+          message: `Synced ${synced} offer(s). Failed: ${failed.join("; ")}`,
+        },
+      };
+    }
+
+    return {
+      fixResult: {
+        success: true,
+        message: `Synced discounts for ${synced} active offer(s).`,
+      },
+    };
+  }
+
+  return null;
+};
+
+function statusTone(status: "ok" | "warning" | "error") {
+  if (status === "ok") return "success";
+  if (status === "warning") return "warning";
+  return "critical";
+}
+
+function HealthCheckFixButton({
+  fix,
+  fetcher,
+}: {
+  fix: HealthFixAction;
+  fetcher: ReturnType<typeof useFetcher<typeof action>>;
+}) {
+  const isLoading = fetcher.state !== "idle";
+
+  if (fix.href) {
+    return (
+      <s-button href={fix.href} target={fix.external ? "_blank" : undefined}>
+        Try to fix
+      </s-button>
+    );
+  }
+
+  return (
+    <fetcher.Form method="post">
+      <input type="hidden" name="intent" value={fix.intent} />
+      <s-button type="submit" {...(isLoading ? { loading: true } : {})}>
+        Try to fix
+      </s-button>
+    </fetcher.Form>
+  );
+}
+
 export default function Dashboard() {
-  const { stats, offers } = useLoaderData<typeof loader>();
+  const { stats, billing, health, offers } = useLoaderData<typeof loader>();
+  const fixFetcher = useFetcher<typeof action>();
+  const fixResult = fixFetcher.data?.fixResult;
 
   return (
     <s-page heading="BundleStack">
       <s-button slot="primary-action" href="/app/offers/new">
         Create offer
       </s-button>
+
+      <s-section heading="Store health">
+        {fixResult && (
+          <s-banner tone={fixResult.success ? "success" : "critical"}>
+            {fixResult.message}
+          </s-banner>
+        )}
+
+        <s-banner
+          tone={
+            health.overall === "healthy"
+              ? "success"
+              : health.overall === "attention"
+                ? "warning"
+                : "critical"
+          }
+        >
+          {health.overall === "healthy"
+            ? "All systems operational"
+            : health.overall === "attention"
+              ? "Needs attention — review checks below"
+              : "Action required — offers may not be working"}
+        </s-banner>
+
+        <s-stack direction="block" gap="base">
+          {health.checks.map((check) => (
+            <s-box
+              key={check.id}
+              padding="base"
+              borderWidth="base"
+              borderRadius="base"
+            >
+              <s-stack direction="inline" gap="base">
+                <s-badge tone={statusTone(check.status)}>{check.status}</s-badge>
+                <s-heading>{check.label}</s-heading>
+              </s-stack>
+              <s-text tone="neutral">{check.message}</s-text>
+              {check.fix && (check.status === "error" || check.status === "warning") && (
+                <HealthCheckFixButton fix={check.fix} fetcher={fixFetcher} />
+              )}
+            </s-box>
+          ))}
+        </s-stack>
+      </s-section>
 
       <s-section heading="Overview">
         <s-stack direction="inline" gap="base">
@@ -43,22 +171,12 @@ export default function Dashboard() {
           </s-box>
           <s-box padding="base" borderWidth="base" borderRadius="base">
             <s-text tone="neutral">Current plan</s-text>
-            <s-heading>{stats.billingPlan}</s-heading>
+            <s-heading>{billing.planLabel}</s-heading>
           </s-box>
         </s-stack>
-      </s-section>
-
-      <s-section heading="Quick start">
         <s-paragraph>
-          BundleStack helps you increase average order value with quantity breaks
-          and bundle discounts — the same playbook used by apps doing $4M+ ARR on
-          Shopify.
+          <Link to="/app/billing">View billing details & uninstall policy →</Link>
         </s-paragraph>
-        <s-unordered-list>
-          <s-list-item>Create a quantity break offer for your best-selling product</s-list-item>
-          <s-list-item>Activate it and add the theme block to your product page</s-list-item>
-          <s-list-item>Track revenue generated directly in this dashboard</s-list-item>
-        </s-unordered-list>
       </s-section>
 
       <s-section heading="Recent offers">
@@ -85,21 +203,12 @@ export default function Dashboard() {
                 </s-stack>
                 <s-text tone="neutral">
                   {offer.tiers.length} tier(s) · ${offer.revenueGenerated.toFixed(2)}{" "}
-                  generated
+                  generated · {offer.discountIds.length} discount(s) synced
                 </s-text>
               </s-box>
             ))}
           </s-stack>
         )}
-      </s-section>
-
-      <s-section slot="aside" heading="Pricing (Kaching playbook)">
-        <s-unordered-list>
-          <s-list-item>Free — launch & get reviews</s-list-item>
-          <s-list-item>$14.99/mo — until $1K revenue generated</s-list-item>
-          <s-list-item>$29.99/mo — until $5K revenue generated</s-list-item>
-          <s-list-item>$59.99/mo — unlimited scale</s-list-item>
-        </s-unordered-list>
       </s-section>
     </s-page>
   );

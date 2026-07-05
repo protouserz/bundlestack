@@ -11,9 +11,13 @@ services:
         value: file:./prisma/production.sqlite
       - key: SCOPES
         value: read_products,write_products,write_discounts,read_discounts
+      - key: SUPPORT_EMAIL
+        value: protouserz@proton.me
+      - key: SHOPIFY_BILLING_TEST
+        value: "true"
+      - key: SHOPIFY_APP_URL
+        value: https://bundlestack-pfee.onrender.com
       - key: SHOPIFY_API_KEY
         sync: false
       - key: SHOPIFY_API_SECRET
-        sync: false
-      - key: SHOPIFY_APP_URL
         sync: false

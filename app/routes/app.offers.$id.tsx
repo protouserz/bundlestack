@@ -19,15 +19,7 @@ import {
 } from "../models/bundle.server";
 import { deleteShopifyDiscounts, replaceOfferDiscounts } from "../models/discount.server";
 import { ProductPickerField } from "../components/ProductPickerField";
-
-const fieldStyle = {
-  width: "100%",
-  maxWidth: "100%",
-  padding: "8px",
-  marginTop: "8px",
-  display: "block",
-  boxSizing: "border-box" as const,
-};
+import { fieldStyle, labelStyle } from "../components/fieldStyles";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
@@ -111,7 +103,7 @@ export default function EditOffer() {
                 <s-banner tone="critical">{actionData.error}</s-banner>
               )}
 
-              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+              <label style={labelStyle}>
                 <s-text>Offer title</s-text>
                 <input
                   name="title"
@@ -121,7 +113,7 @@ export default function EditOffer() {
                 />
               </label>
 
-              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+              <label style={labelStyle}>
                 <s-text>Status</s-text>
                 <select
                   name="status"
@@ -199,20 +191,42 @@ export default function EditOffer() {
         </s-stack>
       </Form>
 
-      <s-section slot="aside" heading="Performance">
-        <s-paragraph>
-          <s-text tone="neutral">Revenue generated: </s-text>
-          ${offer.revenueGenerated.toFixed(2)}
-        </s-paragraph>
+      <s-section slot="aside" heading="Summary">
+        <s-box padding="large" borderWidth="base" borderRadius="base">
+          <s-stack direction="block" gap="base">
+            <s-text tone="neutral">Offer</s-text>
+            <s-heading>{offer.title}</s-heading>
+            <s-text tone="neutral">
+              {offer.tiers.length} tier(s) · {offer.discountIds.length} discount(s)
+              synced
+            </s-text>
+          </s-stack>
+        </s-box>
       </s-section>
 
-      <s-section slot="aside" heading="Danger zone" paddingBlockStart="large">
-        <Form method="post">
-          <input type="hidden" name="intent" value="delete" />
-          <s-button type="submit" tone="critical" variant="tertiary">
-            Delete offer
-          </s-button>
-        </Form>
+      <s-section slot="aside" heading="Performance">
+        <s-box padding="large" borderWidth="base" borderRadius="base">
+          <s-stack direction="block" gap="base">
+            <s-text tone="neutral">Revenue generated</s-text>
+            <s-heading>${offer.revenueGenerated.toFixed(2)}</s-heading>
+          </s-stack>
+        </s-box>
+      </s-section>
+
+      <s-section slot="aside" heading="Danger zone">
+        <s-box padding="large" borderWidth="base" borderRadius="base">
+          <s-stack direction="block" gap="base">
+            <s-text tone="neutral">
+              Permanently delete this offer and remove its Shopify discounts.
+            </s-text>
+            <Form method="post">
+              <input type="hidden" name="intent" value="delete" />
+              <s-button type="submit" tone="critical" variant="tertiary">
+                Delete offer
+              </s-button>
+            </Form>
+          </s-stack>
+        </s-box>
       </s-section>
     </s-page>
   );

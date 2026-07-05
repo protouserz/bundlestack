@@ -2,6 +2,9 @@ import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { ProgressBar } from "../components/ProgressBar";
+import { StatCard } from "../components/StatCard";
+import styles from "../components/ui.module.css";
 import {
   formatPlanPrice,
   PLAN_FEATURES,
@@ -24,17 +27,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     themeEditorUrl: `https://admin.shopify.com/store/${shopHandle}/themes/current/editor?context=apps`,
   };
 };
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <s-box padding="large" borderWidth="base" borderRadius="base">
-      <s-stack direction="block" gap="base">
-        <s-text tone="neutral">{label}</s-text>
-        <s-heading>{value}</s-heading>
-      </s-stack>
-    </s-box>
-  );
-}
 
 function PlanCard({
   plan,
@@ -59,11 +51,7 @@ function PlanCard({
             {isCurrent && <s-badge tone="success">Current plan</s-badge>}
           </s-stack>
           <s-stack direction="inline" gap="base">
-            <s-text>
-              <span style={{ fontSize: "1.75rem", fontWeight: 600 }}>
-                {formatPlanPrice(plan)}
-              </span>
-            </s-text>
+            <span className={styles.priceLarge}>{formatPlanPrice(plan)}</span>
             <s-text tone="neutral">/ month</s-text>
           </s-stack>
           <s-text tone="neutral">{PLAN_REVENUE_CAPS[plan]}</s-text>
@@ -85,6 +73,13 @@ export default function BillingPage() {
   return (
     <s-page heading="Billing & uninstall">
       <s-stack direction="block" gap="large">
+        <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
+          <s-text tone="neutral">
+            Performance-based pricing — free to start, upgrade only when
+            BundleStack generates more revenue for your store.
+          </s-text>
+        </s-box>
+
         <s-section heading="Current plan">
           <s-stack direction="block" gap="large">
             {billing.alertAtEightyPercent && (
@@ -96,13 +91,7 @@ export default function BillingPage() {
               </s-banner>
             )}
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "16px",
-              }}
-            >
+            <div className={styles.gridStats}>
               <StatCard label="Plan" value={billing.planLabel} />
               <StatCard
                 label="Monthly price"
@@ -131,29 +120,7 @@ export default function BillingPage() {
                         ${billing.revenueUntilNextTier.toFixed(2)} more app revenue
                         until upgrade · {billing.progressToNextTier}% there
                       </s-text>
-                      <div
-                        role="progressbar"
-                        aria-valuenow={billing.progressToNextTier}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        style={{
-                          height: "8px",
-                          borderRadius: "4px",
-                          background: "var(--p-color-bg-fill-secondary, #e3e3e3)",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: "100%",
-                            width: `${billing.progressToNextTier}%`,
-                            borderRadius: "4px",
-                            background:
-                              "var(--p-color-bg-fill-success, #008060)",
-                            transition: "width 0.3s ease",
-                          }}
-                        />
-                      </div>
+                      <ProgressBar value={billing.progressToNextTier} />
                     </>
                   ) : (
                     <s-text tone="neutral">
@@ -169,18 +136,11 @@ export default function BillingPage() {
         <s-section heading="Pricing plans">
           <s-stack direction="block" gap="large">
             <s-paragraph>
-              Performance-based pricing — free to start, then pay less than
-              leading bundle apps at every tier. Kaching charges $29.99/mo for
-              $5k revenue; BundleStack Growth is $14.99.
+              Pay less than leading bundle apps at every tier — Growth is $14.99
+              for up to $5k revenue vs $29.99 elsewhere.
             </s-paragraph>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "20px",
-              }}
-            >
+            <div className={styles.gridCards}>
               {PLAN_ORDER.map((plan) => (
                 <PlanCard
                   key={plan}
@@ -192,15 +152,15 @@ export default function BillingPage() {
 
             <s-box padding="large" borderWidth="base" borderRadius="base">
               <s-stack direction="block" gap="base">
-                <s-text tone="neutral">How billing works</s-text>
+                <s-heading>How billing works</s-heading>
                 <s-unordered-list>
                   <s-list-item>
-                    Free forever until your store generates $500/mo through
-                    BundleStack offers
+                    Free until your store generates $500/mo through BundleStack
+                    offers
                   </s-list-item>
                   <s-list-item>
                     Tiers upgrade automatically when revenue crosses each
-                    threshold — no manual plan picking required
+                    threshold
                   </s-list-item>
                   <s-list-item>
                     Shopify bills on a 30-day cycle; uninstalling stops new
@@ -220,7 +180,7 @@ export default function BillingPage() {
               ghost code, no hidden blocks.
             </s-paragraph>
 
-            <s-box padding="large" borderWidth="base" borderRadius="base">
+            <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
               <s-stack direction="block" gap="base">
                 <s-text>✓ All BundleStack automatic discounts are deleted</s-text>
                 <s-text>✓ Offer configuration is removed from our database</s-text>

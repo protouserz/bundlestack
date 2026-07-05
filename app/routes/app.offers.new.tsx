@@ -10,15 +10,7 @@ import { authenticate } from "../shopify.server";
 import { createOffer, parseOfferForm, updateOfferDiscountIds, type DiscountTier } from "../models/bundle.server";
 import { replaceOfferDiscounts } from "../models/discount.server";
 import { ProductPickerField } from "../components/ProductPickerField";
-
-const fieldStyle = {
-  width: "100%",
-  maxWidth: "100%",
-  padding: "8px",
-  marginTop: "8px",
-  display: "block",
-  boxSizing: "border-box" as const,
-};
+import { fieldStyle, labelStyle } from "../components/fieldStyles";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -86,9 +78,16 @@ export default function NewOffer() {
   };
 
   return (
-    <s-page heading="Create quantity break">
+    <s-page heading="Create offer">
       <Form method="post">
         <s-stack direction="block" gap="large">
+          <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
+            <s-text tone="neutral">
+              Set up a quantity-break offer — pick products, define tiers, and
+              activate to sync discounts to Shopify automatically.
+            </s-text>
+          </s-box>
+
           <input type="hidden" name="tiers" value={JSON.stringify(tiers)} />
 
           <s-section heading="Offer details">
@@ -97,7 +96,7 @@ export default function NewOffer() {
                 <s-banner tone="critical">{actionData.error}</s-banner>
               )}
 
-              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+              <label style={labelStyle}>
                 <s-text>Offer title</s-text>
                 <input
                   name="title"
@@ -107,7 +106,7 @@ export default function NewOffer() {
                 />
               </label>
 
-              <label style={{ display: "block", width: "100%", maxWidth: "100%" }}>
+              <label style={labelStyle}>
                 <s-text>Status</s-text>
                 <select
                   name="status"

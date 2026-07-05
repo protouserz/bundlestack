@@ -1,7 +1,9 @@
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { Link, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { EmptyState } from "../components/EmptyState";
+import { OfferCard } from "../components/OfferCard";
 import { listOffers } from "../models/bundle.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -14,56 +16,36 @@ export default function OffersIndex() {
   const { offers } = useLoaderData<typeof loader>();
 
   return (
-    <s-page heading="Bundle offers">
+    <s-page heading="Offers">
       <s-button slot="primary-action" href="/app/offers/new">
         Create offer
       </s-button>
 
-      {offers.length === 0 ? (
-        <s-section>
-          <s-paragraph>
-            No offers yet. Create quantity breaks like &quot;Buy 2, save 10%&quot; or
-            &quot;Buy 3, save 15%&quot; to boost AOV.
-          </s-paragraph>
-        </s-section>
-      ) : (
-        <s-section>
-          <s-stack direction="block" gap="base">
-            {offers.map((offer) => (
-              <s-box
-                key={offer.id}
-                padding="base"
-                borderWidth="base"
-                borderRadius="base"
-              >
-                <s-stack direction="inline" gap="base">
-                  <s-heading>{offer.title}</s-heading>
-                  <s-badge tone={offer.status === "active" ? "success" : "info"}>
-                    {offer.status}
-                  </s-badge>
-                </s-stack>
-                <s-paragraph>
-                  {offer.tiers.map((tier) => (
-                    <span key={tier.minQty}>
-                      Buy {tier.minQty}+ →{" "}
-                      {tier.discountType === "percentage"
-                        ? `${tier.discountValue}% off`
-                        : `$${tier.discountValue} off`}
-                      {" · "}
-                    </span>
-                  ))}
-                </s-paragraph>
-                <s-stack direction="inline" gap="base">
-                  <Link to={`/app/offers/${offer.id}`}>Edit</Link>
-                  <s-text tone="neutral">
-                    ${offer.revenueGenerated.toFixed(2)} generated
-                  </s-text>
-                </s-stack>
-              </s-box>
-            ))}
-          </s-stack>
-        </s-section>
-      )}
+      <s-stack direction="block" gap="large">
+        <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
+          <s-text tone="neutral">
+            Quantity-break offers encourage shoppers to buy more with tiered
+            discounts — synced automatically as Shopify discounts at checkout.
+          </s-text>
+        </s-box>
+
+        {offers.length === 0 ? (
+          <EmptyState
+            heading="No offers yet"
+            description='Create your first offer — e.g. "Buy 2, save 10%" or "Buy 3, save 15%" — and assign it to products in your catalog.'
+            actionLabel="Create offer"
+            actionHref="/app/offers/new"
+          />
+        ) : (
+          <s-section heading={`${offers.length} offer${offers.length === 1 ? "" : "s"}`}>
+            <s-stack direction="block" gap="base">
+              {offers.map((offer) => (
+                <OfferCard key={offer.id} offer={offer} showTiers />
+              ))}
+            </s-stack>
+          </s-section>
+        )}
+      </s-stack>
     </s-page>
   );
 }

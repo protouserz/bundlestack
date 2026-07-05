@@ -1,0 +1,30 @@
+.gridStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.gridCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--p-color-bg-fill-secondary, #e3e3e3);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--p-color-bg-fill-success, #008060);
+  transition: width 0.3s ease;
+}
+
+.priceLarge {
+  font-size: 1.75rem;
+  font-weight: 600;
+}

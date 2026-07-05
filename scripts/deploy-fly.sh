@@ -40,7 +40,7 @@ fi
 : "${SHOPIFY_API_KEY:?Set SHOPIFY_API_KEY (from Partners Dashboard)}"
 : "${SHOPIFY_API_SECRET:?Set SHOPIFY_API_SECRET (from Partners Dashboard)}"
 
-SCOPES="${SCOPES:-read_orders,read_products,write_products,write_discounts,read_discounts}"
+SCOPES="${SCOPES:-read_products,write_products,write_discounts,read_discounts}"
 
 echo "==> Setting Fly secrets..."
 "$FLY" secrets set \

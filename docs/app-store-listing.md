@@ -2,6 +2,12 @@
 
 Paste these into the Shopify Partners listing form.
 
+**Production URLs (Render):**
+
+- App URL: https://bundlestack-pfee.onrender.com
+- Privacy: https://bundlestack-pfee.onrender.com/privacy
+- Support: https://bundlestack-pfee.onrender.com/support
+
 ## App name
 
 BundleStack
@@ -41,7 +47,7 @@ Consumables, supplements, coffee, skincare, apparel, and any catalog where buyin
 
 **Pricing**
 
-Free to install. Paid tiers scale with app-generated revenue — you only pay more when BundleStack earns more for your store. See in-app Billing page for tier details.
+Free to install. Paid tiers scale with app-generated revenue — you only pay more when BundleStack earns more for your store. Charges are processed through Shopify Billing on a 30-day cycle.
 
 ## Search keywords
 
@@ -49,8 +55,9 @@ quantity breaks, volume discount, bundle discounts, buy more save more, tiered p
 
 ## Support
 
-- Support URL: your GitHub issues or help page
+- Support URL: https://bundlestack-pfee.onrender.com/support
 - Support email: your contact email (must not contain "Shopify")
+- GitHub issues: https://github.com/protouserz/bundlestack/issues
 
 ## Pricing plans (App Store form)
 

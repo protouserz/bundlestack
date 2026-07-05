@@ -40,7 +40,7 @@ fly volumes create bundlestack_data --size 1 -a bundlestack -y
 fly secrets set \
   SHOPIFY_API_KEY=your_key \
   SHOPIFY_API_SECRET=your_secret \
-  SCOPES=read_orders,read_products,write_products,write_discounts,read_discounts \
+  SCOPES=read_products,write_products,write_discounts,read_discounts \
   SHOPIFY_APP_URL=https://bundlestack.fly.dev \
   DATABASE_URL=file:/data/production.sqlite \
   -a bundlestack
@@ -134,11 +134,13 @@ In Partners → **App Store review**:
 3. Add BundleStack theme block to product template
 4. Confirm discount applies at checkout with qty 2+
 
-## Step 6 — Billing (before charging merchants)
+## Step 6 — Billing
 
-Tier logic exists in `app/billing.plans.ts`. Before enabling paid plans on the App Store, wire the **Shopify Billing API** so charges are created through Shopify.
+Tier logic lives in `app/billing.plans.ts`. **Shopify Billing API** is wired in `app/billing.shopify.ts` and the in-app Billing page — merchants approve paid tiers through Shopify when revenue thresholds are crossed.
 
-Until then, you can submit as **Free to install** and enable billing after approval.
+For development stores, set `SHOPIFY_BILLING_TEST=true` on Render so charges appear as test subscriptions.
+
+Add all four pricing plans in the Partners App Store listing form (see [`docs/SUBMISSION.md`](./SUBMISSION.md)).
 
 ## Timeline
 

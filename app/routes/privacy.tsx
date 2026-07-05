@@ -68,8 +68,9 @@ export default function PrivacyPolicy() {
       <section style={{ marginBottom: "2rem" }}>
         <h2>Contact</h2>
         <p>
-          For privacy questions, contact the app developer through the Shopify
-          App Store listing or your Partner Dashboard support channel.
+          For privacy questions, visit our{" "}
+          <Link to="/support">support page</Link> or contact us through the
+          Shopify App Store listing.
         </p>
       </section>
 

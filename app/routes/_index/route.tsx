@@ -160,6 +160,10 @@ export default function App() {
           <a href="/privacy" className={styles.footerLink}>
             Privacy Policy
           </a>
+          {" · "}
+          <a href="/support" className={styles.footerLink}>
+            Support
+          </a>
         </p>
       </footer>
     </div>

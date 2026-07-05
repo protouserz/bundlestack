@@ -31,7 +31,7 @@ Create a `.env` file (Shopify CLI generates this when you link the app):
 ```env
 SHOPIFY_API_KEY=
 SHOPIFY_API_SECRET=
-SCOPES=read_orders,read_products,write_products,write_discounts,read_discounts
+SCOPES=read_products,write_products,write_discounts,read_discounts
 SHOPIFY_APP_URL=
 DATABASE_URL=file:./prisma/dev.sqlite
 ```

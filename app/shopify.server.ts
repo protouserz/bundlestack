@@ -5,6 +5,7 @@ import {
   shopifyApp,
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
+import { shopifyBillingConfig } from "./billing.shopify";
 import prisma from "./db.server";
 
 const shopify = shopifyApp({
@@ -16,6 +17,7 @@ const shopify = shopifyApp({
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
+  billing: shopifyBillingConfig(),
   future: {
     expiringOfflineAccessTokens: true,
   },
@@ -23,6 +25,12 @@ const shopify = shopifyApp({
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
 });
+
+export {
+  ALL_SHOPIFY_BILLING_PLANS,
+  BILLING_PLAN_BY_TIER,
+  SHOPIFY_BILLING_PLANS,
+} from "./billing.shopify";
 
 export default shopify;
 export const apiVersion = ApiVersion.October25;

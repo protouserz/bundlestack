@@ -31,9 +31,12 @@ Create a `.env` file (Shopify CLI generates this when you link the app):
 ```env
 SHOPIFY_API_KEY=
 SHOPIFY_API_SECRET=
-SCOPES=read_products,write_products,read_orders
+SCOPES=read_orders,read_products,write_products,write_discounts,read_discounts
 SHOPIFY_APP_URL=
+DATABASE_URL=file:./prisma/dev.sqlite
 ```
+
+Copy from `.env.example`. Shopify CLI generates most values when you link the app.
 
 Link and run:
 
@@ -74,6 +77,18 @@ Billing is calculated from revenue attributed to BundleStack offers. Shopify bil
 2. **Week 3–4** — Launch free on App Store, collect first 10 reviews
 3. **Month 2** — Add post-purchase upsell (second app in portfolio)
 4. **Month 3+** — App Store SEO for "quantity breaks", "bundle discounts", vertical templates
+
+## Shopify App Store
+
+To publish on the App Store, see **[docs/APP_STORE.md](docs/APP_STORE.md)** for the full checklist:
+
+1. Deploy to production (Fly.io `fly.toml` + `Dockerfile` included)
+2. Set `SHOPIFY_APP_URL` and `DATABASE_URL` in production env
+3. Run `npm run deploy` to push config, webhooks, and theme extension
+4. Complete listing in Partners Dashboard (copy in `docs/app-store-listing.md`)
+5. Submit for review on the App Store review page
+
+Compliance webhooks and a public privacy policy (`/privacy`) are implemented. Wire the Shopify Billing API before enabling paid charges.
 
 ## Project structure
 

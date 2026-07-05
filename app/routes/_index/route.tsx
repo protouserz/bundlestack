@@ -156,6 +156,11 @@ export default function App() {
           <strong>BundleStack</strong> · Quantity breaks for Shopify · Built for
           merchants who want results, not bloat
         </p>
+        <p>
+          <a href="/privacy" className={styles.footerLink}>
+            Privacy Policy
+          </a>
+        </p>
       </footer>
     </div>
   );

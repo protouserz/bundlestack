@@ -1,16 +1,41 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "4aade1f433c3c5bd867c99cce348cede"
+name = "BundleStack"
 application_url = "https://shopify.dev/apps/default-app-home"
 embedded = true
-name = "BundleStack"
+handle = "bundlestack"
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-10"
 
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = [ "shop/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/scopes_update"
+  topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_orders,read_products,write_products,write_discounts,read_discounts"
+scopes = "read_orders,read_products,write_products"
 
 [auth]
 redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
@@ -19,7 +44,3 @@ redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
 url = "/app-proxy"
 subpath = "bundlestack"
 prefix = "apps"
-
-[build]
-include_config_on_deploy = true
-automatically_update_urls_on_dev = true

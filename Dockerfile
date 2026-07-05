@@ -1,5 +1,5 @@
-# Simple single-stage build for Render / Fly (no volume required for SQLite path)
-FROM node:20-alpine
+# @shopify/cli requires Node >=22.12 (see package.json engines)
+FROM node:22-alpine
 RUN apk add --no-cache openssl
 
 WORKDIR /app

@@ -10,6 +10,47 @@ Use this document when filling out the Shopify Partners listing and App Store re
 
 ---
 
+## Troubleshooting: "This store will be right back"
+
+If `dev.shopify.com/.../distribution` shows a black **"This store will be right back"** page, that is a **Shopify dashboard routing bug or session issue** — not a problem with BundleStack or Render.
+
+### Fix (try in order)
+
+1. **Use the Partner Dashboard entry point** (most reliable):
+   - Go to [partners.shopify.com](https://partners.shopify.com) → log in
+   - **Apps** → **BundleStack**
+   - In the left sidebar, open **App Store review** or **Distribution** (not a bookmarked deep link)
+
+2. **Navigate from the app home** (avoid deep-linking `/distribution`):
+   - [Dev Dashboard apps list](https://dev.shopify.com/dashboard/225145646/apps)
+   - Click **BundleStack**
+   - Use sidebar: **App Store listing** → then **App Store review**
+
+3. **Choose Public distribution first** (if you haven't):
+   - Partners → **App distribution** → **BundleStack** → **Choose distribution** → **Public**
+   - Then return to App Store listing / review
+
+4. **Refresh session**: hard refresh (`Cmd+Shift+R`), incognito window, or log out and back in.
+
+5. **Check dev store** isn't paused:
+   - Dev Dashboard → **Stores** → `bundlestack-dev` → open admin
+   - If the store admin also shows "right back", recreate or reactivate the dev store
+
+6. **Still broken?** Contact [Partner Support](https://partners.shopify.com/support) with:
+   - App: BundleStack (`393084436481`)
+   - URL that fails
+   - `x-request-id` from Chrome DevTools → Network → failed request → Headers
+
+### Direct links (use after logging in via partners.shopify.com)
+
+| Page | URL |
+|------|-----|
+| Apps list | https://dev.shopify.com/dashboard/225145646/apps |
+| BundleStack app | https://dev.shopify.com/dashboard/225145646/apps/393084436481 |
+| Partner app overview | https://partners.shopify.com/organizations/225145646/apps/393084436481/overview |
+
+---
+
 ## Before you submit (checklist)
 
 ### Code & hosting (done in repo)

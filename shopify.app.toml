@@ -34,15 +34,15 @@ api_version = "2026-10"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_products,write_discounts,read_discounts"
+scopes = "read_discounts,read_products,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
   "https://bundlestack-pfee.onrender.com/auth/callback",
-  "https://bundlestack-pfee.onrender.com/auth/shopify/callback",
+  "https://bundlestack-pfee.onrender.com/auth/shopify/callback"
 ]
 
 [app_proxy]
-url = "/app-proxy"
+url = "https://bundlestack-pfee.onrender.com/app-proxy"
 subpath = "bundlestack"
 prefix = "apps"

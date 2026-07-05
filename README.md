@@ -8,7 +8,7 @@ Shopify app for **quantity breaks and bundle discounts** — the Kaching playboo
 - **Offer CRUD** — create quantity breaks (Buy 2 save 10%, Buy 3 save 15%, etc.)
 - **Theme widget** — product page block that displays tiers and sets quantity on click
 - **App proxy API** — `/apps/bundlestack/offers?product_id=...` for storefront
-- **Usage-based billing stub** — free → $14.99 → $29.99 → $59.99 tiers (wire Billing API in v2)
+- **Usage-based billing** — performance pricing that scales with app-generated revenue (Shopify Billing API wiring in v2)
 
 ## Prerequisites
 
@@ -51,16 +51,22 @@ Press `p` to open the app in your dev store admin.
 3. **Theme** — Online Store → Customize → Product page → Add block → **BundleStack offers**
 4. **Track** — Dashboard shows revenue generated per offer
 
-## Pricing strategy (Kaching playbook)
+## Pricing (performance-based)
 
-| Plan | Price | Trigger |
-|------|-------|---------|
-| Free | $0 | Launch — get installs & reviews |
-| Starter | $14.99/mo | Merchant generates revenue via app |
-| Scale | $29.99/mo | $1K+ revenue generated |
-| Pro | $59.99/mo | $5K+ revenue generated |
+Tiers upgrade automatically when app-generated revenue crosses each threshold. You only pay more when BundleStack earns more for your store.
 
-Launch free. Grandfather early users. Monetize new installs once you rank for keywords.
+| Plan | Price | When it applies | Revenue ceiling |
+|------|-------|-----------------|-----------------|
+| **Free** | $0/mo | Launch & first sales | Up to $500 app revenue / mo |
+| **Starter** | $7.99/mo | After $500 app revenue | Up to $2,000 app revenue / mo |
+| **Growth** | $14.99/mo | After $2,000 app revenue | Up to $5,000 app revenue / mo |
+| **Pro** | $29.99/mo | After $5,000 app revenue | Unlimited app revenue |
+
+Compared to leading bundle apps: Growth at $14.99 covers up to $5k revenue (Kaching charges $29.99 for the same band). Pro unlimited at $29.99 undercuts Appstle's $39.99 unlimited tier.
+
+Billing is calculated from revenue attributed to BundleStack offers. Shopify bills on a 30-day cycle. Uninstalling removes all app discounts and offer data automatically.
+
+> **Note:** Tier logic is implemented in `app/billing.plans.ts`. Shopify Billing API charge creation is planned for v2.
 
 ## Growth plan
 
@@ -80,6 +86,7 @@ app/
     app.offers.$id.tsx      # Edit offer
     app-proxy.offers.tsx    # Storefront API
   models/bundle.server.ts   # Offer CRUD
+  billing.plans.ts          # Pricing tiers & thresholds
   billing.server.ts         # Usage tier logic
 extensions/
   bundlestack-widget/       # Theme app extension

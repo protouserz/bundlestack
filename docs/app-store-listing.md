@@ -56,7 +56,7 @@ quantity breaks, volume discount, bundle discounts, buy more save more, tiered p
 ## Support
 
 - Support URL: https://bundlestack-pfee.onrender.com/support
-- Support email: your contact email (must not contain "Shopify")
+- Support email: protouserz@proton.me (must not contain "Shopify")
 - GitHub issues: https://github.com/protouserz/bundlestack/issues
 
 ## Pricing plans (App Store form)

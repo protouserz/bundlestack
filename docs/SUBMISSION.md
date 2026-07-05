@@ -16,11 +16,14 @@ Use this document when filling out the Shopify Partners listing and App Store re
 
 - [x] HTTPS production URL on Render
 - [x] Compliance webhooks (`customers/data_request`, `customers/redact`, `shop/redact`, `app/uninstalled`)
-- [x] Privacy policy at `/privacy`
-- [x] Support page at `/support`
+- [x] Privacy policy at `/privacy` — **live**
+- [x] Support page at `/support` — **live**
 - [x] Shopify Billing API wired for paid tiers
 - [x] `read_orders` scope removed (no protected customer data)
 - [x] App icon source in `docs/app-store/icon.png` (export 1200×1200 for upload)
+- [x] Render env in `render.yaml` (SCOPES, SUPPORT_EMAIL, SHOPIFY_BILLING_TEST, SHOPIFY_APP_URL)
+- [x] Shopify config deployed (**bundlestack-5**+)
+- [x] `./scripts/verify-app-store-readiness.sh` passes (7/7)
 
 ### You must do in Partners Dashboard
 
@@ -30,10 +33,8 @@ Use this document when filling out the Shopify Partners listing and App Store re
 - [ ] Set **support email** (cannot contain the word "Shopify")
 - [ ] Set **emergency developer contact**
 - [ ] Set **API contact email** (cannot contain "Shopify")
-- [ ] Update Render env: `SCOPES=read_products,write_products,write_discounts,read_discounts`
-- [ ] Set `SUPPORT_EMAIL=your@email.com` on Render
-- [ ] Set `SHOPIFY_BILLING_TEST=true` on Render while testing on dev stores
-- [ ] Run `npm run deploy` after any `shopify.app.toml` change
+- [ ] Update Render env if dashboard overrides blueprint (see `render.yaml` values)
+- [ ] Optional: add `RENDER_DEPLOY_HOOK_URL` GitHub secret for auto-deploy on push
 - [ ] Complete **App Store review** automated checks → Submit
 
 ---

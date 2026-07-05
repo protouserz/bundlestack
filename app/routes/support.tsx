@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 const SUPPORT_EMAIL =
-  process.env.SUPPORT_EMAIL || "support@example.com (update in Render env)";
+  process.env.SUPPORT_EMAIL || "protouserz@proton.me";
 
 export default function SupportPage() {
   return (

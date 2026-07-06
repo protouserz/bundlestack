@@ -1,5 +1,10 @@
 /* BundleStack storefront widget — matches marketing mockup typography */
 
+.bundlestack-widget--pending,
+.bundlestack-widget--hidden {
+  display: none !important;
+}
+
 .bundlestack-widget {
   --bs-navy: #0f172a;
   --bs-emerald: #059669;

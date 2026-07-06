@@ -5,7 +5,7 @@
 
 <div
   id="bundlestack-widget-{{ block.id }}"
-  class="bundlestack-widget"
+  class="bundlestack-widget bundlestack-widget--pending"
   {% if product %}
     data-product-id="gid://shopify/Product/{{ product.id }}"
     data-price-cents="{{ product.selected_or_first_available_variant.price }}"

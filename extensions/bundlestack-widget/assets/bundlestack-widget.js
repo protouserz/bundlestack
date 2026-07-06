@@ -295,6 +295,15 @@
     return clearBtn;
   }
 
+  function showWidget(root) {
+    root.classList.remove("bundlestack-widget--pending", "bundlestack-widget--hidden");
+  }
+
+  function hideWidget(root) {
+    root.classList.add("bundlestack-widget--hidden");
+    root.classList.remove("bundlestack-widget--pending");
+  }
+
   function initWidget(root) {
     const productId = root.dataset.productId;
     const proxyPath = root.dataset.proxyPath;
@@ -307,6 +316,7 @@
         tiersEl.innerHTML =
           '<p class="bundlestack-widget__empty">Save the theme, then preview the live store (not the editor).</p>';
       }
+      hideWidget(root);
       return;
     }
 
@@ -322,12 +332,12 @@
       .then((data) => {
         const offers = data.offers || [];
 
-        if (offers.length === 0) {
-          tiersEl.innerHTML =
-            '<p class="bundlestack-widget__empty">No bundle offers for this product.</p>';
+        if (offers.length === 0 || !offers[0]?.tiers?.length) {
+          hideWidget(root);
           return;
         }
 
+        showWidget(root);
         const offer = offers[0];
         tiersEl.innerHTML = offer.tiers
           .map((tier) => {

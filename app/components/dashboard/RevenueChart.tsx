@@ -1,7 +1,7 @@
 import styles from "./dashboard.module.css";
 
 type OfferPoint = {
-  createdAt: string;
+  createdAt: string | Date;
   revenueGenerated: number;
 };
 

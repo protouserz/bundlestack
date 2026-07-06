@@ -26,7 +26,8 @@ check "Homepage responds" "curl -sf -o /dev/null -w '%{http_code}' '$APP_URL' | 
 check "Privacy policy" "curl -sf '$APP_URL/privacy' | grep -qi 'Privacy Policy'"
 check "Support page" "curl -sf '$APP_URL/support' | grep -qi 'Support'"
 check "No read_orders in shopify.app.toml" "! grep -q read_orders shopify.app.toml"
-check "Compliance webhook routes exist" "test -f app/routes/webhooks.customers.data_request.tsx"
+check "Compliance webhook routes exist" "test -f app/routes/webhooks.compliance.tsx"
+check "Compliance topics in shopify.app.toml" "grep -q 'compliance_topics' shopify.app.toml"
 check "App icon present" "test -f docs/app-store/icon.png"
 check "Billing config in shopify.server" "grep -q shopifyBillingConfig app/shopify.server.ts"
 

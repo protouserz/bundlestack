@@ -14,7 +14,7 @@ function discountTypeLabel(offer: Offer) {
   return types.has("fixed") ? "Fixed amount" : "Percentage";
 }
 
-function formatDate(value: string) {
+function formatDate(value: string | Date) {
   return new Date(value).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",

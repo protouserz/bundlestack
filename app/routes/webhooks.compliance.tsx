@@ -14,15 +14,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   console.log(`Received ${topic} webhook for ${shop}`, payload);
 
-  const shopDomain =
-    typeof payload === "object" &&
-    payload !== null &&
-    "shop_domain" in payload &&
-    typeof payload.shop_domain === "string"
-      ? payload.shop_domain
-      : shop;
+  if (topic === "shop/redact") {
+    const shopDomain =
+      typeof payload === "object" &&
+      payload !== null &&
+      "shop_domain" in payload &&
+      typeof payload.shop_domain === "string"
+        ? payload.shop_domain
+        : shop;
 
-  await cleanupShopData(shopDomain);
+    await cleanupShopData(shopDomain);
+  }
 
   return webhookOk();
 };

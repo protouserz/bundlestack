@@ -1,13 +1,17 @@
 import type { ActionFunctionArgs } from "react-router";
-import { authenticate } from "../shopify.server";
+import {
+  authenticateWebhookRequest,
+  headers,
+  loader,
+  webhookOk,
+} from "../utils/webhooks.server";
 
-/**
- * BundleStack does not persist customer PII. Nothing to redact per customer.
- */
+export { headers, loader };
+
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { topic, shop, payload } = await authenticate.webhook(request);
+  const { topic, shop, payload } = await authenticateWebhookRequest(request);
 
   console.log(`Received ${topic} webhook for ${shop}`, payload);
 
-  return new Response();
+  return webhookOk();
 };

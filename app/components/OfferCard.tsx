@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Form, Link } from "react-router";
 import type { listOffers } from "../models/bundle.server";
 
 type Offer = Awaited<ReturnType<typeof listOffers>>[number];
@@ -6,9 +6,14 @@ type Offer = Awaited<ReturnType<typeof listOffers>>[number];
 type OfferCardProps = {
   offer: Offer;
   showTiers?: boolean;
+  showDelete?: boolean;
 };
 
-export function OfferCard({ offer, showTiers = false }: OfferCardProps) {
+export function OfferCard({
+  offer,
+  showTiers = false,
+  showDelete = false,
+}: OfferCardProps) {
   return (
     <s-box padding="large" borderWidth="base" borderRadius="base">
       <s-stack direction="block" gap="base">
@@ -44,6 +49,15 @@ export function OfferCard({ offer, showTiers = false }: OfferCardProps) {
             <s-text tone="neutral">
               ${offer.revenueGenerated.toFixed(2)} generated
             </s-text>
+          )}
+          {showDelete && (
+            <Form method="post">
+              <input type="hidden" name="intent" value="delete" />
+              <input type="hidden" name="offerId" value={offer.id} />
+              <s-button type="submit" tone="critical" variant="tertiary">
+                Delete
+              </s-button>
+            </Form>
           )}
         </s-stack>
       </s-stack>

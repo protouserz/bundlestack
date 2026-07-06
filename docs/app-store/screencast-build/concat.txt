@@ -1,0 +1,6 @@
+file '/Users/mac/Projects/bundlestack/docs/app-store/screencast-build/seg-intro.mp4'
+file '/Users/mac/Projects/bundlestack/docs/app-store/screencast-build/seg-feature.mp4'
+file '/Users/mac/Projects/bundlestack/docs/app-store/screencast-build/seg-dashboard.mp4'
+file '/Users/mac/Projects/bundlestack/docs/app-store/screencast-build/seg-offer.mp4'
+file '/Users/mac/Projects/bundlestack/docs/app-store/screencast-build/seg-storefront.mp4'
+file '/Users/mac/Projects/bundlestack/docs/app-store/screencast-build/seg-outro.mp4'

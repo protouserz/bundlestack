@@ -8,11 +8,16 @@
   class="bundlestack-widget"
   {% if product %}
     data-product-id="gid://shopify/Product/{{ product.id }}"
+    data-price-cents="{{ product.selected_or_first_available_variant.price }}"
+    data-currency="{{ cart.currency.iso_code }}"
   {% endif %}
   data-proxy-path="/apps/bundlestack/offers"
 >
-  <p class="bundlestack-widget__heading">{{ block.settings.heading }}</p>
-  <div class="bundlestack-widget__tiers" aria-live="polite">
+  <div class="bundlestack-widget__header">
+    <p class="bundlestack-widget__title">BundleStack</p>
+    <p class="bundlestack-widget__subtitle">{{ block.settings.heading }}</p>
+  </div>
+  <div class="bundlestack-widget__tiers" role="group" aria-label="{{ block.settings.heading }}" aria-live="polite">
     <p class="bundlestack-widget__loading">{{ 'bundlestack.widget.loading' | t }}</p>
   </div>
 </div>

@@ -60,7 +60,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       existing.discountIds,
     );
     await updateOfferDiscountIds(params.id!, discountIds);
-    return redirect(`/app/offers/${params.id}`);
+    return redirect("/app/offers");
   } catch (error) {
     if (error instanceof Response) {
       return { error: await error.text() };

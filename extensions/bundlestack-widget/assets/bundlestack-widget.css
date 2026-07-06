@@ -1,41 +1,174 @@
+/* BundleStack storefront widget — matches marketing mockup typography */
+
 .bundlestack-widget {
-  margin: 1rem 0;
-  padding: 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  --bs-navy: #0f172a;
+  --bs-emerald: #059669;
+  --bs-emerald-light: #34d399;
+  --bs-emerald-soft: #ecfdf5;
+  --bs-emerald-border: #6ee7b7;
+  --bs-surface: #ffffff;
+  --bs-border: #e2e8f0;
+  --bs-text-muted: #64748b;
+  --bs-radius: 12px;
+
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border: 1px solid var(--bs-border);
+  border-radius: var(--bs-radius);
+  background: var(--bs-surface);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--bs-navy);
 }
 
-.bundlestack-widget__heading {
-  font-weight: 600;
-  margin: 0 0 0.75rem;
+.bundlestack-widget__header {
+  margin-bottom: 1.125rem;
+}
+
+.bundlestack-widget__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--bs-navy);
+}
+
+.bundlestack-widget__subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--bs-text-muted);
+}
+
+.bundlestack-widget__tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
 }
 
 .bundlestack-widget__tier {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.5rem;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.04);
+  column-gap: 0.875rem;
+  row-gap: 0.25rem;
+  width: 100%;
+  padding: 1rem 1.125rem;
+  margin: 0;
+  border: 2px solid var(--bs-border);
+  border-radius: 10px;
+  background: var(--bs-surface);
   cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .bundlestack-widget__tier:hover {
-  background: rgba(0, 0, 0, 0.08);
+  border-color: var(--bs-emerald-border);
+  background: var(--bs-emerald-soft);
+}
+
+.bundlestack-widget__tier:focus-visible {
+  outline: none;
+  border-color: var(--bs-emerald);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
+}
+
+.bundlestack-widget__tier--selected {
+  border-color: var(--bs-emerald);
+  background: var(--bs-emerald-soft);
+}
+
+.bundlestack-widget__tier-radio {
+  grid-row: 1 / -1;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.bundlestack-widget__tier--selected .bundlestack-widget__tier-radio,
+.bundlestack-widget__tier:hover .bundlestack-widget__tier-radio {
+  border-color: var(--bs-emerald);
+}
+
+.bundlestack-widget__tier--selected .bundlestack-widget__tier-radio {
+  background: var(--bs-emerald);
+  box-shadow: inset 0 0 0 3px #fff;
 }
 
 .bundlestack-widget__tier-label {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--bs-navy);
+  letter-spacing: -0.01em;
+}
+
+.bundlestack-widget__tier-meta {
+  grid-column: 3;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.375rem;
+  text-align: right;
+}
+
+.bundlestack-widget__tier-badge {
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: var(--bs-emerald);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bundlestack-widget__tier-price {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--bs-emerald);
+  white-space: nowrap;
+}
+
+.bundlestack-widget__tier-price--regular {
+  color: var(--bs-text-muted);
   font-weight: 500;
 }
 
-.bundlestack-widget__tier-discount {
-  color: #008060;
-  font-weight: 600;
+.bundlestack-widget__tier-price-each {
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .bundlestack-widget__loading,
 .bundlestack-widget__empty {
-  color: rgba(0, 0, 0, 0.55);
   margin: 0;
+  padding: 1rem;
+  font-size: 0.9375rem;
+  color: var(--bs-text-muted);
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.bundlestack-widget__empty code {
+  font-size: 0.875rem;
+  background: #e2e8f0;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
 }

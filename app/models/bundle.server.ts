@@ -122,6 +122,12 @@ export async function deleteOffer(shop: string, id: string) {
   return serializeOffer(offer);
 }
 
+export async function deleteAllOffers(shop: string) {
+  const offers = await listOffers(shop);
+  await prisma.bundleOffer.deleteMany({ where: { shop } });
+  return offers;
+}
+
 export async function removeOfferRecord(id: string) {
   await prisma.bundleOffer.delete({ where: { id } });
 }

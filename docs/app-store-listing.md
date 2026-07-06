@@ -20,34 +20,17 @@ Quantity breaks & bundle discounts that boost AOV
 
 Turn single-item orders into bigger carts with tiered quantity-break offers — Buy 2 save 10%, Buy 3 save 15%, and more. Automatic Shopify discount sync and a product-page widget included.
 
-## App details (long description)
+## App details (long description) — use paragraphs only, NO bullet lists
 
-BundleStack helps Shopify merchants increase average order value with quantity-break offers that are fast to set up and easy for shoppers to understand.
+BundleStack helps merchants grow order value with quantity-break offers that are fast to set up and easy for shoppers to understand.
 
-**What merchants get**
+Merchants get unlimited tiered offers with a clean dashboard, a product picker with no manual ID copying, automatic Shopify discount sync when offers go active, a theme widget for product pages, a store health monitor with one-click fixes, and a clean uninstall that removes discounts and data.
 
-- Unlimited quantity-break offers with a clean admin dashboard
-- Product picker — no manual ID copying
-- Automatic Shopify discount creation when offers are activated
-- Theme app extension widget for product pages
-- Store health monitor with one-click fixes
-- Performance-based pricing — free until the app generates revenue
-- Clean uninstall — discounts and data removed automatically
+Create an offer, select products, define quantity tiers, set the offer to Active, and add the BundleStack block in the theme editor. Discounts apply automatically at checkout.
 
-**How it works**
+Built for consumables, supplements, coffee, skincare, apparel, and any catalog where buying more should save more.
 
-1. Create an offer and select products
-2. Define quantity tiers (min qty + discount %)
-3. Set status to Active — discounts sync to Shopify
-4. Add the BundleStack block in the theme editor
-
-**Built for**
-
-Consumables, supplements, coffee, skincare, apparel, and any catalog where buying more should save more.
-
-**Pricing**
-
-Free to install. Paid tiers scale with app-generated revenue — you only pay more when BundleStack earns more for your store. Charges are processed through Shopify Billing on a 30-day cycle.
+Free to install. Paid tiers scale with app-generated revenue and are billed through Shopify on a 30-day cycle.
 
 ## Search keywords
 

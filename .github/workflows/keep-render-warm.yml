@@ -1,0 +1,16 @@
+name: Keep Render warm
+
+# Render free tier sleeps after ~15 min idle. Ping every 14 min to avoid cold starts.
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping BundleStack production
+        run: |
+          curl -fsS -o /dev/null -w "Homepage: %{http_code}\n" "https://bundlestack-pfee.onrender.com/"
+          curl -fsS -o /dev/null -w "Privacy: %{http_code}\n" "https://bundlestack-pfee.onrender.com/privacy" || true

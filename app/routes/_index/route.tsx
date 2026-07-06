@@ -28,8 +28,8 @@ const FEATURES = [
   },
   {
     icon: "💰",
-    title: "Pay when you profit",
-    text: "Free to start. Plans scale with revenue BundleStack generates — you only pay more when the app earns more for you.",
+    title: "Simple pricing",
+    text: "Free to start with unlimited offers. Upgrade or downgrade plans anytime from the app — billed through Shopify.",
   },
 ];
 
@@ -81,8 +81,8 @@ export default function App() {
               <span className={styles.statLabel}>average setup</span>
             </div>
             <div className={styles.stat}>
-              <span className={styles.statValue}>$0</span>
-              <span className={styles.statLabel}>until you earn</span>
+              <span className={styles.statValue}>Free</span>
+              <span className={styles.statLabel}>plan available</span>
             </div>
           </div>
         </div>

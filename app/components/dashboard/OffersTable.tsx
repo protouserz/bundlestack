@@ -52,7 +52,7 @@ export function OffersTable({ offers }: OffersTableProps) {
                   <th>Products</th>
                   <th>Discount type</th>
                   <th>Created</th>
-                  <th>Revenue</th>
+                  <th>Redemptions</th>
                   <th aria-label="Actions" />
                 </tr>
               </thead>
@@ -81,7 +81,7 @@ export function OffersTable({ offers }: OffersTableProps) {
                     <td>{offer.productIds.length}</td>
                     <td>{discountTypeLabel(offer)}</td>
                     <td>{formatDate(offer.createdAt)}</td>
-                    <td>${offer.revenueGenerated.toFixed(2)}</td>
+                    <td>{offer.discountUses ?? 0}</td>
                     <td>
                       <Link className={styles.panelLink} to={`/app/offers/${offer.id}`}>
                         Edit

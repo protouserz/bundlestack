@@ -1,6 +1,6 @@
 export type BillingPlan = "free" | "starter" | "scale" | "pro";
 
-/** Minimum app-generated revenue to qualify for each plan tier. */
+/** Suggested monthly store volume for each plan tier. */
 export const PLAN_THRESHOLDS: Record<BillingPlan, number> = {
   free: 0,
   starter: 500,
@@ -23,10 +23,10 @@ export const PLAN_LABELS: Record<BillingPlan, string> = {
 };
 
 export const PLAN_REVENUE_CAPS: Record<BillingPlan, string> = {
-  free: "Up to $500 app revenue / mo",
-  starter: "Up to $2,000 app revenue / mo",
-  scale: "Up to $5,000 app revenue / mo",
-  pro: "Unlimited app revenue",
+  free: "Best for stores getting started",
+  starter: "For growing stores up to ~$2k/mo volume",
+  scale: "For scaling stores up to ~$5k/mo volume",
+  pro: "For high-volume stores with no cap",
 };
 
 export const PLAN_FEATURES: Record<BillingPlan, string[]> = {

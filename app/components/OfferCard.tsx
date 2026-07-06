@@ -38,8 +38,8 @@ export function OfferCard({
           </s-paragraph>
         ) : (
           <s-text tone="neutral">
-            {offer.tiers.length} tier(s) · ${offer.revenueGenerated.toFixed(2)}{" "}
-            generated · {offer.discountIds.length} discount(s) synced
+            {offer.tiers.length} tier(s) · {offer.discountUses ?? 0} redemptions ·{" "}
+            {offer.discountIds.length} discount(s) synced
           </s-text>
         )}
 
@@ -47,7 +47,7 @@ export function OfferCard({
           <Link to={`/app/offers/${offer.id}`}>Edit offer</Link>
           {showTiers && (
             <s-text tone="neutral">
-              ${offer.revenueGenerated.toFixed(2)} generated
+              {offer.discountUses ?? 0} redemptions
             </s-text>
           )}
           {showDelete && (

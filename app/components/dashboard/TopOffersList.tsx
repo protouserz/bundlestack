@@ -20,7 +20,7 @@ function tierSummary(offer: Offer) {
 
 export function TopOffersList({ offers }: TopOffersListProps) {
   const topOffers = [...offers]
-    .sort((a, b) => b.revenueGenerated - a.revenueGenerated)
+    .sort((a, b) => (b.discountUses ?? 0) - (a.discountUses ?? 0))
     .slice(0, 3);
 
   return (
@@ -44,7 +44,7 @@ export function TopOffersList({ offers }: TopOffersListProps) {
                 </p>
               </div>
               <span className={styles.topRevenue}>
-                ${offer.revenueGenerated.toFixed(2)}
+                {offer.discountUses ?? 0} uses
               </span>
             </li>
           ))}

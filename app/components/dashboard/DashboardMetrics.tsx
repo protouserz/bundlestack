@@ -9,7 +9,7 @@ import {
 type DashboardMetricsProps = {
   activeOffers: number;
   totalOffers: number;
-  revenue: number;
+  discountUses: number;
   health: ShopHealth;
 };
 
@@ -28,7 +28,7 @@ function healthScore(checks: ShopHealth["checks"]) {
 export function DashboardMetrics({
   activeOffers,
   totalOffers,
-  revenue,
+  discountUses,
   health,
 }: DashboardMetricsProps) {
   const score = healthScore(health.checks);
@@ -49,16 +49,16 @@ export function DashboardMetrics({
       </div>
 
       <div className={styles.metricCard}>
-        <p className={styles.metricLabel}>Revenue generated</p>
-        <p className={styles.metricValue}>${revenue.toFixed(2)}</p>
+        <p className={styles.metricLabel}>Discount redemptions</p>
+        <p className={styles.metricValue}>{discountUses}</p>
         <p className={styles.metricSubtext}>
-          {revenue > 0
-            ? "Tracked from bundle offer performance"
-            : "Starts tracking once offers drive sales"}
+          {discountUses > 0
+            ? "Synced from Shopify automatic discounts"
+            : "Updates when shoppers use your bundle tiers"}
         </p>
         <Sparkline
           className={styles.sparkline}
-          values={buildSparklineFromRevenue(revenue)}
+          values={buildSparklineFromRevenue(discountUses)}
         />
       </div>
 

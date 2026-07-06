@@ -90,7 +90,7 @@ export default function EditOffer() {
           initialTiers={offer.tiers}
           error={actionData?.error}
           isSubmitting={isSubmitting}
-          revenueGenerated={offer.revenueGenerated}
+          discountUses={offer.discountUses}
           discountCount={offer.discountIds.length}
           deleteButton={
             <s-button

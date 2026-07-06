@@ -29,7 +29,7 @@ type OfferFormProps = {
   error?: string;
   isSubmitting?: boolean;
   submitLabel?: string;
-  revenueGenerated?: number;
+  discountUses?: number;
   discountCount?: number;
   deleteButton?: ReactNode;
 };
@@ -52,7 +52,7 @@ export function OfferForm({
   error,
   isSubmitting = false,
   submitLabel,
-  revenueGenerated,
+  discountUses,
   discountCount,
   deleteButton,
 }: OfferFormProps) {
@@ -267,9 +267,9 @@ export function OfferForm({
               {mode === "edit" && (
                 <>
                   <li className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Revenue</span>
+                    <span className={styles.summaryLabel}>Redemptions</span>
                     <span className={styles.summaryValue}>
-                      ${(revenueGenerated ?? 0).toFixed(2)}
+                      {discountUses ?? 0}
                     </span>
                   </li>
                   <li className={styles.summaryItem}>

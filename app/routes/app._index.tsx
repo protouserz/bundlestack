@@ -14,32 +14,54 @@ import { TopOffersList } from "../components/dashboard/TopOffersList";
 import styles from "../components/dashboard/dashboard.module.css";
 import {
   ensureShopSettings,
+  getShopSettings,
   getShopStats,
   listOffers,
+  resolveBillingPlan,
+  setShopBillingPlan,
 } from "../models/bundle.server";
 import {
   getShopHealth,
   syncAllActiveOfferDiscounts,
   type HealthFixAction,
 } from "../models/health.server";
+import { syncDiscountUsesForShop } from "../models/usage.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
   const shop = session.shop;
 
   await ensureShopSettings(shop);
+  await syncDiscountUsesForShop(admin, shop);
 
-  const [stats, offers, health] = await Promise.all([
+  const [stats, offers, health, settings] = await Promise.all([
     getShopStats(shop),
     listOffers(shop),
     getShopHealth(admin, shop),
+    getShopSettings(shop),
   ]);
 
-  const billing = getBillingSummary(stats.totalRevenue);
+  const billingCheck = await billing.check();
+  const activeSubscriptionNames = billingCheck.appSubscriptions
+    .filter((subscription) => subscription.status === "ACTIVE")
+    .map((subscription) => subscription.name);
+  const currentPlan = resolveBillingPlan(
+    settings.billingPlan,
+    activeSubscriptionNames,
+  );
+
+  if (currentPlan !== settings.billingPlan) {
+    await setShopBillingPlan(shop, currentPlan);
+  }
+
+  const billingSummary = getBillingSummary(
+    currentPlan,
+    stats.totalDiscountUses,
+  );
 
   return {
     stats,
-    billing,
+    billing: billingSummary,
     health,
     offers,
   };
@@ -165,7 +187,7 @@ export default function Dashboard() {
         <DashboardMetrics
           activeOffers={stats.activeOffers}
           totalOffers={stats.totalOffers}
-          revenue={stats.totalRevenue}
+          discountUses={stats.totalDiscountUses}
           health={health}
         />
 

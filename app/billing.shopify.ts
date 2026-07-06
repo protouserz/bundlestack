@@ -2,6 +2,8 @@ import { BillingInterval } from "@shopify/shopify-app-react-router/server";
 import type { BillingConfigSubscriptionLineItemPlan } from "@shopify/shopify-api";
 import { PLAN_PRICES, type BillingPlan } from "./billing.plans";
 
+export type { BillingPlan };
+
 export const SHOPIFY_BILLING_PLANS = {
   STARTER: "BundleStack Starter",
   SCALE: "BundleStack Growth",
@@ -69,5 +71,17 @@ export function shopifyBillingConfig(): Record<
 }
 
 export function isBillingTestMode(): boolean {
+  if (process.env.NODE_ENV !== "production") {
+    return process.env.SHOPIFY_BILLING_TEST !== "false";
+  }
   return process.env.SHOPIFY_BILLING_TEST === "true";
+}
+
+export function getTierForShopifyPlan(
+  planName: string,
+): Exclude<BillingPlan, "free"> | null {
+  const entry = Object.entries(BILLING_PLAN_BY_TIER).find(
+    ([, name]) => name === planName,
+  );
+  return entry ? (entry[0] as Exclude<BillingPlan, "free">) : null;
 }

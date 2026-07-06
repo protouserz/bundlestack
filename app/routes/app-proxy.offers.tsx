@@ -10,13 +10,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const { session } = await authenticate.public.appProxy(request);
     shop = session?.shop ?? null;
   } catch {
-    // Allow local debugging; production requests must pass signature validation.
+    if (process.env.NODE_ENV === "production") {
+      return new Response(JSON.stringify({ offers: [], error: "unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   }
 
   shop ??= url.searchParams.get("shop");
 
   if (!shop) {
     return new Response(JSON.stringify({ offers: [], error: "missing shop" }), {
+      status: 400,
       headers: { "Content-Type": "application/json" },
     });
   }

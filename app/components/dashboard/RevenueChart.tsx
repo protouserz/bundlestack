@@ -2,7 +2,7 @@ import styles from "./dashboard.module.css";
 
 type OfferPoint = {
   createdAt: string | Date;
-  revenueGenerated: number;
+  discountUses?: number;
 };
 
 type RevenueChartProps = {
@@ -20,7 +20,8 @@ function buildSeries(offers: OfferPoint[]) {
   });
 
   for (const offer of offers) {
-    if (offer.revenueGenerated <= 0) continue;
+    const uses = offer.discountUses ?? 0;
+    if (uses <= 0) continue;
 
     const offerDate = new Date(offer.createdAt);
     offerDate.setHours(0, 0, 0, 0);
@@ -29,9 +30,9 @@ function buildSeries(offers: OfferPoint[]) {
       (entry) => entry.date.getTime() === offerDate.getTime(),
     );
     if (bucket) {
-      bucket.revenue += offer.revenueGenerated;
+      bucket.revenue += uses;
     } else {
-      buckets[buckets.length - 1].revenue += offer.revenueGenerated;
+      buckets[buckets.length - 1].revenue += uses;
     }
   }
 
@@ -76,10 +77,10 @@ export function RevenueChart({ offers }: RevenueChartProps) {
 
   return (
     <div className={styles.panel}>
-      <h2 className={styles.panelTitle}>Revenue over time</h2>
+      <h2 className={styles.panelTitle}>Discount redemptions over time</h2>
       {!hasRevenue ? (
         <div className={styles.chartEmpty}>
-          Revenue will appear here as bundle offers generate sales.
+          Redemption counts appear here once shoppers use your bundle tiers.
         </div>
       ) : (
         <div className={styles.chartWrap}>
@@ -108,7 +109,7 @@ export function RevenueChart({ offers }: RevenueChartProps) {
                   fontSize="11"
                   fill="#94a3b8"
                 >
-                  ${tick.value >= 1000 ? `${(tick.value / 1000).toFixed(1)}K` : tick.value.toFixed(0)}
+                  {tick.value >= 1000 ? `${(tick.value / 1000).toFixed(1)}K` : Math.round(tick.value)}
                 </text>
               </g>
             ))}

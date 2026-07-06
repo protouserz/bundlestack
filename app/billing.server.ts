@@ -43,8 +43,10 @@ export type BillingSummary = {
   alertAtEightyPercent: boolean;
 };
 
-export function getBillingSummary(revenueGenerated: number): BillingSummary {
-  const plan = getPlanForRevenue(revenueGenerated);
+export function getBillingSummary(
+  plan: BillingPlan,
+  discountUses: number,
+): BillingSummary {
   const nextPlan = getNextPlan(plan);
   const monthlyPrice = PLAN_PRICES[plan];
 
@@ -54,11 +56,11 @@ export function getBillingSummary(revenueGenerated: number): BillingSummary {
   if (nextPlan) {
     const nextThreshold = PLAN_THRESHOLDS[nextPlan];
     const currentThreshold = PLAN_THRESHOLDS[plan];
-    revenueUntilNextTier = Math.max(0, nextThreshold - revenueGenerated);
+    revenueUntilNextTier = Math.max(0, nextThreshold - discountUses);
     const range = nextThreshold - currentThreshold;
     progressToNextTier =
       range > 0
-        ? Math.min(100, ((revenueGenerated - currentThreshold) / range) * 100)
+        ? Math.min(100, ((discountUses - currentThreshold) / range) * 100)
         : 100;
   }
 
@@ -69,7 +71,7 @@ export function getBillingSummary(revenueGenerated: number): BillingSummary {
     plan,
     planLabel: PLAN_LABELS[plan],
     monthlyPrice,
-    revenueGenerated,
+    revenueGenerated: discountUses,
     nextPlan,
     nextPlanLabel: nextPlan ? PLAN_LABELS[nextPlan] : null,
     nextPlanPrice: nextPlan ? PLAN_PRICES[nextPlan] : null,
@@ -77,4 +79,8 @@ export function getBillingSummary(revenueGenerated: number): BillingSummary {
     progressToNextTier: Math.round(Math.max(0, progressToNextTier)),
     alertAtEightyPercent,
   };
+}
+
+export function isBillingPlan(value: string): value is BillingPlan {
+  return value === "free" || value === "starter" || value === "scale" || value === "pro";
 }

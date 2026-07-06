@@ -1,5 +1,6 @@
 import prisma from "../db.server";
-import { getPlanForRevenue } from "../billing.server";
+import { isBillingPlan, type BillingPlan } from "../billing.server";
+import { getTierForShopifyPlan } from "../billing.shopify";
 
 export type DiscountTier = {
   minQty: number;
@@ -33,6 +34,7 @@ export function serializeOffer(offer: {
   productIds: string;
   tiers: string;
   discountIds?: string;
+  discountUses?: number;
   revenueGenerated: number;
   createdAt: Date;
   updatedAt: Date;
@@ -147,14 +149,48 @@ export async function getShopStats(shop: string) {
   const offers = await prisma.bundleOffer.findMany({ where: { shop } });
 
   const activeOffers = offers.filter((o) => o.status === "active").length;
-  const totalRevenue = offers.reduce((sum, o) => sum + o.revenueGenerated, 0);
+  const totalDiscountUses = offers.reduce((sum, o) => sum + o.discountUses, 0);
+  const settings = await getShopSettings(shop);
 
   return {
     totalOffers: offers.length,
     activeOffers,
-    totalRevenue,
-    billingPlan: getPlanForRevenue(totalRevenue),
+    totalDiscountUses,
+    totalRevenue: totalDiscountUses,
+    billingPlan: settings.billingPlan,
   };
+}
+
+export async function getShopSettings(shop: string) {
+  return prisma.shopSettings.upsert({
+    where: { shop },
+    create: { shop },
+    update: {},
+  });
+}
+
+export async function setShopBillingPlan(shop: string, plan: BillingPlan) {
+  return prisma.shopSettings.upsert({
+    where: { shop },
+    create: { shop, billingPlan: plan },
+    update: { billingPlan: plan },
+  });
+}
+
+export function resolveBillingPlan(
+  storedPlan: string,
+  activeSubscriptionNames: string[],
+): BillingPlan {
+  for (const name of activeSubscriptionNames) {
+    const tier = getTierForShopifyPlan(name);
+    if (tier) return tier;
+  }
+
+  if (isBillingPlan(storedPlan)) {
+    return storedPlan;
+  }
+
+  return "free";
 }
 
 export async function ensureShopSettings(shop: string) {

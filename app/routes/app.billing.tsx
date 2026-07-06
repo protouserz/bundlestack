@@ -3,14 +3,14 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Form, Link, useLoaderData } from "react-router";
+import { Form, Link, redirect, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { ProgressBar } from "../components/ProgressBar";
 import { StatCard } from "../components/StatCard";
 import styles from "../components/ui.module.css";
 import {
   getShopifyPlanForTier,
+  getTierForShopifyPlan,
   isBillingTestMode,
   SHOPIFY_BILLING_PLANS,
 } from "../billing.shopify";
@@ -22,20 +22,47 @@ import {
   PLAN_REVENUE_CAPS,
   type BillingPlan,
 } from "../billing.plans";
-import { getBillingSummary } from "../billing.server";
-import { getShopStats } from "../models/bundle.server";
+import { getBillingSummary, isBillingPlan } from "../billing.server";
+import {
+  getShopSettings,
+  getShopStats,
+  resolveBillingPlan,
+  setShopBillingPlan,
+} from "../models/bundle.server";
+import { syncDiscountUsesForShop } from "../models/usage.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session, billing } = await authenticate.admin(request);
-  const stats = await getShopStats(session.shop);
-  const billingSummary = getBillingSummary(stats.totalRevenue);
-  const shopHandle = session.shop.replace(".myshopify.com", "");
-  const requiredShopifyPlan = getShopifyPlanForTier(billingSummary.plan);
+  const { session, billing, admin } = await authenticate.admin(request);
+  await syncDiscountUsesForShop(admin, session.shop);
+
+  const [stats, settings] = await Promise.all([
+    getShopStats(session.shop),
+    getShopSettings(session.shop),
+  ]);
 
   const billingCheck = await billing.check();
-  const activeSubscriptionNames = billingCheck.appSubscriptions.map(
+  const activeSubscriptions = billingCheck.appSubscriptions.filter(
+    (subscription) => subscription.status === "ACTIVE",
+  );
+  const activeSubscriptionNames = activeSubscriptions.map(
     (subscription) => subscription.name,
   );
+
+  const currentPlan = resolveBillingPlan(
+    settings.billingPlan,
+    activeSubscriptionNames,
+  );
+
+  if (currentPlan !== settings.billingPlan) {
+    await setShopBillingPlan(session.shop, currentPlan);
+  }
+
+  const billingSummary = getBillingSummary(
+    currentPlan,
+    stats.totalDiscountUses,
+  );
+  const shopHandle = session.shop.replace(".myshopify.com", "");
+  const requiredShopifyPlan = getShopifyPlanForTier(currentPlan);
   const hasActiveShopifySubscription =
     requiredShopifyPlan === null ||
     activeSubscriptionNames.includes(requiredShopifyPlan);
@@ -44,6 +71,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   return {
     billing: billingSummary,
+    activeSubscriptions,
     activeSubscriptionNames,
     hasActiveShopifySubscription,
     needsSubscriptionApproval,
@@ -53,33 +81,93 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   };
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { billing } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const plan = formData.get("plan");
-  const allowedPlans = new Set<string>(Object.values(SHOPIFY_BILLING_PLANS));
+async function cancelActiveSubscriptions(
+  billing: Awaited<ReturnType<typeof authenticate.admin>>["billing"],
+) {
+  const billingCheck = await billing.check();
 
-  if (typeof plan !== "string" || !allowedPlans.has(plan)) {
-    throw new Response("Invalid billing plan", { status: 400 });
+  for (const subscription of billingCheck.appSubscriptions) {
+    if (subscription.status !== "ACTIVE") continue;
+    await billing.cancel({
+      subscriptionId: subscription.id,
+      isTest: isBillingTestMode(),
+      prorate: true,
+    });
   }
+}
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { billing, session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const intent = String(formData.get("intent") ?? "");
   const appUrl = process.env.SHOPIFY_APP_URL || new URL(request.url).origin;
 
-  return billing.request({
-    plan: plan as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
-    isTest: isBillingTestMode(),
-    returnUrl: `${appUrl}/app/billing`,
-  });
+  if (intent === "cancel") {
+    await cancelActiveSubscriptions(billing);
+    await setShopBillingPlan(session.shop, "free");
+    return redirect("/app/billing");
+  }
+
+  if (intent === "subscribe") {
+    const planValue = String(formData.get("plan") ?? "");
+    if (!isBillingPlan(planValue)) {
+      throw new Response("Invalid billing plan", { status: 400 });
+    }
+
+    const plan = planValue as BillingPlan;
+
+    if (plan === "free") {
+      await cancelActiveSubscriptions(billing);
+      await setShopBillingPlan(session.shop, "free");
+      return redirect("/app/billing");
+    }
+
+    const shopifyPlan = getShopifyPlanForTier(plan);
+    if (!shopifyPlan) {
+      throw new Response("Invalid billing plan", { status: 400 });
+    }
+
+    await cancelActiveSubscriptions(billing);
+    await setShopBillingPlan(session.shop, plan);
+
+    return billing.request({
+      plan: shopifyPlan,
+      isTest: isBillingTestMode(),
+      returnUrl: `${appUrl}/app/billing`,
+    });
+  }
+
+  const legacyPlan = formData.get("plan");
+  const allowedPlans = new Set<string>(Object.values(SHOPIFY_BILLING_PLANS));
+  if (typeof legacyPlan === "string" && allowedPlans.has(legacyPlan)) {
+    const tier = getTierForShopifyPlan(legacyPlan);
+    if (tier) {
+      await setShopBillingPlan(session.shop, tier);
+      return billing.request({
+        plan: legacyPlan as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
+        isTest: isBillingTestMode(),
+        returnUrl: `${appUrl}/app/billing`,
+      });
+    }
+  }
+
+  throw new Response("Invalid billing action", { status: 400 });
 };
 
 function PlanCard({
   plan,
-  isCurrent,
+  currentPlan,
+  hasActiveSubscription,
 }: {
   plan: BillingPlan;
-  isCurrent: boolean;
+  currentPlan: BillingPlan;
+  hasActiveSubscription: boolean;
 }) {
   const features = PLAN_FEATURES[plan];
+  const isCurrent = plan === currentPlan;
+  const planIndex = PLAN_ORDER.indexOf(plan);
+  const currentIndex = PLAN_ORDER.indexOf(currentPlan);
+  const isUpgrade = planIndex > currentIndex;
 
   return (
     <s-box
@@ -106,6 +194,29 @@ function PlanCard({
             <s-text key={feature}>✓ {feature}</s-text>
           ))}
         </s-stack>
+
+        {!isCurrent && (
+          <Form method="post">
+            <input type="hidden" name="intent" value="subscribe" />
+            <input type="hidden" name="plan" value={plan} />
+            <s-button type="submit" variant={isUpgrade ? "primary" : "tertiary"}>
+              {plan === "free"
+                ? "Switch to Free"
+                : isUpgrade
+                  ? `Upgrade to ${PLAN_LABELS[plan]}`
+                  : `Downgrade to ${PLAN_LABELS[plan]}`}
+            </s-button>
+          </Form>
+        )}
+
+        {isCurrent && plan !== "free" && hasActiveSubscription && (
+          <Form method="post">
+            <input type="hidden" name="intent" value="cancel" />
+            <s-button type="submit" variant="tertiary">
+              Cancel paid subscription
+            </s-button>
+          </Form>
+        )}
       </s-stack>
     </s-box>
   );
@@ -119,6 +230,7 @@ export default function BillingPage() {
     requiredShopifyPlan,
     billingTestMode,
     themeEditorUrl,
+    activeSubscriptions,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -126,9 +238,9 @@ export default function BillingPage() {
       <s-stack direction="block" gap="large">
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
           <s-text tone="neutral">
-            Performance-based pricing — free to start, upgrade only when
-            BundleStack generates more revenue for your store. Paid tiers are
-            billed through Shopify on a 30-day cycle.
+            Choose the plan that fits your store. Upgrade or downgrade anytime
+            from this page — paid plans are billed through Shopify on a 30-day
+            cycle.
           </s-text>
         </s-box>
 
@@ -136,12 +248,13 @@ export default function BillingPage() {
           <s-banner tone="warning">
             <s-stack direction="block" gap="base">
               <s-text>
-                Your store qualifies for the {billing.planLabel} plan (
-                {formatPlanPrice(billing.plan)}/mo). Approve the subscription
-                in Shopify to continue on this tier.
+                You selected the {billing.planLabel} plan (
+                {formatPlanPrice(billing.plan)}/mo). Approve the subscription in
+                Shopify to activate billing.
               </s-text>
               <Form method="post">
-                <input type="hidden" name="plan" value={requiredShopifyPlan} />
+                <input type="hidden" name="intent" value="subscribe" />
+                <input type="hidden" name="plan" value={billing.plan} />
                 <s-button type="submit" variant="primary">
                   Approve {billing.planLabel} in Shopify
                 </s-button>
@@ -158,15 +271,6 @@ export default function BillingPage() {
 
         <s-section heading="Current plan">
           <s-stack direction="block" gap="large">
-            {billing.alertAtEightyPercent && (
-              <s-banner tone="warning">
-                You are at {billing.progressToNextTier}% toward the{" "}
-                {billing.nextPlanLabel} plan ({formatPlanPrice(billing.nextPlan!)}/
-                mo). Tiers upgrade automatically when BundleStack generates more
-                revenue — you only pay more when the app earns more for you.
-              </s-banner>
-            )}
-
             <div className={styles.gridStats}>
               <StatCard label="Plan" value={billing.planLabel} />
               <StatCard
@@ -178,8 +282,8 @@ export default function BillingPage() {
                 }
               />
               <StatCard
-                label="Revenue generated"
-                value={`$${billing.revenueGenerated.toFixed(2)}`}
+                label="Discount redemptions"
+                value={String(billing.revenueGenerated)}
               />
             </div>
 
@@ -187,33 +291,11 @@ export default function BillingPage() {
               <s-box padding="large" borderWidth="base" borderRadius="base">
                 <s-stack direction="block" gap="base">
                   <s-heading>Shopify subscription</s-heading>
-                  {activeSubscriptionNames.map((name) => (
-                    <s-text key={name}>Active: {name}</s-text>
-                  ))}
-                </s-stack>
-              </s-box>
-            )}
-
-            {billing.nextPlan && billing.revenueUntilNextTier !== null && (
-              <s-box padding="large" borderWidth="base" borderRadius="base">
-                <s-stack direction="block" gap="base">
-                  <s-text>
-                    Next tier: {billing.nextPlanLabel} (
-                    {formatPlanPrice(billing.nextPlan)}/mo)
-                  </s-text>
-                  {billing.revenueUntilNextTier > 0 ? (
-                    <>
-                      <s-text tone="neutral">
-                        ${billing.revenueUntilNextTier.toFixed(2)} more app revenue
-                        until upgrade · {billing.progressToNextTier}% there
-                      </s-text>
-                      <ProgressBar value={billing.progressToNextTier} />
-                    </>
-                  ) : (
-                    <s-text tone="neutral">
-                      You qualify for the highest tier based on app revenue.
+                  {activeSubscriptions.map((subscription) => (
+                    <s-text key={subscription.id}>
+                      Active: {subscription.name}
                     </s-text>
-                  )}
+                  ))}
                 </s-stack>
               </s-box>
             )}
@@ -223,8 +305,8 @@ export default function BillingPage() {
         <s-section heading="Pricing plans">
           <s-stack direction="block" gap="large">
             <s-paragraph>
-              Pay less than leading bundle apps at every tier — Growth is $14.99
-              for up to $5k revenue vs $29.99 elsewhere.
+              Pick a plan below. You can change plans without reinstalling the
+              app or contacting support.
             </s-paragraph>
 
             <div className={styles.gridCards}>
@@ -232,7 +314,8 @@ export default function BillingPage() {
                 <PlanCard
                   key={plan}
                   plan={plan}
-                  isCurrent={billing.plan === plan}
+                  currentPlan={billing.plan}
+                  hasActiveSubscription={activeSubscriptionNames.length > 0}
                 />
               ))}
             </div>
@@ -242,16 +325,19 @@ export default function BillingPage() {
                 <s-heading>How billing works</s-heading>
                 <s-unordered-list>
                   <s-list-item>
-                    Free until your store generates $500/mo through BundleStack
-                    offers
+                    Free includes unlimited offers, the theme widget, and
+                    automatic Shopify discounts
                   </s-list-item>
                   <s-list-item>
-                    Tiers upgrade automatically when revenue crosses each
-                    threshold
+                    Select a paid plan when you are ready — approve the charge in
+                    Shopify
                   </s-list-item>
                   <s-list-item>
-                    When you qualify for a paid tier, approve the charge in
-                    Shopify — billing runs on a 30-day cycle
+                    Switch plans or return to Free anytime from this page
+                  </s-list-item>
+                  <s-list-item>
+                    Discount redemptions are counted from your synced Shopify
+                    automatic discounts
                   </s-list-item>
                   <s-list-item>
                     Uninstalling stops new charges immediately

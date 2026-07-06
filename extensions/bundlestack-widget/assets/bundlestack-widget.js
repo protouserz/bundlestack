@@ -110,6 +110,33 @@
     return true;
   }
 
+  function getDefaultQuantity(widgetRoot) {
+    const input = findQuantityInput(widgetRoot);
+    if (!input) return "1";
+    const min = parseInt(input.min, 10);
+    return String(!Number.isNaN(min) && min > 0 ? min : 1);
+  }
+
+  function updateClearButton(widgetRoot) {
+    const clearBtn = widgetRoot.querySelector(".bundlestack-widget__clear");
+    if (!clearBtn) return;
+    const hasSelection = Boolean(
+      widgetRoot.querySelector(".bundlestack-widget__tier--selected")
+    );
+    clearBtn.classList.toggle("bundlestack-widget__clear--visible", hasSelection);
+    clearBtn.hidden = !hasSelection;
+  }
+
+  function clearSelection(widgetRoot) {
+    widgetRoot.querySelectorAll(".bundlestack-widget__tier").forEach((el) => {
+      el.classList.remove("bundlestack-widget__tier--selected");
+      el.setAttribute("aria-pressed", "false");
+    });
+    delete widgetRoot.dataset.selectedQty;
+    setProductQuantity(widgetRoot, getDefaultQuantity(widgetRoot));
+    updateClearButton(widgetRoot);
+  }
+
   function syncQuantityFromSelection(widgetRoot) {
     const qty = getSelectedQty(widgetRoot);
     if (qty) setProductQuantity(widgetRoot, qty);
@@ -205,6 +232,15 @@
   }
 
   function selectTier(root, tierEl, qty) {
+    const isAlreadySelected = tierEl.classList.contains(
+      "bundlestack-widget__tier--selected"
+    );
+
+    if (isAlreadySelected) {
+      clearSelection(root);
+      return;
+    }
+
     root.querySelectorAll(".bundlestack-widget__tier").forEach((el) => {
       el.classList.remove("bundlestack-widget__tier--selected");
       el.setAttribute("aria-pressed", "false");
@@ -212,6 +248,7 @@
     tierEl.classList.add("bundlestack-widget__tier--selected");
     tierEl.setAttribute("aria-pressed", "true");
     setProductQuantity(root, qty);
+    updateClearButton(root);
   }
 
   function syncSelectedFromQuantity(root) {
@@ -241,6 +278,21 @@
     } else {
       delete root.dataset.selectedQty;
     }
+    updateClearButton(root);
+  }
+
+  function ensureClearButton(root, tiersEl) {
+    let clearBtn = root.querySelector(".bundlestack-widget__clear");
+    if (!clearBtn) {
+      clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.className = "bundlestack-widget__clear";
+      clearBtn.textContent = "Clear selection";
+      clearBtn.hidden = true;
+      clearBtn.addEventListener("click", () => clearSelection(root));
+      tiersEl.insertAdjacentElement("afterend", clearBtn);
+    }
+    return clearBtn;
   }
 
   function initWidget(root) {
@@ -310,6 +362,9 @@
             selectTier(root, tierEl, tierEl.dataset.minQty);
           });
         });
+
+        ensureClearButton(root, tiersEl);
+        updateClearButton(root);
 
         const qtyInput = findQuantityInput(root);
         if (qtyInput) {

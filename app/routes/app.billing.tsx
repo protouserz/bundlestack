@@ -3,15 +3,19 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Form, Link, redirect, useLoaderData } from "react-router";
+import { Form, Link, redirect, useActionData, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { StatCard } from "../components/StatCard";
 import styles from "../components/ui.module.css";
 import {
+  billingReturnUrl,
+  formatBillingError,
+  resolveBillingTestMode,
+} from "../billing-session.server";
+import {
   getShopifyPlanForTier,
   getTierForShopifyPlan,
-  isBillingTestMode,
   SHOPIFY_BILLING_PLANS,
 } from "../billing.shopify";
 import {
@@ -35,9 +39,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing, admin } = await authenticate.admin(request);
   await syncDiscountUsesForShop(admin, session.shop);
 
-  const [stats, settings] = await Promise.all([
+  const [stats, settings, billingTestMode] = await Promise.all([
     getShopStats(session.shop),
     getShopSettings(session.shop),
+    resolveBillingTestMode(admin),
   ]);
 
   const billingCheck = await billing.check();
@@ -76,13 +81,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     hasActiveShopifySubscription,
     needsSubscriptionApproval,
     requiredShopifyPlan,
-    billingTestMode: isBillingTestMode(),
+    billingTestMode,
     themeEditorUrl: `https://admin.shopify.com/store/${shopHandle}/themes/current/editor?context=apps`,
   };
 };
 
 async function cancelActiveSubscriptions(
   billing: Awaited<ReturnType<typeof authenticate.admin>>["billing"],
+  isTest: boolean,
 ) {
   const billingCheck = await billing.check();
 
@@ -90,20 +96,21 @@ async function cancelActiveSubscriptions(
     if (subscription.status !== "ACTIVE") continue;
     await billing.cancel({
       subscriptionId: subscription.id,
-      isTest: isBillingTestMode(),
+      isTest,
       prorate: true,
     });
   }
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
+  const { billing, session, admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = String(formData.get("intent") ?? "");
-  const appUrl = process.env.SHOPIFY_APP_URL || new URL(request.url).origin;
+  const returnUrl = billingReturnUrl(request);
+  const isTest = await resolveBillingTestMode(admin);
 
   if (intent === "cancel") {
-    await cancelActiveSubscriptions(billing);
+    await cancelActiveSubscriptions(billing, isTest);
     await setShopBillingPlan(session.shop, "free");
     return redirect("/app/billing");
   }
@@ -111,30 +118,34 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (intent === "subscribe") {
     const planValue = String(formData.get("plan") ?? "");
     if (!isBillingPlan(planValue)) {
-      throw new Response("Invalid billing plan", { status: 400 });
+      return { error: "Invalid billing plan selected." };
     }
 
     const plan = planValue as BillingPlan;
 
     if (plan === "free") {
-      await cancelActiveSubscriptions(billing);
+      await cancelActiveSubscriptions(billing, isTest);
       await setShopBillingPlan(session.shop, "free");
       return redirect("/app/billing");
     }
 
     const shopifyPlan = getShopifyPlanForTier(plan);
     if (!shopifyPlan) {
-      throw new Response("Invalid billing plan", { status: 400 });
+      return { error: "Invalid billing plan selected." };
     }
 
-    await cancelActiveSubscriptions(billing);
-    await setShopBillingPlan(session.shop, plan);
+    try {
+      await cancelActiveSubscriptions(billing, isTest);
+      await setShopBillingPlan(session.shop, plan);
 
-    return billing.request({
-      plan: shopifyPlan,
-      isTest: isBillingTestMode(),
-      returnUrl: `${appUrl}/app/billing`,
-    });
+      return await billing.request({
+        plan: shopifyPlan,
+        isTest,
+        returnUrl,
+      });
+    } catch (error) {
+      return { error: formatBillingError(error) };
+    }
   }
 
   const legacyPlan = formData.get("plan");
@@ -142,16 +153,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (typeof legacyPlan === "string" && allowedPlans.has(legacyPlan)) {
     const tier = getTierForShopifyPlan(legacyPlan);
     if (tier) {
-      await setShopBillingPlan(session.shop, tier);
-      return billing.request({
-        plan: legacyPlan as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
-        isTest: isBillingTestMode(),
-        returnUrl: `${appUrl}/app/billing`,
-      });
+      try {
+        await setShopBillingPlan(session.shop, tier);
+        return await billing.request({
+          plan: legacyPlan as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
+          isTest,
+          returnUrl,
+        });
+      } catch (error) {
+        return { error: formatBillingError(error) };
+      }
     }
   }
 
-  throw new Response("Invalid billing action", { status: 400 });
+  return { error: "Invalid billing action." };
 };
 
 function PlanCard({
@@ -223,6 +238,7 @@ function PlanCard({
 }
 
 export default function BillingPage() {
+  const actionData = useActionData<typeof action>();
   const {
     billing,
     activeSubscriptionNames,
@@ -236,6 +252,10 @@ export default function BillingPage() {
   return (
     <s-page heading="Billing & uninstall">
       <s-stack direction="block" gap="large">
+        {actionData?.error && (
+          <s-banner tone="critical">{actionData.error}</s-banner>
+        )}
+
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
           <s-text tone="neutral">
             Choose the plan that fits your store. Upgrade or downgrade anytime
@@ -261,8 +281,8 @@ export default function BillingPage() {
               </Form>
               {billingTestMode && (
                 <s-text tone="neutral">
-                  Test billing mode is on — charges appear as test subscriptions
-                  on development stores.
+                  Test billing mode is on for this store — charges appear as test
+                  subscriptions until you install on a live store.
                 </s-text>
               )}
             </s-stack>

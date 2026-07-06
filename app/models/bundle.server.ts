@@ -149,7 +149,10 @@ export async function getShopStats(shop: string) {
   const offers = await prisma.bundleOffer.findMany({ where: { shop } });
 
   const activeOffers = offers.filter((o) => o.status === "active").length;
-  const totalDiscountUses = offers.reduce((sum, o) => sum + o.discountUses, 0);
+  const totalDiscountUses = offers.reduce(
+    (sum, o) => sum + (o.discountUses ?? 0),
+    0,
+  );
   const settings = await getShopSettings(shop);
 
   return {

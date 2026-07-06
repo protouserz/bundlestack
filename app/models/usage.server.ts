@@ -32,27 +32,35 @@ export async function syncDiscountUsesForShop(
   const offers = await listOffersRaw(shop);
   let totalUses = 0;
 
-  for (const offer of offers) {
-    const discountIds = parseDiscountIds(offer.discountIds);
-    let offerUses = 0;
+  try {
+    for (const offer of offers) {
+      const discountIds = parseDiscountIds(offer.discountIds);
+      let offerUses = 0;
 
-    for (const discountId of discountIds) {
-      offerUses += await fetchDiscountUsageCount(admin, discountId);
+      for (const discountId of discountIds) {
+        offerUses += await fetchDiscountUsageCount(admin, discountId);
+      }
+
+      await prisma.bundleOffer.update({
+        where: { id: offer.id },
+        data: { discountUses: offerUses },
+      });
+
+      totalUses += offerUses;
     }
 
-    await prisma.bundleOffer.update({
-      where: { id: offer.id },
-      data: { discountUses: offerUses },
+    await prisma.shopSettings.upsert({
+      where: { shop },
+      create: { shop, totalRevenue: totalUses },
+      update: { totalRevenue: totalUses },
     });
-
-    totalUses += offerUses;
+  } catch (error) {
+    console.error("Failed to sync discount uses:", error);
+    totalUses = offers.reduce(
+      (sum, offer) => sum + (offer.discountUses ?? 0),
+      0,
+    );
   }
-
-  await prisma.shopSettings.upsert({
-    where: { shop },
-    create: { shop, totalRevenue: totalUses },
-    update: { totalRevenue: totalUses },
-  });
 
   return totalUses;
 }

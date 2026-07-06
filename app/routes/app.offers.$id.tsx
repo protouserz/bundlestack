@@ -1,10 +1,9 @@
-import { useState } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Form, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Form, redirect, useActionData, useFetcher, useLoaderData, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -15,11 +14,10 @@ import {
   removeOfferRecord,
   updateOffer,
   updateOfferDiscountIds,
-  type DiscountTier,
 } from "../models/bundle.server";
 import { deleteShopifyDiscounts, replaceOfferDiscounts } from "../models/discount.server";
-import { ProductPickerField } from "../components/ProductPickerField";
-import { fieldStyle, labelStyle } from "../components/fieldStyles";
+import { OfferForm } from "../components/offer-form/OfferForm";
+import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
@@ -76,158 +74,39 @@ export default function EditOffer() {
   const { offer, products } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const deleteFetcher = useFetcher<typeof action>();
   const isSubmitting = navigation.state === "submitting";
-  const [tiers, setTiers] = useState<DiscountTier[]>(offer.tiers);
-
-  const updateTier = (index: number, field: keyof DiscountTier, value: string) => {
-    setTiers((current) =>
-      current.map((tier, i) => {
-        if (i !== index) return tier;
-        if (field === "minQty" || field === "discountValue") {
-          return { ...tier, [field]: Number(value) || 0 };
-        }
-        return { ...tier, [field]: value };
-      }),
-    );
-  };
+  const isDeleting = deleteFetcher.state !== "idle";
 
   return (
-    <s-page heading="Edit offer">
-      <Form method="post">
-        <s-stack direction="block" gap="large">
-          <input type="hidden" name="tiers" value={JSON.stringify(tiers)} />
-
-          <s-section heading="Offer details">
-            <s-stack direction="block" gap="large">
-              {actionData?.error && (
-                <s-banner tone="critical">{actionData.error}</s-banner>
-              )}
-
-              <label style={labelStyle}>
-                <s-text>Offer title</s-text>
-                <input
-                  name="title"
-                  required
-                  defaultValue={offer.title}
-                  style={fieldStyle}
-                />
-              </label>
-
-              <label style={labelStyle}>
-                <s-text>Status</s-text>
-                <select
-                  name="status"
-                  defaultValue={offer.status}
-                  style={fieldStyle}
-                >
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="paused">Paused</option>
-                </select>
-              </label>
-
-              <s-stack direction="block" gap="base">
-                <s-text>Products</s-text>
-                <ProductPickerField initialProducts={products} />
-              </s-stack>
-            </s-stack>
-          </s-section>
-
-          <s-section heading="Quantity tiers">
-            <s-stack direction="block" gap="large">
-              {tiers.map((tier, index) => (
-                <s-box
-                  key={index}
-                  padding="base"
-                  borderWidth="base"
-                  borderRadius="base"
-                >
-                  <s-stack direction="inline" gap="base">
-                    <label>
-                      Min qty
-                      <input
-                        type="number"
-                        min={2}
-                        value={tier.minQty}
-                        onChange={(e) => updateTier(index, "minQty", e.target.value)}
-                        style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
-                      />
-                    </label>
-                    <label>
-                      Discount %
-                      <input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={tier.discountValue}
-                        onChange={(e) =>
-                          updateTier(index, "discountValue", e.target.value)
-                        }
-                        style={{ width: "80px", padding: "8px", marginLeft: "8px" }}
-                      />
-                    </label>
-                    <label>
-                      Label
-                      <input
-                        value={tier.label ?? ""}
-                        onChange={(e) => updateTier(index, "label", e.target.value)}
-                        style={{ width: "160px", padding: "8px", marginLeft: "8px" }}
-                      />
-                    </label>
-                  </s-stack>
-                </s-box>
-              ))}
-            </s-stack>
-          </s-section>
-
-          <s-stack direction="inline" gap="base" paddingBlockStart="large">
-            <s-button type="submit" {...(isSubmitting ? { loading: true } : {})}>
-              Save changes
+    <s-page>
+      <Form method="post" className={styles.offerPage}>
+        <OfferForm
+          mode="edit"
+          defaultTitle={offer.title}
+          defaultStatus={offer.status}
+          defaultOfferType={offer.offerType}
+          initialProducts={products}
+          initialTiers={offer.tiers}
+          error={actionData?.error}
+          isSubmitting={isSubmitting}
+          revenueGenerated={offer.revenueGenerated}
+          discountCount={offer.discountIds.length}
+          deleteButton={
+            <s-button
+              type="button"
+              tone="critical"
+              variant="tertiary"
+              {...(isDeleting ? { loading: true } : {})}
+              onClick={() =>
+                deleteFetcher.submit({ intent: "delete" }, { method: "post" })
+              }
+            >
+              Delete offer
             </s-button>
-            <s-button href="/app/offers" variant="tertiary">
-              Back
-            </s-button>
-          </s-stack>
-        </s-stack>
+          }
+        />
       </Form>
-
-      <s-section slot="aside" heading="Summary">
-        <s-box padding="large" borderWidth="base" borderRadius="base">
-          <s-stack direction="block" gap="base">
-            <s-text tone="neutral">Offer</s-text>
-            <s-heading>{offer.title}</s-heading>
-            <s-text tone="neutral">
-              {offer.tiers.length} tier(s) · {offer.discountIds.length} discount(s)
-              synced
-            </s-text>
-          </s-stack>
-        </s-box>
-      </s-section>
-
-      <s-section slot="aside" heading="Performance">
-        <s-box padding="large" borderWidth="base" borderRadius="base">
-          <s-stack direction="block" gap="base">
-            <s-text tone="neutral">Revenue generated</s-text>
-            <s-heading>${offer.revenueGenerated.toFixed(2)}</s-heading>
-          </s-stack>
-        </s-box>
-      </s-section>
-
-      <s-section slot="aside" heading="Danger zone">
-        <s-box padding="large" borderWidth="base" borderRadius="base">
-          <s-stack direction="block" gap="base">
-            <s-text tone="neutral">
-              Permanently delete this offer and remove its Shopify discounts.
-            </s-text>
-            <Form method="post">
-              <input type="hidden" name="intent" value="delete" />
-              <s-button type="submit" tone="critical" variant="tertiary">
-                Delete offer
-              </s-button>
-            </Form>
-          </s-stack>
-        </s-box>
-      </s-section>
     </s-page>
   );
 }

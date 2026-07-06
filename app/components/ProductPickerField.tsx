@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import styles from "./offer-form/offer-form.module.css";
 
 export type SelectedProduct = {
   id: string;
@@ -10,21 +11,29 @@ type ProductPickerFieldProps = {
   name?: string;
   initialProducts?: SelectedProduct[];
   required?: boolean;
+  browseLabel?: string;
+  onProductsChange?: (count: number) => void;
 };
 
 export function ProductPickerField({
   name = "productIds",
   initialProducts = [],
   required = true,
+  browseLabel = "Browse products",
+  onProductsChange,
 }: ProductPickerFieldProps) {
   const shopify = useAppBridge();
   const [products, setProducts] = useState<SelectedProduct[]>(initialProducts);
+
+  useEffect(() => {
+    onProductsChange?.(products.length);
+  }, [products.length, onProductsChange]);
 
   const openPicker = useCallback(async () => {
     const selected = await shopify.resourcePicker({
       type: "product",
       multiple: true,
-      selectionIds: products.map((p) => ({ id: p.id })),
+      selectionIds: products.map((product) => ({ id: product.id })),
     });
 
     if (!selected || selected.length === 0) return;
@@ -38,61 +47,61 @@ export function ProductPickerField({
   }, [shopify, products]);
 
   const removeProduct = (id: string) => {
-    setProducts((current) => current.filter((p) => p.id !== id));
+    setProducts((current) => current.filter((product) => product.id !== id));
   };
 
-  const hiddenValue = products.map((p) => p.id).join("\n");
+  const hiddenValue = products.map((product) => product.id).join("\n");
 
   return (
     <div>
-      <input type="hidden" name={name} value={hiddenValue} required={required && products.length === 0} />
+      <input
+        type="hidden"
+        name={name}
+        value={hiddenValue}
+        required={required && products.length === 0}
+      />
 
-      <s-stack direction="block" gap="base">
+      <div className={styles.productToolbar}>
+        <input
+          className={styles.searchInput}
+          type="text"
+          placeholder="Search products"
+          readOnly
+          onFocus={openPicker}
+          aria-label="Search products"
+        />
         <s-button type="button" variant="secondary" onClick={openPicker}>
-          Select products
+          {browseLabel}
         </s-button>
+      </div>
 
-        {products.length === 0 ? (
-          <s-text tone="neutral">No products selected. Use the picker to choose products for this offer.</s-text>
-        ) : (
-          <s-stack direction="block" gap="base">
-            {products.map((product) => (
-              <s-box
-                key={product.id}
-                padding="base"
-                borderWidth="base"
-                borderRadius="base"
+      {products.length === 0 ? (
+        <p className={styles.emptyProducts}>
+          No products selected. Click browse to choose products for this offer.
+        </p>
+      ) : (
+        <ul className={styles.productList}>
+          {products.map((product) => (
+            <li key={product.id} className={styles.productRow}>
+              <div className={styles.productThumb} aria-hidden="true">
+                📦
+              </div>
+              <div className={styles.productMeta}>
+                <p className={styles.productName}>{product.title}</p>
+                <p className={styles.productSubtext}>Included in offer</p>
+              </div>
+              <button
+                type="button"
+                className={styles.removeButton}
+                onClick={() => removeProduct(product.id)}
+                aria-label={`Remove ${product.title}`}
               >
-                <s-stack direction="inline" gap="base">
-                  <s-text>{product.title}</s-text>
-                  <s-text tone="neutral">
-                    <span
-                      style={{
-                        display: "inline-block",
-                        maxWidth: "280px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        verticalAlign: "bottom",
-                      }}
-                      title={product.id}
-                    >
-                      {product.id}
-                    </span>
-                  </s-text>
-                  <s-button
-                    type="button"
-                    variant="tertiary"
-                    onClick={() => removeProduct(product.id)}
-                  >
-                    Remove
-                  </s-button>
-                </s-stack>
-              </s-box>
-            ))}
-          </s-stack>
-        )}
-      </s-stack>
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

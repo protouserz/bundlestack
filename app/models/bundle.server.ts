@@ -168,6 +168,7 @@ export async function ensureShopSettings(shop: string) {
 export function parseOfferForm(formData: FormData): BundleOfferInput {
   const title = String(formData.get("title") ?? "").trim();
   const status = String(formData.get("status") ?? "draft");
+  const offerType = String(formData.get("offerType") ?? "quantity_break");
   const productIdsRaw = String(formData.get("productIds") ?? "");
   const tiersRaw = String(formData.get("tiers") ?? "[]");
 
@@ -199,7 +200,7 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     throw new Response("At least one quantity tier is required", { status: 400 });
   }
 
-  return { title, status, productIds, tiers };
+  return { title, status, offerType, productIds, tiers };
 }
 
 export async function cleanupShopData(shop: string) {

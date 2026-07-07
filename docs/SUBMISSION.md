@@ -41,6 +41,27 @@ If `dev.shopify.com/.../distribution` shows a black **"This store will be right 
    - URL that fails
    - `x-request-id` from Chrome DevTools → Network → failed request → Headers
 
+### Embedded app checks stuck on “pending”
+
+Partners shows two items under **Embedded app checks**:
+
+- Using the latest App Bridge script loaded from Shopify’s CDN
+- Using session tokens for user authentication
+
+These are **not** instant code scans. Shopify collects **telemetry** when a merchant uses your app **inside the admin iframe** (every ~2 hours). If the app never loads successfully, the checks stay pending.
+
+**Do this (in order):**
+
+1. **Wake production** — open https://bundlestack-pfee.onrender.com/health and wait until you see `{"ok":true,"service":"bundlestack"}` (up to ~60s on free tier). Do **not** open the app in Shopify until this returns OK.
+2. **Open the app in admin** — https://admin.shopify.com/store/bundlestack-dev/apps/bundlestack — then **reload** if you previously saw the Render splash.
+3. **Use a normal browser window** with ad blockers and script blockers **disabled** for `*.myshopify.com` and `bundlestack-pfee.onrender.com`.
+4. **Click through the app** for 2–3 minutes: Dashboard → Offers → open an offer → Billing. Each navigation should hit your backend.
+5. **Verify session tokens** — DevTools → Network → filter `bundlestack-pfee`. Requests to `/app/...` should include `Authorization: Bearer eyJ...`. If that header is missing, the session-token check will not pass.
+6. **Verify App Bridge** — Network should show `app-bridge.js` from `cdn.shopify.com/shopifycloud/`.
+7. **Wait** — recheck Partners after **2–48 hours**. If still pending after real usage, contact [Partner Support](https://partners.shopify.com/support) and ask for manual embedded-check verification (app ID `393084436481`).
+
+**"WELCOME TO RENDER" splash in the iframe?** That means the app never loaded — embedded checks **cannot pass** until you see the real BundleStack dashboard. Wake `/health` first, then reload the app in admin. For App Store submission, upgrade Render to **Starter ($7/mo)** so the service never sleeps; GitHub keep-warm alone is unreliable on free tier.
+
 ### Direct links (use after logging in via partners.shopify.com)
 
 | Page | URL |

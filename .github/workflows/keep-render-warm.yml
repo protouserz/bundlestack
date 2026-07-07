@@ -1,16 +1,30 @@
 name: Keep Render warm
 
-# Render free tier sleeps after ~15 min idle. Ping every 14 min to avoid cold starts.
+# Render free tier sleeps after ~15 min idle. GitHub scheduled workflows often
+# run less frequently than the cron (delays up to 1h), so ping every 5 min and
+# wait until the real app responds — not Render's cold-start splash page.
 on:
   schedule:
-    - cron: "*/14 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Ping BundleStack production
+      - name: Wake BundleStack until app is live
         run: |
-          curl -fsS -o /dev/null -w "Homepage: %{http_code}\n" "https://bundlestack-pfee.onrender.com/"
-          curl -fsS -o /dev/null -w "Privacy: %{http_code}\n" "https://bundlestack-pfee.onrender.com/privacy" || true
+          set -euo pipefail
+          URL="https://bundlestack-pfee.onrender.com/health"
+          for attempt in $(seq 1 18); do
+            body="$(curl -fsS "$URL" 2>/dev/null || true)"
+            if echo "$body" | grep -q '"ok":true'; then
+              echo "App warm on attempt $attempt"
+              exit 0
+            fi
+            echo "Attempt $attempt: still cold-starting, retrying in 10s..."
+            sleep 10
+          done
+          echo "App did not become warm in time"
+          exit 1

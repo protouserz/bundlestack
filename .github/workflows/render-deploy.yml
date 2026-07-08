@@ -10,16 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deploy
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
         env:
           DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
+          if [ -z "${DEPLOY_HOOK}" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL is not set in repo secrets."
+            echo "Add your Render deploy hook URL to enable auto-deploy on push."
+            echo "Or use Manual Deploy in the Render dashboard."
+            exit 0
+          fi
           echo "Triggering Render deploy..."
           curl -fsS -X POST "$DEPLOY_HOOK"
           echo "Deploy hook fired."
-
-      - name: No deploy hook configured
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL == '' }}
-        run: |
-          echo "Set RENDER_DEPLOY_HOOK_URL in GitHub repo secrets to auto-trigger Render."
-          echo "Or use Manual Deploy in the Render dashboard."

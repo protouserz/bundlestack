@@ -81,8 +81,8 @@ export default function App() {
               <span className={styles.statLabel}>average setup</span>
             </div>
             <div className={styles.stat}>
-              <span className={styles.statValue}>Free</span>
-              <span className={styles.statLabel}>plan available</span>
+              <span className={styles.statValue}>Unlimited</span>
+              <span className={styles.statLabel}>offers on free plan</span>
             </div>
           </div>
         </div>

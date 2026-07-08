@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import styles from "./offer-form/offer-form.module.css";
 
@@ -24,10 +24,15 @@ export function ProductPickerField({
 }: ProductPickerFieldProps) {
   const shopify = useAppBridge();
   const [products, setProducts] = useState<SelectedProduct[]>(initialProducts);
+  const onProductsChangeRef = useRef(onProductsChange);
 
   useEffect(() => {
-    onProductsChange?.(products.length);
-  }, [products.length, onProductsChange]);
+    onProductsChangeRef.current = onProductsChange;
+  }, [onProductsChange]);
+
+  useEffect(() => {
+    onProductsChangeRef.current?.(products.length);
+  }, [products.length]);
 
   const openPicker = useCallback(async () => {
     const selected = await shopify.resourcePicker({

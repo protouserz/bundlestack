@@ -56,7 +56,7 @@ These are **not** instant code scans. Shopify collects **telemetry** when a merc
 2. **Open the app in admin** — https://admin.shopify.com/store/bundlestack-dev/apps/bundlestack — then **reload** if you previously saw the Render splash.
 3. **Use a normal browser window** with ad blockers and script blockers **disabled** for `*.myshopify.com` and `bundlestack-pfee.onrender.com`.
 4. **Click through the app** for 2–3 minutes: Dashboard → Offers → open an offer → Billing. Each navigation should hit your backend.
-5. **Verify session tokens** — DevTools → Network → filter `bundlestack-pfee`. Requests to `/app/...` should include `Authorization: Bearer eyJ...`. If that header is missing, the session-token check will not pass.
+5. **Verify session tokens** — DevTools → Network → **clear the filter** (embedded apps do **not** call `onrender.com` in the browser — Shopify proxies everything through `admin.shopify.com`). Filter by `apps/bundlestack` or `bundlestack`, click **Offers**, and open the `.data` or document request. Check **Request URL** for `id_token=eyJ...` on first load, or **Request Headers** for `Authorization: Bearer eyJ...` on navigations.
 6. **Verify App Bridge** — Network should show `app-bridge.js` from `cdn.shopify.com/shopifycloud/`.
 7. **Wait** — recheck Partners after **2–48 hours**. If still pending after real usage, contact [Partner Support](https://partners.shopify.com/support) and ask for manual embedded-check verification (app ID `393084436481`).
 

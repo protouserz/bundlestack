@@ -14,7 +14,9 @@ export { headers, loader };
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { shop, session, topic, admin } = await authenticateWebhookRequest(request);
 
-  console.log(`Received ${topic} webhook for ${shop}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`Received ${topic} webhook for ${shop}`);
+  }
 
   if (admin) {
     try {

@@ -1,6 +1,7 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
-import { listOffers } from "./bundle.server";
+import { listOffers, type DiscountTier } from "./bundle.server";
 import { parseDiscountIds } from "./discount.server";
+import { fetchDiscountNodesByIds } from "../utils/graphql.server";
 
 export type HealthFixAction = {
   intent: string;
@@ -23,29 +24,22 @@ export type ShopHealth = {
   themeEditorUrl: string;
 };
 
-async function discountExists(
-  admin: AdminApiContext,
-  discountId: string,
-): Promise<boolean> {
-  const response = await admin.graphql(
-    `#graphql
-      query discountNode($id: ID!) {
-        discountNode(id: $id) {
-          id
-        }
-      }`,
-    { variables: { id: discountId } },
-  );
-  const json = await response.json();
-  return Boolean(json.data?.discountNode?.id);
-}
+type SerializedOffer = {
+  id: string;
+  title: string;
+  status: string;
+  productIds: string[];
+  tiers: DiscountTier[];
+  discountIds: string[];
+};
 
 export async function getShopHealth(
   admin: AdminApiContext,
   shop: string,
+  offersInput?: SerializedOffer[],
 ): Promise<ShopHealth> {
   const checks: HealthCheck[] = [];
-  const offers = await listOffers(shop);
+  const offers = offersInput ?? (await listOffers(shop));
   const activeOffers = offers.filter((o) => o.status === "active");
 
   if (activeOffers.length === 0) {
@@ -93,11 +87,8 @@ export async function getShopHealth(
   }
 
   const allDiscountIds = activeOffers.flatMap((o) => o.discountIds);
-  let missingInShopify = 0;
-  for (const id of allDiscountIds) {
-    const exists = await discountExists(admin, id);
-    if (!exists) missingInShopify += 1;
-  }
+  const discountNodes = await fetchDiscountNodesByIds(admin, allDiscountIds);
+  const missingInShopify = allDiscountIds.filter((id) => !discountNodes.has(id)).length;
 
   if (missingInShopify > 0) {
     checks.push({

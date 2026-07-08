@@ -32,14 +32,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const shop = session.shop;
 
   await ensureShopSettings(shop);
-  await syncDiscountUsesForShop(admin, shop);
 
-  const [stats, offers, health, settings] = await Promise.all([
-    getShopStats(shop),
-    listOffers(shop),
-    getShopHealth(admin, shop),
+  const offers = await listOffers(shop);
+
+  const [settings, health] = await Promise.all([
     getShopSettings(shop),
+    getShopHealth(admin, shop, offers),
+    syncDiscountUsesForShop(admin, shop),
   ]);
+
+  const stats = await getShopStats(shop);
 
   const billingCheck = await billing.check();
   const activeSubscriptionNames = billingCheck.appSubscriptions

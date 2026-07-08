@@ -1,45 +1,28 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import prisma from "../db.server";
+import { fetchDiscountNodesByIds } from "../utils/graphql.server";
 import { listOffersRaw } from "./bundle.server";
 import { parseDiscountIds } from "./discount.server";
-
-async function fetchDiscountUsageCount(
-  admin: AdminApiContext,
-  discountId: string,
-): Promise<number> {
-  const response = await admin.graphql(
-    `#graphql
-      query discountUsage($id: ID!) {
-        discountNode(id: $id) {
-          discount {
-            ... on DiscountAutomaticBasic {
-              asyncUsageCount
-            }
-          }
-        }
-      }`,
-    { variables: { id: discountId } },
-  );
-
-  const json = await response.json();
-  return json.data?.discountNode?.discount?.asyncUsageCount ?? 0;
-}
 
 export async function syncDiscountUsesForShop(
   admin: AdminApiContext,
   shop: string,
 ): Promise<number> {
   const offers = await listOffersRaw(shop);
+  const allDiscountIds = offers.flatMap((offer) =>
+    parseDiscountIds(offer.discountIds),
+  );
+  const discountNodes = await fetchDiscountNodesByIds(admin, allDiscountIds);
+
   let totalUses = 0;
 
   try {
     for (const offer of offers) {
       const discountIds = parseDiscountIds(offer.discountIds);
-      let offerUses = 0;
-
-      for (const discountId of discountIds) {
-        offerUses += await fetchDiscountUsageCount(admin, discountId);
-      }
+      const offerUses = discountIds.reduce((sum, discountId) => {
+        const node = discountNodes.get(discountId);
+        return sum + (node?.discount?.asyncUsageCount ?? 0);
+      }, 0);
 
       await prisma.bundleOffer.update({
         where: { id: offer.id },

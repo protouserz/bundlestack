@@ -37,10 +37,11 @@ import { syncDiscountUsesForShop } from "../models/usage.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing, admin } = await authenticate.admin(request);
-  await syncDiscountUsesForShop(admin, session.shop);
 
   const [stats, settings, billingTestMode] = await Promise.all([
-    getShopStats(session.shop),
+    syncDiscountUsesForShop(admin, session.shop).then(() =>
+      getShopStats(session.shop),
+    ),
     getShopSettings(session.shop),
     resolveBillingTestMode(admin),
   ]);

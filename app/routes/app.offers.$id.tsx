@@ -1,9 +1,16 @@
+import { useState } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Form, redirect, useActionData, useFetcher, useLoaderData, useNavigation } from "react-router";
+import {
+  Form,
+  redirect,
+  useActionData,
+  useFetcher,
+  useLoaderData,
+} from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -73,15 +80,22 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 export default function EditOffer() {
   const { offer, products } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
   const deleteFetcher = useFetcher<typeof action>();
-  const isSubmitting = navigation.state === "submitting";
+  const [formKey, setFormKey] = useState(0);
   const isDeleting = deleteFetcher.state !== "idle";
 
   return (
-    <s-page>
-      <Form method="post" className={styles.offerPage}>
+    <s-page heading="Edit offer">
+      <Form
+        key={formKey}
+        method="post"
+        className={styles.offerPage}
+        data-save-bar
+        data-discard-confirmation
+        onReset={() => setFormKey((current) => current + 1)}
+      >
         <OfferForm
+          key={formKey}
           mode="edit"
           defaultTitle={offer.title}
           defaultStatus={offer.status}
@@ -89,7 +103,6 @@ export default function EditOffer() {
           initialProducts={products}
           initialTiers={offer.tiers}
           error={actionData?.error}
-          isSubmitting={isSubmitting}
           discountUses={offer.discountUses}
           discountCount={offer.discountIds.length}
           deleteButton={

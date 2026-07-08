@@ -1,0 +1,9 @@
+[[extensions]]
+name = "t:name"
+handle = "bundlestack-discount-link"
+type = "admin_link"
+uid = "bfee7df4-f5db-0e21-82d0-aae7448a62c7413d7c29"
+
+[[extensions.targeting]]
+target = "admin.discount-index.action.link"
+url = "/app/offers/new"

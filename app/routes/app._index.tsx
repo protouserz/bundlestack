@@ -3,13 +3,14 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Link, useFetcher, useLoaderData } from "react-router";
+import { Link, redirect, useFetcher, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getBillingSummary } from "../billing.server";
 import { DashboardMetrics } from "../components/dashboard/DashboardMetrics";
 import { OffersTable } from "../components/dashboard/OffersTable";
 import { RevenueChart } from "../components/dashboard/RevenueChart";
+import { ThemeWidgetStatus } from "../components/dashboard/ThemeWidgetStatus";
 import { TopOffersList } from "../components/dashboard/TopOffersList";
 import styles from "../components/dashboard/dashboard.module.css";
 import {
@@ -18,6 +19,7 @@ import {
   getShopStats,
   listOffers,
   resolveBillingPlan,
+  setOnboardingDone,
   setShopBillingPlan,
 } from "../models/bundle.server";
 import {
@@ -35,13 +37,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const offers = await listOffers(shop);
 
-  const [settings, health] = await Promise.all([
+  const [settings, health, stats] = await Promise.all([
     getShopSettings(shop),
     getShopHealth(admin, shop, offers),
-    syncDiscountUsesForShop(admin, shop),
+    getShopStats(shop),
   ]);
 
-  const stats = await getShopStats(shop);
+  if (stats.totalOffers > 0 && !settings.onboardingDone) {
+    await setOnboardingDone(shop, true);
+    settings.onboardingDone = true;
+  }
 
   const billingCheck = await billing.check();
   const activeSubscriptionNames = billingCheck.appSubscriptions
@@ -66,6 +71,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     billing: billingSummary,
     health,
     offers,
+    onboardingDone: settings.onboardingDone,
+    themeEditorUrl: health.themeEditorUrl,
   };
 };
 
@@ -95,6 +102,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         message: `Synced discounts for ${synced} active offer(s).`,
       },
     };
+  }
+
+  if (intent === "refresh-stats") {
+    await syncDiscountUsesForShop(admin, session.shop);
+    return redirect("/app");
+  }
+
+  if (intent === "dismiss-onboarding") {
+    await setOnboardingDone(session.shop, true);
+    return redirect("/app");
   }
 
   return null;
@@ -142,34 +159,29 @@ function formatDateRange() {
 }
 
 export default function Dashboard() {
-  const { stats, billing, health, offers } = useLoaderData<typeof loader>();
+  const { stats, billing, health, offers, onboardingDone, themeEditorUrl } =
+    useLoaderData<typeof loader>();
   const fixFetcher = useFetcher<typeof action>();
+  const onboardingFetcher = useFetcher<typeof action>();
+  const statsFetcher = useFetcher<typeof action>();
   const fixResult = fixFetcher.data?.fixResult;
   const showHealthDetails =
     health.overall !== "healthy" || health.checks.some((c) => c.fix);
+  const showWelcome = !onboardingDone && stats.totalOffers === 0;
 
   return (
-    <s-page>
+    <s-page heading="Dashboard">
       <s-button slot="primary-action" href="/app/offers/new">
         Create offer
       </s-button>
 
       <div className={styles.dashboard}>
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.headerTitle}>Dashboard</h1>
-            <p className={styles.headerSubtitle}>
-              Overview of your BundleStack performance
-            </p>
-          </div>
-          <div className={styles.dateBadge} aria-label="Reporting period">
-            <span aria-hidden="true">📅</span>
-            {formatDateRange()}
-          </div>
-        </header>
+        <s-text tone="neutral">
+          Reporting period: {formatDateRange()}
+        </s-text>
 
-        {stats.totalOffers === 0 && (
-          <div className={styles.welcomeBanner}>
+        {showWelcome && (
+          <s-banner tone="info">
             <s-stack direction="block" gap="base">
               <s-heading>Welcome to BundleStack</s-heading>
               <s-text tone="neutral">
@@ -181,10 +193,18 @@ export default function Dashboard() {
                 <s-button href="/app/billing" variant="tertiary">
                   View pricing
                 </s-button>
+                <onboardingFetcher.Form method="post">
+                  <input type="hidden" name="intent" value="dismiss-onboarding" />
+                  <s-button type="submit" variant="tertiary">
+                    Dismiss
+                  </s-button>
+                </onboardingFetcher.Form>
               </s-stack>
             </s-stack>
-          </div>
+          </s-banner>
         )}
+
+        <ThemeWidgetStatus themeEditorUrl={themeEditorUrl} />
 
         <DashboardMetrics
           activeOffers={stats.activeOffers}
@@ -192,6 +212,17 @@ export default function Dashboard() {
           discountUses={stats.totalDiscountUses}
           health={health}
         />
+
+        <statsFetcher.Form method="post">
+          <input type="hidden" name="intent" value="refresh-stats" />
+          <s-button
+            type="submit"
+            variant="tertiary"
+            {...(statsFetcher.state !== "idle" ? { loading: true } : {})}
+          >
+            Refresh redemption stats
+          </s-button>
+        </statsFetcher.Form>
 
         <div className={styles.midRow}>
           <RevenueChart offers={offers} />

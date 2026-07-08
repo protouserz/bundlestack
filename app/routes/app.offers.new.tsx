@@ -28,8 +28,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const input = parseOfferForm(formData);
     const offer = await createOffer(session.shop, input);
     const discountIds = await replaceOfferDiscounts(admin, offer, []);
-    const saved = await updateOfferDiscountIds(offer.id, discountIds);
-    return redirect(`/app/offers/${saved.id}`);
+    await updateOfferDiscountIds(offer.id, discountIds);
+    return redirect("/app/offers");
   } catch (error) {
     if (error instanceof Response) {
       return { error: await error.text() };

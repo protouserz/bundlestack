@@ -207,6 +207,14 @@ export async function ensureShopSettings(shop: string) {
   });
 }
 
+export async function setOnboardingDone(shop: string, done = true) {
+  return prisma.shopSettings.upsert({
+    where: { shop },
+    create: { shop, onboardingDone: done },
+    update: { onboardingDone: done },
+  });
+}
+
 export function parseOfferForm(formData: FormData): BundleOfferInput {
   const title = String(formData.get("title") ?? "").trim();
   const status = String(formData.get("status") ?? "draft");

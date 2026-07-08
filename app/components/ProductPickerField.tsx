@@ -25,6 +25,7 @@ export function ProductPickerField({
   const shopify = useAppBridge();
   const [products, setProducts] = useState<SelectedProduct[]>(initialProducts);
   const onProductsChangeRef = useRef(onProductsChange);
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     onProductsChangeRef.current = onProductsChange;
@@ -33,6 +34,18 @@ export function ProductPickerField({
   useEffect(() => {
     onProductsChangeRef.current?.(products.length);
   }, [products.length]);
+
+  const hiddenValue = products.map((product) => product.id).join("\n");
+
+  useEffect(() => {
+    const input = hiddenInputRef.current;
+    if (!input) return;
+
+    if (input.value !== hiddenValue) {
+      input.value = hiddenValue;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }, [hiddenValue]);
 
   const openPicker = useCallback(async () => {
     const selected = await shopify.resourcePicker({
@@ -55,14 +68,13 @@ export function ProductPickerField({
     setProducts((current) => current.filter((product) => product.id !== id));
   };
 
-  const hiddenValue = products.map((product) => product.id).join("\n");
-
   return (
     <div>
       <input
+        ref={hiddenInputRef}
         type="hidden"
         name={name}
-        value={hiddenValue}
+        defaultValue={hiddenValue}
         required={required && products.length === 0}
       />
 

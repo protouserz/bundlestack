@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import type { DiscountTier } from "../../models/bundle.server";
 import { ProductPickerField, type SelectedProduct } from "../ProductPickerField";
@@ -27,8 +27,6 @@ type OfferFormProps = {
   initialProducts?: SelectedProduct[];
   initialTiers?: DiscountTier[];
   error?: string;
-  isSubmitting?: boolean;
-  submitLabel?: string;
   discountUses?: number;
   discountCount?: number;
   deleteButton?: ReactNode;
@@ -50,8 +48,6 @@ export function OfferForm({
   initialProducts = [],
   initialTiers = DEFAULT_TIERS,
   error,
-  isSubmitting = false,
-  submitLabel,
   discountUses,
   discountCount,
   deleteButton,
@@ -61,6 +57,18 @@ export function OfferForm({
   const [status, setStatus] = useState(defaultStatus);
   const [offerType, setOfferType] = useState(defaultOfferType);
   const [productCount, setProductCount] = useState(initialProducts.length);
+  const tiersInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const input = tiersInputRef.current;
+    if (!input) return;
+
+    const value = JSON.stringify(tiers);
+    if (input.value !== value) {
+      input.value = value;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }, [tiers]);
 
   const updateTier = (index: number, field: keyof DiscountTier, value: string) => {
     setTiers((current) =>
@@ -103,16 +111,12 @@ export function OfferForm({
     setProductCount(count);
   }, []);
 
-  const pageTitle = mode === "create" ? "Create offer" : "Edit offer";
-  const saveLabel = submitLabel ?? (mode === "create" ? "Save offer" : "Save changes");
-
   return (
     <>
       <div className={styles.pageHeader}>
         <Link className={styles.backLink} to="/app/offers" aria-label="Back to offers">
-          ←
+          ← Back to offers
         </Link>
-        <h1 className={styles.pageTitle}>{pageTitle}</h1>
       </div>
 
       {error && (
@@ -121,7 +125,12 @@ export function OfferForm({
         </div>
       )}
 
-      <input type="hidden" name="tiers" value={JSON.stringify(tiers)} />
+      <input
+        ref={tiersInputRef}
+        type="hidden"
+        name="tiers"
+        defaultValue={JSON.stringify(tiers)}
+      />
       <input type="hidden" name="offerType" value={offerType} />
 
       <div className={styles.layout}>
@@ -312,15 +321,6 @@ export function OfferForm({
             </section>
           )}
         </aside>
-      </div>
-
-      <div className={styles.footer}>
-        <s-button href="/app/offers" variant="tertiary">
-          Cancel
-        </s-button>
-        <s-button type="submit" {...(isSubmitting ? { loading: true } : {})}>
-          {saveLabel}
-        </s-button>
       </div>
     </>
   );

@@ -31,7 +31,6 @@ export default function App() {
       <NavMenu>
         <Link to="/app">Dashboard</Link>
         <Link to="/app/offers">Offers</Link>
-        <Link to="/app/offers/new">Create offer</Link>
         <Link to="/app/billing">Billing</Link>
       </NavMenu>
       <Outlet />

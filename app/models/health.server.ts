@@ -111,20 +111,6 @@ export async function getShopHealth(
   }
 
   checks.push({
-    id: "theme-block",
-    label: "Theme widget",
-    status: "warning",
-    message:
-      "Confirm the BundleStack block is on your product page in the theme editor.",
-    fix: {
-      intent: "open-theme-editor",
-      label: "Open theme editor",
-      external: true,
-      href: `https://admin.shopify.com/store/${shop.replace(".myshopify.com", "")}/themes/current/editor?context=apps`,
-    },
-  });
-
-  checks.push({
     id: "app-proxy",
     label: "Storefront API",
     status: "ok",

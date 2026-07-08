@@ -1,6 +1,7 @@
 import prisma from "../db.server";
 import { isBillingPlan, type BillingPlan } from "../billing.server";
 import { getTierForShopifyPlan } from "../billing.shopify";
+import { safeJsonParse } from "../utils/json.server";
 
 export type DiscountTier = {
   minQty: number;
@@ -18,11 +19,11 @@ export type BundleOfferInput = {
 };
 
 function parseTiers(raw: string): DiscountTier[] {
-  return JSON.parse(raw) as DiscountTier[];
+  return safeJsonParse<DiscountTier[]>(raw, []);
 }
 
 function parseProductIds(raw: string): string[] {
-  return JSON.parse(raw) as string[];
+  return safeJsonParse<string[]>(raw, []);
 }
 
 export function serializeOffer(offer: {
@@ -43,7 +44,9 @@ export function serializeOffer(offer: {
     ...offer,
     productIds: parseProductIds(offer.productIds),
     tiers: parseTiers(offer.tiers),
-    discountIds: offer.discountIds ? (JSON.parse(offer.discountIds) as string[]) : [],
+    discountIds: offer.discountIds
+      ? safeJsonParse<string[]>(offer.discountIds, [])
+      : [],
   };
 }
 
@@ -216,7 +219,12 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     .map((id) => id.trim())
     .filter(Boolean);
 
-  const tiers = JSON.parse(tiersRaw) as DiscountTier[];
+  let tiers: DiscountTier[];
+  try {
+    tiers = JSON.parse(tiersRaw) as DiscountTier[];
+  } catch {
+    throw new Response("Invalid tier data", { status: 400 });
+  }
 
   if (!title) {
     throw new Response("Title is required", { status: 400 });

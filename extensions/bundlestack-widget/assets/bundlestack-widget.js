@@ -389,7 +389,7 @@
       })
       .catch(() => {
         tiersEl.innerHTML =
-          '<p class="bundlestack-widget__empty">Unable to load offers. Is <code>npm run dev</code> running?</p>';
+          '<p class="bundlestack-widget__empty">Unable to load offers right now. Please refresh the page.</p>';
       });
   }
 

@@ -9,9 +9,11 @@ import {
 export { headers, loader };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { topic, shop, payload } = await authenticateWebhookRequest(request);
+  const { topic, shop } = await authenticateWebhookRequest(request);
 
-  console.log(`Received ${topic} webhook for ${shop}`, payload);
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`Received ${topic} webhook for ${shop}`);
+  }
 
   return webhookOk();
 };

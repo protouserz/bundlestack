@@ -15,7 +15,6 @@ ENV PORT=3000
 ENV DATABASE_URL=file:./prisma/production.sqlite
 
 RUN npx prisma generate && npm run build && npm prune --omit=dev
-RUN npx prisma generate
 
 EXPOSE 3000
 

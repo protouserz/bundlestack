@@ -13,7 +13,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { payload, session, topic, shop } =
     await authenticateWebhookRequest(request);
 
-  console.log(`Received ${topic} webhook for ${shop}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`Received ${topic} webhook for ${shop}`);
+  }
 
   const current = payload.current as string[];
   if (session) {

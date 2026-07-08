@@ -18,11 +18,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
   }
 
-  shop ??= url.searchParams.get("shop");
+  // Never trust ?shop= in production — only signed app-proxy sessions are valid.
+  if (!shop && process.env.NODE_ENV !== "production") {
+    shop = url.searchParams.get("shop");
+  }
 
   if (!shop) {
-    return new Response(JSON.stringify({ offers: [], error: "missing shop" }), {
-      status: 400,
+    return new Response(JSON.stringify({ offers: [], error: "unauthorized" }), {
+      status: 401,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -41,7 +44,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return new Response(JSON.stringify({ offers }), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "no-store",
+      "Cache-Control": "public, max-age=60, stale-while-revalidate=120",
     },
   });
 };

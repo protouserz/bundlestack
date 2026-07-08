@@ -87,9 +87,9 @@ Mandatory webhooks are configured in `shopify.app.toml` and handled at:
 
 | Topic | Route |
 |-------|-------|
-| `customers/data_request` | `/webhooks/customers/data_request` |
-| `customers/redact` | `/webhooks/customers/redact` |
-| `shop/redact` | `/webhooks/shop/redact` |
+| `customers/data_request` | `/webhooks/compliance` |
+| `customers/redact` | `/webhooks/compliance` |
+| `shop/redact` | `/webhooks/compliance` |
 | `app/uninstalled` | `/webhooks/app/uninstalled` |
 
 Test locally:
@@ -98,6 +98,8 @@ Test locally:
 shopify app webhook trigger --topic customers/data_request
 shopify app webhook trigger --topic shop/redact
 ```
+
+Both compliance topics route to `/webhooks/compliance`.
 
 ## Step 4 — Partners Dashboard listing
 

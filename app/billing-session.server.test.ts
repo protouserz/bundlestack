@@ -2,7 +2,27 @@ import { describe, expect, it } from "vitest";
 import {
   buildExitIframePath,
   extractBillingRedirectFromError,
+  getShopifyAppPricingUrl,
+  usesShopifyAppPricingSubscriptions,
 } from "./billing-session.server";
+import { SHOPIFY_BILLING_PLANS } from "./billing.shopify";
+
+describe("getShopifyAppPricingUrl", () => {
+  it("builds the Shopify hosted pricing page URL", () => {
+    expect(getShopifyAppPricingUrl("bundlestack-dev.myshopify.com")).toBe(
+      "https://admin.shopify.com/store/bundlestack-dev/charges/bundlestack/pricing_plans",
+    );
+  });
+});
+
+describe("usesShopifyAppPricingSubscriptions", () => {
+  it("detects Shopify App Pricing subscription names", () => {
+    expect(usesShopifyAppPricingSubscriptions(["Starter"])).toBe(true);
+    expect(
+      usesShopifyAppPricingSubscriptions([SHOPIFY_BILLING_PLANS.SCALE]),
+    ).toBe(false);
+  });
+});
 
 describe("buildExitIframePath", () => {
   it("builds exit-iframe path with shop, host, and confirmation URL", () => {

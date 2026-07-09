@@ -20,6 +20,9 @@ import {
   buildExitIframePath,
   createBillingConfirmationUrl,
   formatBillingError,
+  getShopifyAppPricingUrl,
+  isManagedPricingBillingError,
+  usesShopifyAppPricingSubscriptions,
   resolveBillingTestMode,
 } from "../billing-session.server";
 import { openBillingHandoff } from "../billing-client";
@@ -122,6 +125,9 @@ async function loadBillingPage(request: Request, billingContext: BillingContext)
     pendingShopifyPlan !== null &&
     !activeSubscriptionNames.includes(pendingShopifyPlan);
   const billingError = requestUrl.searchParams.get("billing_error");
+  const usesShopifyAppPricing =
+    usesShopifyAppPricingSubscriptions(activeSubscriptionNames);
+  const shopifyPricingUrl = getShopifyAppPricingUrl(session.shop);
 
   return {
     billing: billingSummary,
@@ -133,6 +139,8 @@ async function loadBillingPage(request: Request, billingContext: BillingContext)
     pendingShopifyPlan,
     billingTestMode,
     billingError,
+    usesShopifyAppPricing,
+    shopifyPricingUrl,
     themeEditorUrl: `https://admin.shopify.com/store/${shopHandle}/themes/current/editor?context=apps`,
   };
 }
@@ -169,10 +177,16 @@ async function cancelActiveSubscriptions(
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const billingContext = await authenticate.admin(request);
-  const { billing, session, admin } = billingContext;
+  const { billing, session, admin, redirect: shopifyRedirect } = billingContext;
   const formData = await request.formData();
   const intent = String(formData.get("intent") ?? "");
   const isTest = await resolveBillingTestMode(admin);
+
+  const redirectToShopifyPricing = () => {
+    throw shopifyRedirect(getShopifyAppPricingUrl(session.shop), {
+      target: "_top",
+    });
+  };
 
   if (intent === "cancel") {
     await cancelActiveSubscriptions(billing, isTest);
@@ -196,9 +210,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return redirect("/app/billing");
     }
 
+    const billingCheck = await billing.check();
+    const activeSubscriptionNames = billingCheck.appSubscriptions
+      .filter((subscription) => subscription.status === "ACTIVE")
+      .map((subscription) => subscription.name);
+
+    if (usesShopifyAppPricingSubscriptions(activeSubscriptionNames)) {
+      redirectToShopifyPricing();
+    }
+
     try {
       return await requestPaidPlan(billingContext, request, plan);
     } catch (error) {
+      if (isManagedPricingBillingError(error)) {
+        redirectToShopifyPricing();
+      }
       return { error: formatBillingError(error) };
     }
   }
@@ -211,6 +237,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       try {
         return await requestPaidPlan(billingContext, request, tier);
       } catch (error) {
+        if (isManagedPricingBillingError(error)) {
+          redirectToShopifyPricing();
+        }
         return { error: formatBillingError(error) };
       }
     }
@@ -223,11 +252,13 @@ function PlanCard({
   plan,
   currentPlan,
   hasActiveSubscription,
+  usesShopifyAppPricing,
   subscribeFetcher,
 }: {
   plan: BillingPlan;
   currentPlan: BillingPlan;
   hasActiveSubscription: boolean;
+  usesShopifyAppPricing: boolean;
   subscribeFetcher: ReturnType<typeof useFetcher<typeof action>>;
 }) {
   const navigation = useNavigation();
@@ -244,9 +275,11 @@ function PlanCard({
   const buttonLabel =
     plan === "free"
       ? "Switch to Free"
-      : isUpgrade
-        ? `Upgrade to ${PLAN_LABELS[plan]}`
-        : `Downgrade to ${PLAN_LABELS[plan]}`;
+      : usesShopifyAppPricing
+        ? `Change to ${PLAN_LABELS[plan]} in Shopify`
+        : isUpgrade
+          ? `Upgrade to ${PLAN_LABELS[plan]}`
+          : `Downgrade to ${PLAN_LABELS[plan]}`;
 
   return (
     <s-box
@@ -369,6 +402,7 @@ export default function BillingPage() {
     activeSubscriptions,
     hasActiveShopifySubscription,
     billingError,
+    usesShopifyAppPricing,
   } = useLoaderData<typeof loader>();
   const fetcherData = subscribeFetcher.data;
   const errorMessage =
@@ -386,6 +420,15 @@ export default function BillingPage() {
       <s-stack direction="block" gap="large">
         {errorMessage && (
           <s-banner tone="critical">{errorMessage}</s-banner>
+        )}
+
+        {usesShopifyAppPricing && (
+          <s-banner tone="info">
+            <s-text>
+              Plan changes use Shopify&apos;s hosted plan page. Click a paid plan
+              below to open it in Shopify admin, then approve the charge there.
+            </s-text>
+          </s-banner>
         )}
 
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
@@ -452,6 +495,7 @@ export default function BillingPage() {
                   plan={plan}
                   currentPlan={billing.plan}
                   hasActiveSubscription={hasActiveShopifySubscription}
+                  usesShopifyAppPricing={usesShopifyAppPricing}
                   subscribeFetcher={subscribeFetcher}
                 />
               ))}

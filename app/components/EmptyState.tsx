@@ -1,3 +1,5 @@
+import { SButton } from "./polaris";
+
 type EmptyStateProps = {
   heading: string;
   description: string;
@@ -19,7 +21,7 @@ export function EmptyState({
           <s-text tone="neutral">{description}</s-text>
         </s-stack>
         {actionLabel && actionHref && (
-          <s-button href={actionHref}>{actionLabel}</s-button>
+          <SButton href={actionHref}>{actionLabel}</SButton>
         )}
       </s-stack>
     </s-box>

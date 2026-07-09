@@ -5,6 +5,7 @@ import { Form, useActionData, useLoaderData } from "react-router";
 
 import { login } from "../../shopify.server";
 import { loginErrorMessage } from "./error.server";
+import { SButton, SPage } from "../../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const errors = loginErrorMessage(await login(request));
@@ -28,7 +29,7 @@ export default function Auth() {
 
   return (
     <AppProvider embedded={false}>
-      <s-page>
+      <SPage>
         <Form method="post">
         <s-section heading="Log in">
           <s-text-field
@@ -40,10 +41,10 @@ export default function Auth() {
             autocomplete="on"
             error={errors.shop}
           ></s-text-field>
-          <s-button type="submit">Log in</s-button>
+          <SButton type="submit">Log in</SButton>
         </s-section>
         </Form>
-      </s-page>
+      </SPage>
     </AppProvider>
   );
 }

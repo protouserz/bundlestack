@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Link } from "react-router";
 import type { DiscountTier } from "../../models/bundle.server";
 import { ProductPickerField, type SelectedProduct } from "../ProductPickerField";
+import { SButton } from "../polaris";
 import styles from "./offer-form.module.css";
 
 const OFFER_TYPES = [
@@ -244,9 +245,9 @@ export function OfferForm({
               </tbody>
             </table>
             <div className={styles.addTierButton}>
-              <s-button type="button" variant="secondary" onClick={addTier}>
+              <SButton type="button" variant="secondary" onClick={addTier}>
                 Add tier
-              </s-button>
+              </SButton>
             </div>
           </section>
         </div>

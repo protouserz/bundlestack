@@ -14,6 +14,7 @@ import {
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { StatCard } from "../components/StatCard";
+import { SButton, SPage } from "../components/polaris";
 import styles from "../components/ui.module.css";
 import {
   billingReturnUrl,
@@ -329,13 +330,13 @@ function PlanCard({
           <subscribeFetcher.Form method="post">
             <input type="hidden" name="intent" value="subscribe" />
             <input type="hidden" name="plan" value="free" />
-            <s-button
+            <SButton
               type="submit"
               variant="tertiary"
               {...(isBusy ? { loading: true } : {})}
             >
               {buttonLabel}
-            </s-button>
+            </SButton>
           </subscribeFetcher.Form>
         )}
 
@@ -343,26 +344,26 @@ function PlanCard({
           <subscribeFetcher.Form method="post">
             <input type="hidden" name="intent" value="subscribe" />
             <input type="hidden" name="plan" value={plan} />
-            <s-button
+            <SButton
               type="submit"
               variant={isUpgrade ? "primary" : "tertiary"}
               {...(isBusy ? { loading: true } : {})}
             >
               {buttonLabel}
-            </s-button>
+            </SButton>
           </subscribeFetcher.Form>
         )}
 
         {isCurrent && plan !== "free" && hasActiveSubscription && (
           <subscribeFetcher.Form method="post">
             <input type="hidden" name="intent" value="cancel" />
-            <s-button
+            <SButton
               type="submit"
               variant="tertiary"
               {...(isBusy ? { loading: true } : {})}
             >
               Cancel paid subscription
-            </s-button>
+            </SButton>
           </subscribeFetcher.Form>
         )}
       </s-stack>
@@ -392,9 +393,9 @@ function PendingApprovalBanner({
         <subscribeFetcher.Form method="post">
           <input type="hidden" name="intent" value="subscribe" />
           <input type="hidden" name="plan" value={pendingPlan} />
-          <s-button type="submit" variant="primary">
+          <SButton type="submit" variant="primary">
             Approve {PLAN_LABELS[pendingPlan]} in Shopify
-          </s-button>
+          </SButton>
         </subscribeFetcher.Form>
         {billingTestMode && (
           <s-text tone="neutral">
@@ -434,7 +435,7 @@ export default function BillingPage() {
   }, [fetcherData]);
 
   return (
-    <s-page heading="Billing & uninstall">
+    <SPage heading="Billing & uninstall">
       <s-stack direction="block" gap="large">
         {errorMessage && (
           <s-banner tone="critical">{errorMessage}</s-banner>
@@ -570,7 +571,7 @@ export default function BillingPage() {
           </s-stack>
         </s-section>
       </s-stack>
-    </s-page>
+    </SPage>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import { SButton } from "./polaris";
 import styles from "./offer-form/offer-form.module.css";
 
 export type SelectedProduct = {
@@ -87,9 +88,9 @@ export function ProductPickerField({
           onFocus={openPicker}
           aria-label="Search products"
         />
-        <s-button type="button" variant="secondary" onClick={openPicker}>
+        <SButton type="button" variant="secondary" onClick={openPicker}>
           {browseLabel}
-        </s-button>
+        </SButton>
       </div>
 
       {products.length === 0 ? (

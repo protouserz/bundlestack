@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import { SButton } from "../polaris";
 
 type BlockStatus = "loading" | "active" | "available" | "unavailable" | "unknown";
 
@@ -98,9 +99,9 @@ export function ThemeWidgetStatus({
             ? `${blockName} is available but not placed on your product template yet.`
             : `${blockName} is not active on your published theme.`}
         </s-text>
-        <s-button href={themeEditorUrl} target="_blank">
+        <SButton href={themeEditorUrl} target="_blank">
           Open theme editor
-        </s-button>
+        </SButton>
       </s-stack>
     </s-banner>
   );

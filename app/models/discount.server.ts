@@ -143,8 +143,6 @@ export async function syncOfferDiscounts(
               shippingDiscounts: true,
             },
             customerGets: {
-              appliesOnOneTimePurchase: true,
-              appliesOnSubscription: false,
               value: {
                 percentage: tier.discountValue / 100,
               },

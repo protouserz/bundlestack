@@ -287,6 +287,7 @@
 }
 
 .healthBarFill {
+  width: var(--health-score, 0%);
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--dash-green), var(--dash-green-dark));

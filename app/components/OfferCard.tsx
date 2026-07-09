@@ -1,5 +1,6 @@
 import { Form, Link } from "react-router";
 import type { listOffers } from "../models/bundle.server";
+import { SButton } from "./polaris";
 
 type Offer = Awaited<ReturnType<typeof listOffers>>[number];
 
@@ -54,9 +55,9 @@ export function OfferCard({
             <Form method="post">
               <input type="hidden" name="intent" value="delete" />
               <input type="hidden" name="offerId" value={offer.id} />
-              <s-button type="submit" tone="critical" variant="tertiary">
+              <SButton type="submit" tone="critical" variant="tertiary">
                 Delete
-              </s-button>
+              </SButton>
             </Form>
           )}
         </s-stack>

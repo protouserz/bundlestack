@@ -40,7 +40,7 @@ function buildSeries(offers: OfferPoint[]) {
   return buckets.map((bucket) => {
     cumulative += bucket.revenue;
     return {
-      label: bucket.date.toLocaleDateString(undefined, {
+      label: bucket.date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       }),

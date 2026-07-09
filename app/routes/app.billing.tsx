@@ -9,10 +9,8 @@ import {
   useActionData,
   useLoaderData,
   useNavigation,
-  useSearchParams,
   useSubmit,
 } from "react-router";
-import { useMemo } from "react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { StatCard } from "../components/StatCard";
@@ -133,18 +131,12 @@ async function loadBillingPage(request: Request, billingContext: BillingContext)
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const billingContext = await authenticate.admin(request);
   const requestUrl = new URL(request.url);
-  const subscribePlan = requestUrl.searchParams.get("subscribe");
 
-  if (subscribePlan && isBillingPlan(subscribePlan) && subscribePlan !== "free") {
-    try {
-      await requestPaidPlan(billingContext, request, subscribePlan);
-    } catch (error) {
-      rethrowIfResponse(error);
-      const params = new URLSearchParams(requestUrl.searchParams);
-      params.delete("subscribe");
-      params.set("billing_error", formatBillingError(error));
-      throw redirect(`/app/billing?${params.toString()}`);
-    }
+  if (requestUrl.searchParams.has("subscribe")) {
+    const params = new URLSearchParams(requestUrl.searchParams);
+    params.delete("subscribe");
+    const query = params.toString();
+    throw redirect(query ? `/app/billing?${query}` : "/app/billing");
   }
 
   return loadBillingPage(request, billingContext);
@@ -220,16 +212,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return { error: "Invalid billing action." };
 };
 
-function useSubscribeHref(plan: BillingPlan) {
-  const [searchParams] = useSearchParams();
-
-  return useMemo(() => {
-    const params = new URLSearchParams(searchParams);
-    params.set("subscribe", plan);
-    return `?${params.toString()}`;
-  }, [searchParams, plan]);
-}
-
 function PlanCard({
   plan,
   currentPlan,
@@ -241,7 +223,6 @@ function PlanCard({
 }) {
   const submit = useSubmit();
   const navigation = useNavigation();
-  const subscribeHref = useSubscribeHref(plan);
   const features = PLAN_FEATURES[plan];
   const isCurrent =
     plan === currentPlan &&
@@ -298,11 +279,16 @@ function PlanCard({
         )}
 
         {!isCurrent && plan !== "free" && (
-          <Link to={subscribeHref} reloadDocument className={styles.planActionLink}>
-            <s-button type="button" variant={isUpgrade ? "primary" : "tertiary"}>
-              {buttonLabel}
-            </s-button>
-          </Link>
+          <s-button
+            type="button"
+            variant={isUpgrade ? "primary" : "tertiary"}
+            {...(isBusy ? { loading: true } : {})}
+            onClick={() =>
+              submit({ intent: "subscribe", plan }, { method: "post" })
+            }
+          >
+            {buttonLabel}
+          </s-button>
         )}
 
         {isCurrent && plan !== "free" && hasActiveSubscription && (
@@ -329,7 +315,7 @@ function PendingApprovalBanner({
   currentPlanLabel: string;
   billingTestMode: boolean;
 }) {
-  const pendingSubscribeHref = useSubscribeHref(pendingPlan);
+  const submit = useSubmit();
 
   return (
     <s-banner tone="warning">
@@ -339,11 +325,18 @@ function PendingApprovalBanner({
           {formatPlanPrice(pendingPlan)}/mo) in Shopify to activate billing. Your
           current plan stays {currentPlanLabel} until approval is complete.
         </s-text>
-        <Link to={pendingSubscribeHref} reloadDocument className={styles.planActionLink}>
-          <s-button type="button" variant="primary">
-            Approve {PLAN_LABELS[pendingPlan]} in Shopify
-          </s-button>
-        </Link>
+        <s-button
+          type="button"
+          variant="primary"
+          onClick={() =>
+            submit(
+              { intent: "subscribe", plan: pendingPlan },
+              { method: "post" },
+            )
+          }
+        >
+          Approve {PLAN_LABELS[pendingPlan]} in Shopify
+        </s-button>
         {billingTestMode && (
           <s-text tone="neutral">
             Test billing mode is on for this store — charges appear as test

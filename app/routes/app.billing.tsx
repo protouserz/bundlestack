@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
@@ -6,10 +7,9 @@ import type {
 import {
   Link,
   redirect,
-  useActionData,
+  useFetcher,
   useLoaderData,
   useNavigation,
-  useSubmit,
 } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -17,10 +17,12 @@ import { StatCard } from "../components/StatCard";
 import styles from "../components/ui.module.css";
 import {
   billingReturnUrl,
+  extractBillingRedirectFromError,
   formatBillingError,
   rethrowIfResponse,
   resolveBillingTestMode,
 } from "../billing-session.server";
+import { openBillingApprovalUrl } from "../billing-client";
 import {
   getShopifyPlanForTier,
   getTierForShopifyPlan,
@@ -190,6 +192,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
       await requestPaidPlan(billingContext, request, plan);
     } catch (error) {
+      const billingRedirect = extractBillingRedirectFromError(error);
+      if (billingRedirect) {
+        return billingRedirect;
+      }
       rethrowIfResponse(error);
       return { error: formatBillingError(error) };
     }
@@ -203,6 +209,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       try {
         await requestPaidPlan(billingContext, request, tier);
       } catch (error) {
+        const billingRedirect = extractBillingRedirectFromError(error);
+        if (billingRedirect) {
+          return billingRedirect;
+        }
         rethrowIfResponse(error);
         return { error: formatBillingError(error) };
       }
@@ -216,12 +226,13 @@ function PlanCard({
   plan,
   currentPlan,
   hasActiveSubscription,
+  subscribeFetcher,
 }: {
   plan: BillingPlan;
   currentPlan: BillingPlan;
   hasActiveSubscription: boolean;
+  subscribeFetcher: ReturnType<typeof useFetcher<typeof action>>;
 }) {
-  const submit = useSubmit();
   const navigation = useNavigation();
   const features = PLAN_FEATURES[plan];
   const isCurrent =
@@ -230,7 +241,8 @@ function PlanCard({
   const planIndex = PLAN_ORDER.indexOf(plan);
   const currentIndex = PLAN_ORDER.indexOf(currentPlan);
   const isUpgrade = planIndex > currentIndex;
-  const isBusy = navigation.state !== "idle";
+  const isBusy =
+    navigation.state !== "idle" || subscribeFetcher.state !== "idle";
 
   const buttonLabel =
     plan === "free"
@@ -271,7 +283,10 @@ function PlanCard({
             variant="tertiary"
             {...(isBusy ? { loading: true } : {})}
             onClick={() =>
-              submit({ intent: "subscribe", plan: "free" }, { method: "post" })
+              subscribeFetcher.submit(
+                { intent: "subscribe", plan: "free" },
+                { method: "post" },
+              )
             }
           >
             {buttonLabel}
@@ -284,7 +299,7 @@ function PlanCard({
             variant={isUpgrade ? "primary" : "tertiary"}
             {...(isBusy ? { loading: true } : {})}
             onClick={() =>
-              submit({ intent: "subscribe", plan }, { method: "post" })
+              subscribeFetcher.submit({ intent: "subscribe", plan }, { method: "post" })
             }
           >
             {buttonLabel}
@@ -296,7 +311,9 @@ function PlanCard({
             type="button"
             variant="tertiary"
             {...(isBusy ? { loading: true } : {})}
-            onClick={() => submit({ intent: "cancel" }, { method: "post" })}
+            onClick={() =>
+              subscribeFetcher.submit({ intent: "cancel" }, { method: "post" })
+            }
           >
             Cancel paid subscription
           </s-button>
@@ -310,13 +327,13 @@ function PendingApprovalBanner({
   pendingPlan,
   currentPlanLabel,
   billingTestMode,
+  subscribeFetcher,
 }: {
   pendingPlan: BillingPlan;
   currentPlanLabel: string;
   billingTestMode: boolean;
+  subscribeFetcher: ReturnType<typeof useFetcher<typeof action>>;
 }) {
-  const submit = useSubmit();
-
   return (
     <s-banner tone="warning">
       <s-stack direction="block" gap="base">
@@ -329,7 +346,7 @@ function PendingApprovalBanner({
           type="button"
           variant="primary"
           onClick={() =>
-            submit(
+            subscribeFetcher.submit(
               { intent: "subscribe", plan: pendingPlan },
               { method: "post" },
             )
@@ -349,7 +366,7 @@ function PendingApprovalBanner({
 }
 
 export default function BillingPage() {
-  const actionData = useActionData<typeof action>();
+  const subscribeFetcher = useFetcher<typeof action>();
   const {
     billing,
     pendingPlan,
@@ -362,7 +379,23 @@ export default function BillingPage() {
     hasActiveShopifySubscription,
     billingError,
   } = useLoaderData<typeof loader>();
-  const errorMessage = actionData?.error ?? billingError;
+  const fetcherData = subscribeFetcher.data;
+  const errorMessage =
+    (fetcherData && "error" in fetcherData ? fetcherData.error : undefined) ??
+    billingError;
+
+  useEffect(() => {
+    if (!fetcherData) return;
+
+    if ("confirmationUrl" in fetcherData && fetcherData.confirmationUrl) {
+      openBillingApprovalUrl(fetcherData.confirmationUrl);
+      return;
+    }
+
+    if ("exitIframeUrl" in fetcherData && fetcherData.exitIframeUrl) {
+      openBillingApprovalUrl(fetcherData.exitIframeUrl);
+    }
+  }, [fetcherData]);
 
   return (
     <s-page heading="Billing & uninstall">
@@ -384,6 +417,7 @@ export default function BillingPage() {
             pendingPlan={pendingPlan}
             currentPlanLabel={billing.planLabel}
             billingTestMode={billingTestMode}
+            subscribeFetcher={subscribeFetcher}
           />
         )}
 
@@ -434,6 +468,7 @@ export default function BillingPage() {
                   plan={plan}
                   currentPlan={billing.plan}
                   hasActiveSubscription={hasActiveShopifySubscription}
+                  subscribeFetcher={subscribeFetcher}
                 />
               ))}
             </div>

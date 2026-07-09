@@ -76,6 +76,29 @@ export function rethrowIfResponse(error: unknown): void {
   }
 }
 
+const BILLING_CONFIRMATION_HEADER =
+  "X-Shopify-API-Request-Failure-Reauthorize-Url";
+
+/** Pull billing approval URL from billing.request()'s thrown Response. */
+export function extractBillingRedirectFromError(error: unknown): {
+  confirmationUrl?: string;
+  exitIframeUrl?: string;
+} | null {
+  if (!(error instanceof Response)) return null;
+
+  const confirmationUrl = error.headers.get(BILLING_CONFIRMATION_HEADER);
+  if (confirmationUrl) {
+    return { confirmationUrl };
+  }
+
+  const location = error.headers.get("Location");
+  if (location?.includes("exit-iframe")) {
+    return { exitIframeUrl: location };
+  }
+
+  return null;
+}
+
 export function isManagedPricingBillingError(error: unknown): boolean {
   const message =
     error instanceof Error

@@ -11,6 +11,7 @@ import styles from "../components/ui.module.css";
 import {
   billingReturnUrl,
   formatBillingError,
+  rethrowIfResponse,
   resolveBillingTestMode,
 } from "../billing-session.server";
 import {
@@ -39,6 +40,7 @@ import {
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing, admin } = await authenticate.admin(request);
+  const requestUrl = new URL(request.url);
 
   const [stats, settings, billingTestMode] = await Promise.all([
     getShopStats(session.shop),
@@ -61,7 +63,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     await setShopBillingPlan(session.shop, currentPlan);
   }
 
-  if (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan) {
+  if (requestUrl.searchParams.has("charge_id") && activeSubscriptionNames.length > 0) {
+    await clearPendingBillingPlan(session.shop);
+  } else if (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan) {
     await clearPendingBillingPlan(session.shop);
   }
 
@@ -146,12 +150,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     try {
       await setPendingBillingPlan(session.shop, plan);
-      return await billing.request({
+      await billing.request({
         plan: shopifyPlan,
         isTest,
         returnUrl,
       });
     } catch (error) {
+      rethrowIfResponse(error);
       return { error: formatBillingError(error) };
     }
   }
@@ -163,12 +168,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (tier) {
       try {
         await setPendingBillingPlan(session.shop, tier);
-        return await billing.request({
+        await billing.request({
           plan: legacyPlan as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
           isTest,
           returnUrl,
         });
       } catch (error) {
+        rethrowIfResponse(error);
         return { error: formatBillingError(error) };
       }
     }

@@ -15,6 +15,7 @@ import {
   removeOfferRecord,
 } from "../models/bundle.server";
 import { deleteShopifyDiscounts } from "../models/discount.server";
+import { SButton, SPage } from "../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -58,13 +59,13 @@ export default function OffersIndex() {
   };
 
   return (
-    <s-page heading="Offers">
-      <s-button slot="primary-action" variant="primary" href="/app/offers/new">
+    <SPage heading="Offers">
+      <SButton slot="primary-action" variant="primary" href="/app/offers/new">
         Create offer
-      </s-button>
+      </SButton>
 
       {offers.length > 0 && (
-        <s-button
+        <SButton
           slot="secondary-actions"
           tone="critical"
           variant="tertiary"
@@ -72,7 +73,7 @@ export default function OffersIndex() {
           commandFor="delete-all-offers-modal"
         >
           Delete all
-        </s-button>
+        </SButton>
       )}
 
       <s-stack direction="block" gap="large">
@@ -116,25 +117,25 @@ export default function OffersIndex() {
             </s-paragraph>
           </s-stack>
 
-          <s-button
+          <SButton
             slot="secondary-actions"
             variant="tertiary"
             commandFor="delete-all-offers-modal"
             command="--hide"
           >
             Cancel
-          </s-button>
-          <s-button
+          </SButton>
+          <SButton
             slot="primary-action"
             variant="primary"
             tone="critical"
             onClick={handleDeleteAll}
           >
             Delete all
-          </s-button>
+          </SButton>
         </s-modal>
       )}
-    </s-page>
+    </SPage>
   );
 }
 

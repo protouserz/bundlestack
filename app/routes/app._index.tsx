@@ -28,6 +28,7 @@ import {
   type HealthFixAction,
 } from "../models/health.server";
 import { syncDiscountUsesForShop } from "../models/usage.server";
+import { SButton, SPage } from "../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session, billing } = await authenticate.admin(request);
@@ -153,18 +154,18 @@ function HealthCheckFixButton({
 
   if (fix.href) {
     return (
-      <s-button href={fix.href} target={fix.external ? "_blank" : undefined}>
+      <SButton href={fix.href} target={fix.external ? "_blank" : undefined}>
         Try to fix
-      </s-button>
+      </SButton>
     );
   }
 
   return (
     <fetcher.Form method="post">
       <input type="hidden" name="intent" value={fix.intent} />
-      <s-button type="submit" {...(isLoading ? { loading: true } : {})}>
+      <SButton type="submit" {...(isLoading ? { loading: true } : {})}>
         Try to fix
-      </s-button>
+      </SButton>
     </fetcher.Form>
   );
 }
@@ -174,7 +175,7 @@ function formatDateRange() {
   const start = new Date();
   start.setDate(start.getDate() - 29);
 
-  const formatter = new Intl.DateTimeFormat(undefined, {
+  const formatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -195,10 +196,10 @@ export default function Dashboard() {
   const showWelcome = !onboardingDone && stats.totalOffers === 0;
 
   return (
-    <s-page heading="Dashboard">
-      <s-button slot="primary-action" variant="primary" href="/app/offers/new">
+    <SPage heading="Dashboard">
+      <SButton slot="primary-action" variant="primary" href="/app/offers/new">
         Create offer
-      </s-button>
+      </SButton>
 
       <div className={styles.dashboard}>
         <s-text tone="neutral">
@@ -214,15 +215,15 @@ export default function Dashboard() {
                 start turning single-item orders into bigger carts.
               </s-text>
               <s-stack direction="inline" gap="base">
-                <s-button href="/app/offers/new">Create your first offer</s-button>
-                <s-button href="/app/billing" variant="tertiary">
+                <SButton href="/app/offers/new">Create your first offer</SButton>
+                <SButton href="/app/billing" variant="tertiary">
                   View pricing
-                </s-button>
+                </SButton>
                 <onboardingFetcher.Form method="post">
                   <input type="hidden" name="intent" value="dismiss-onboarding" />
-                  <s-button type="submit" variant="tertiary">
+                  <SButton type="submit" variant="tertiary">
                     Dismiss
-                  </s-button>
+                  </SButton>
                 </onboardingFetcher.Form>
               </s-stack>
             </s-stack>
@@ -240,13 +241,13 @@ export default function Dashboard() {
 
         <statsFetcher.Form method="post">
           <input type="hidden" name="intent" value="refresh-stats" />
-          <s-button
+          <SButton
             type="submit"
             variant="tertiary"
             {...(statsFetcher.state !== "idle" ? { loading: true } : {})}
           >
             Refresh redemption stats
-          </s-button>
+          </SButton>
         </statsFetcher.Form>
 
         <div className={styles.midRow}>
@@ -309,7 +310,7 @@ export default function Dashboard() {
           </Link>
         </p>
       </div>
-    </s-page>
+    </SPage>
   );
 }
 

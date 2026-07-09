@@ -24,6 +24,7 @@ import {
 } from "../models/bundle.server";
 import { applyOfferDiscountSync, deleteShopifyDiscounts } from "../models/discount.server";
 import { OfferForm } from "../components/offer-form/OfferForm";
+import { SButton, SPage } from "../components/polaris";
 import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -85,7 +86,7 @@ export default function EditOffer() {
   const isDeleting = deleteFetcher.state !== "idle";
 
   return (
-    <s-page heading="Edit offer">
+    <SPage heading="Edit offer">
       <Form
         key={formKey}
         method="post"
@@ -106,7 +107,7 @@ export default function EditOffer() {
           discountUses={offer.discountUses}
           discountCount={offer.discountIds.length}
           deleteButton={
-            <s-button
+            <SButton
               type="button"
               tone="critical"
               variant="tertiary"
@@ -116,11 +117,11 @@ export default function EditOffer() {
               }
             >
               Delete offer
-            </s-button>
+            </SButton>
           }
         />
       </Form>
-    </s-page>
+    </SPage>
   );
 }
 

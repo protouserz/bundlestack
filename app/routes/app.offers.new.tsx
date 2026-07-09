@@ -14,6 +14,7 @@ import {
 } from "../models/bundle.server";
 import { applyOfferDiscountSync } from "../models/discount.server";
 import { OfferForm } from "../components/offer-form/OfferForm";
+import { SPage } from "../components/polaris";
 import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -47,7 +48,7 @@ export default function NewOffer() {
   const [formKey, setFormKey] = useState(0);
 
   return (
-    <s-page heading="Create offer">
+    <SPage heading="Create offer">
       <Form
         key={formKey}
         method="post"
@@ -64,7 +65,7 @@ export default function NewOffer() {
           error={actionData?.error}
         />
       </Form>
-    </s-page>
+    </SPage>
   );
 }
 

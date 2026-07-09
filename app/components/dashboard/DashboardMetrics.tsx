@@ -1,4 +1,5 @@
 import type { ShopHealth } from "../../models/health.server";
+import type { CSSProperties } from "react";
 import styles from "./dashboard.module.css";
 import {
   Sparkline,
@@ -70,11 +71,12 @@ export function DashboardMetrics({
             ? "All systems operational"
             : "Review system checks below"}
         </p>
-        <div className={styles.healthBar} aria-hidden="true">
-          <div
-            className={styles.healthBarFill}
-            style={{ width: `${score}%` }}
-          />
+        <div
+          className={styles.healthBar}
+          style={{ "--health-score": `${score}%` } as CSSProperties}
+          aria-hidden="true"
+        >
+          <div className={styles.healthBarFill} />
         </div>
       </div>
     </div>

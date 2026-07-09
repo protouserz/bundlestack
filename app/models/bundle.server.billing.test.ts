@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { SHOPIFY_BILLING_PLANS } from "../billing.shopify";
 import {
   resolveBillingPlan,
+  resolveCurrentBillingPlan,
   resolvePendingBillingPlan,
 } from "./bundle.server";
 
@@ -15,6 +16,23 @@ describe("resolveBillingPlan", () => {
     expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.STARTER])).toBe("starter");
     expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.SCALE])).toBe("scale");
     expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.PRO])).toBe("pro");
+  });
+
+  it("prefers the highest active tier when multiple subscriptions exist", () => {
+    expect(resolveBillingPlan(["Starter", "Growth"])).toBe("scale");
+  });
+});
+
+describe("resolveCurrentBillingPlan", () => {
+  it("uses plan_handle after Shopify App Pricing approval", () => {
+    expect(
+      resolveCurrentBillingPlan({
+        activeSubscriptionNames: ["Starter"],
+        planHandle: "growth",
+        chargeId: "123",
+        storedPlan: "starter",
+      }),
+    ).toBe("scale");
   });
 });
 

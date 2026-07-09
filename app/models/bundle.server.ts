@@ -1,6 +1,7 @@
 import prisma from "../db.server";
 import { isBillingPlan, type BillingPlan } from "../billing.server";
-import { getTierForShopifyPlan } from "../billing.shopify";
+import { getTierForPlanHandle, getTierForShopifyPlan } from "../billing.shopify";
+import { PLAN_ORDER } from "../billing.plans";
 import { safeJsonParse } from "../utils/json.server";
 
 export type DiscountTier = {
@@ -198,12 +199,45 @@ export async function clearPendingBillingPlan(shop: string) {
 export function resolveBillingPlan(
   activeSubscriptionNames: string[],
 ): BillingPlan {
+  let bestPlan: BillingPlan = "free";
+
   for (const name of activeSubscriptionNames) {
     const tier = getTierForShopifyPlan(name);
-    if (tier) return tier;
+    if (!tier) continue;
+
+    if (PLAN_ORDER.indexOf(tier) > PLAN_ORDER.indexOf(bestPlan)) {
+      bestPlan = tier;
+    }
   }
 
-  return "free";
+  return bestPlan;
+}
+
+export function resolveCurrentBillingPlan({
+  activeSubscriptionNames,
+  planHandle,
+  chargeId,
+  storedPlan,
+}: {
+  activeSubscriptionNames: string[];
+  planHandle: string | null;
+  chargeId: string | null;
+  storedPlan: BillingPlan;
+}): BillingPlan {
+  if (chargeId && planHandle) {
+    const fromHandle = getTierForPlanHandle(planHandle);
+    if (fromHandle) return fromHandle;
+  }
+
+  const fromSubscriptions = resolveBillingPlan(activeSubscriptionNames);
+  if (fromSubscriptions !== "free") return fromSubscriptions;
+
+  if (planHandle) {
+    const fromHandle = getTierForPlanHandle(planHandle);
+    if (fromHandle) return fromHandle;
+  }
+
+  return storedPlan;
 }
 
 export function resolvePendingBillingPlan(

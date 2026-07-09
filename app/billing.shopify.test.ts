@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  getTierForPlanHandle,
   getTierForShopifyPlan,
   SHOPIFY_BILLING_PLANS,
 } from "./billing.shopify";
+
+describe("getTierForPlanHandle", () => {
+  it("maps Shopify App Pricing handles to app tiers", () => {
+    expect(getTierForPlanHandle("growth")).toBe("scale");
+    expect(getTierForPlanHandle("starter")).toBe("starter");
+    expect(getTierForPlanHandle("pro")).toBe("pro");
+    expect(getTierForPlanHandle("free")).toBe("free");
+  });
+});
 
 describe("getTierForShopifyPlan", () => {
   it("maps exact Shopify billing plan names", () => {

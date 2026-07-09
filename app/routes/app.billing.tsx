@@ -44,7 +44,7 @@ import {
   clearPendingBillingPlan,
   getShopSettings,
   getShopStats,
-  resolveBillingPlan,
+  resolveCurrentBillingPlan,
   resolvePendingBillingPlan,
   setPendingBillingPlan,
   setShopBillingPlan,
@@ -96,16 +96,25 @@ async function loadBillingPage(request: Request, billingContext: BillingContext)
     (subscription) => subscription.name,
   );
 
-  const currentPlan = resolveBillingPlan(activeSubscriptionNames);
+  const planHandle = requestUrl.searchParams.get("plan_handle");
+  const chargeId = requestUrl.searchParams.get("charge_id");
+  const storedPlan = isBillingPlan(settings.billingPlan)
+    ? settings.billingPlan
+    : "free";
+
+  const currentPlan = resolveCurrentBillingPlan({
+    activeSubscriptionNames,
+    planHandle,
+    chargeId,
+    storedPlan,
+  });
   const pendingPlan = resolvePendingBillingPlan(settings.pendingBillingPlan);
 
   if (currentPlan !== settings.billingPlan) {
     await setShopBillingPlan(session.shop, currentPlan);
   }
 
-  if (requestUrl.searchParams.has("charge_id") && activeSubscriptionNames.length > 0) {
-    await clearPendingBillingPlan(session.shop);
-  } else if (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan) {
+  if (chargeId || (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan)) {
     await clearPendingBillingPlan(session.shop);
   }
 
@@ -115,11 +124,7 @@ async function loadBillingPage(request: Request, billingContext: BillingContext)
   );
   const shopHandle = session.shop.replace(".myshopify.com", "");
   const pendingShopifyPlan = pendingPlan ? getShopifyPlanForTier(pendingPlan) : null;
-  const hasActiveShopifySubscription = activeSubscriptionNames.some((name) =>
-    Object.values(SHOPIFY_BILLING_PLANS).includes(
-      name as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
-    ),
-  );
+  const hasActiveShopifySubscription = activeSubscriptions.length > 0;
   const needsSubscriptionApproval =
     pendingPlan !== null &&
     pendingShopifyPlan !== null &&
@@ -156,7 +161,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw redirect(query ? `/app/billing?${query}` : "/app/billing");
   }
 
-  return loadBillingPage(request, billingContext);
+  const page = await loadBillingPage(request, billingContext);
+
+  if (
+    requestUrl.searchParams.has("plan_handle") ||
+    requestUrl.searchParams.has("charge_id")
+  ) {
+    const params = new URLSearchParams(requestUrl.searchParams);
+    params.delete("plan_handle");
+    params.delete("charge_id");
+    const query = params.toString();
+    throw redirect(query ? `/app/billing?${query}` : "/app/billing");
+  }
+
+  return page;
 };
 
 async function cancelActiveSubscriptions(

@@ -96,3 +96,17 @@ export function getTierForShopifyPlan(
 
   return null;
 }
+
+/** Map Shopify App Pricing plan_handle values to app billing tiers. */
+export function getTierForPlanHandle(
+  planHandle: string,
+): BillingPlan | null {
+  const normalized = planHandle.toLowerCase().trim();
+  if (normalized === "free") return "free";
+  if (normalized === "starter") return "starter";
+  if (normalized === "growth" || normalized === "scale") return "scale";
+  if (normalized === "pro") return "pro";
+
+  const tier = getTierForShopifyPlan(planHandle);
+  return tier ?? null;
+}

@@ -196,7 +196,7 @@ export default function Dashboard() {
 
   return (
     <s-page heading="Dashboard">
-      <s-button slot="primary-action" href="/app/offers/new">
+      <s-button slot="primary-action" variant="primary" href="/app/offers/new">
         Create offer
       </s-button>
 

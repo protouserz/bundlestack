@@ -59,7 +59,7 @@ export default function OffersIndex() {
 
   return (
     <s-page heading="Offers">
-      <s-button slot="primary-action" href="/app/offers/new">
+      <s-button slot="primary-action" variant="primary" href="/app/offers/new">
         Create offer
       </s-button>
 

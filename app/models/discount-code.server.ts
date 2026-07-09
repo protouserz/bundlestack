@@ -119,8 +119,8 @@ async function createDiscountCode(
           usageLimit: coupon.usageLimit,
           appliesOncePerCustomer: coupon.appliesOncePerCustomer,
           combinesWith: {
-            orderDiscounts: false,
-            productDiscounts: false,
+            orderDiscounts: true,
+            productDiscounts: true,
             shippingDiscounts: true,
           },
         },

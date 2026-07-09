@@ -168,8 +168,8 @@ async function createAutomaticDiscountForTier(
             title: discountTitle,
             startsAt,
             combinesWith: {
-              orderDiscounts: false,
-              productDiscounts: false,
+              orderDiscounts: true,
+              productDiscounts: true,
               shippingDiscounts: true,
             },
             customerGets: {

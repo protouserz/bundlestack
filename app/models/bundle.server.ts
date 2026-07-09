@@ -178,13 +178,24 @@ export async function getShopSettings(shop: string) {
 export async function setShopBillingPlan(shop: string, plan: BillingPlan) {
   return prisma.shopSettings.upsert({
     where: { shop },
-    create: { shop, billingPlan: plan },
+    create: { shop, billingPlan: plan, pendingBillingPlan: "" },
     update: { billingPlan: plan },
   });
 }
 
+export async function setPendingBillingPlan(shop: string, plan: BillingPlan | "") {
+  return prisma.shopSettings.upsert({
+    where: { shop },
+    create: { shop, pendingBillingPlan: plan },
+    update: { pendingBillingPlan: plan },
+  });
+}
+
+export async function clearPendingBillingPlan(shop: string) {
+  return setPendingBillingPlan(shop, "");
+}
+
 export function resolveBillingPlan(
-  storedPlan: string,
   activeSubscriptionNames: string[],
 ): BillingPlan {
   for (const name of activeSubscriptionNames) {
@@ -192,11 +203,17 @@ export function resolveBillingPlan(
     if (tier) return tier;
   }
 
-  if (isBillingPlan(storedPlan)) {
-    return storedPlan;
+  return "free";
+}
+
+export function resolvePendingBillingPlan(
+  pendingBillingPlan: string,
+): BillingPlan | null {
+  if (!pendingBillingPlan || !isBillingPlan(pendingBillingPlan)) {
+    return null;
   }
 
-  return "free";
+  return pendingBillingPlan === "free" ? null : pendingBillingPlan;
 }
 
 export async function ensureShopSettings(shop: string) {

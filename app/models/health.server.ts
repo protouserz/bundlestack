@@ -33,6 +33,10 @@ type SerializedOffer = {
   discountIds: string[];
 };
 
+function expectedDiscountCount(offer: SerializedOffer): number {
+  return offer.tiers.filter((tier) => tier.discountType === "percentage").length;
+}
+
 export async function getShopHealth(
   admin: AdminApiContext,
   shop: string,
@@ -63,9 +67,10 @@ export async function getShopHealth(
     });
   }
 
-  const offersMissingDiscounts = activeOffers.filter(
-    (o) => o.discountIds.length === 0,
-  );
+  const offersMissingDiscounts = activeOffers.filter((offer) => {
+    const expected = expectedDiscountCount(offer);
+    return expected > 0 && offer.discountIds.length < expected;
+  });
   if (offersMissingDiscounts.length > 0) {
     checks.push({
       id: "discount-sync",
@@ -137,30 +142,62 @@ export function collectDiscountIdsFromOffers(
 
 export { parseDiscountIds };
 
+export type SyncDiscountsResult = {
+  synced: number;
+  failed: string[];
+  skipped: string[];
+};
+
 export async function syncAllActiveOfferDiscounts(
   admin: AdminApiContext,
   shop: string,
-): Promise<{ synced: number; failed: string[] }> {
+): Promise<SyncDiscountsResult> {
   const { listOffers, updateOfferDiscountIds } = await import("./bundle.server");
   const { replaceOfferDiscounts } = await import("./discount.server");
 
   const offers = await listOffers(shop);
   const activeOffers = offers.filter((o) => o.status === "active");
   const failed: string[] = [];
+  const skipped: string[] = [];
+
+  if (activeOffers.length === 0) {
+    return {
+      synced: 0,
+      failed: ["No active offers to sync. Set at least one offer to Active first."],
+      skipped: [],
+    };
+  }
+
+  let synced = 0;
 
   for (const offer of activeOffers) {
+    const expected = expectedDiscountCount(offer);
+    if (expected === 0) {
+      skipped.push(`${offer.title}: no percentage tiers configured`);
+      continue;
+    }
+
     try {
       const discountIds = await replaceOfferDiscounts(
         admin,
         offer,
         offer.discountIds,
       );
+
+      if (discountIds.length !== expected) {
+        failed.push(
+          `${offer.title}: created ${discountIds.length}/${expected} Shopify discount(s)`,
+        );
+        continue;
+      }
+
       await updateOfferDiscountIds(offer.id, discountIds);
+      synced += 1;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       failed.push(`${offer.title}: ${message}`);
     }
   }
 
-  return { synced: activeOffers.length - failed.length, failed };
+  return { synced, failed, skipped };
 }

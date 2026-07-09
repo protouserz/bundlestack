@@ -22,7 +22,7 @@ import {
   updateOffer,
   updateOfferDiscountIds,
 } from "../models/bundle.server";
-import { deleteShopifyDiscounts, replaceOfferDiscounts } from "../models/discount.server";
+import { applyOfferDiscountSync, deleteShopifyDiscounts } from "../models/discount.server";
 import { OfferForm } from "../components/offer-form/OfferForm";
 import styles from "../components/offer-form/offer-form.module.css";
 
@@ -59,7 +59,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     const input = parseOfferForm(formData);
     const updated = await updateOffer(session.shop, params.id!, input);
-    const discountIds = await replaceOfferDiscounts(
+    const discountIds = await applyOfferDiscountSync(
       admin,
       updated,
       existing.discountIds,

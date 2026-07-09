@@ -28,11 +28,15 @@ import {
 } from "../billing.plans";
 import { getBillingSummary, isBillingPlan } from "../billing.server";
 import {
+  clearPendingBillingPlan,
   getShopSettings,
   getShopStats,
   resolveBillingPlan,
+  resolvePendingBillingPlan,
+  setPendingBillingPlan,
   setShopBillingPlan,
 } from "../models/bundle.server";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing, admin } = await authenticate.admin(request);
 
@@ -50,13 +54,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     (subscription) => subscription.name,
   );
 
-  const currentPlan = resolveBillingPlan(
-    settings.billingPlan,
-    activeSubscriptionNames,
-  );
+  const currentPlan = resolveBillingPlan(activeSubscriptionNames);
+  const pendingPlan = resolvePendingBillingPlan(settings.pendingBillingPlan);
 
   if (currentPlan !== settings.billingPlan) {
     await setShopBillingPlan(session.shop, currentPlan);
+  }
+
+  if (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan) {
+    await clearPendingBillingPlan(session.shop);
   }
 
   const billingSummary = getBillingSummary(
@@ -64,20 +70,25 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     stats.totalDiscountUses,
   );
   const shopHandle = session.shop.replace(".myshopify.com", "");
-  const requiredShopifyPlan = getShopifyPlanForTier(currentPlan);
-  const hasActiveShopifySubscription =
-    requiredShopifyPlan === null ||
-    activeSubscriptionNames.includes(requiredShopifyPlan);
+  const pendingShopifyPlan = pendingPlan ? getShopifyPlanForTier(pendingPlan) : null;
+  const hasActiveShopifySubscription = activeSubscriptionNames.some((name) =>
+    Object.values(SHOPIFY_BILLING_PLANS).includes(
+      name as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
+    ),
+  );
   const needsSubscriptionApproval =
-    requiredShopifyPlan !== null && !hasActiveShopifySubscription;
+    pendingPlan !== null &&
+    pendingShopifyPlan !== null &&
+    !activeSubscriptionNames.includes(pendingShopifyPlan);
 
   return {
     billing: billingSummary,
+    pendingPlan,
     activeSubscriptions,
     activeSubscriptionNames,
     hasActiveShopifySubscription,
     needsSubscriptionApproval,
-    requiredShopifyPlan,
+    pendingShopifyPlan,
     billingTestMode,
     themeEditorUrl: `https://admin.shopify.com/store/${shopHandle}/themes/current/editor?context=apps`,
   };
@@ -109,6 +120,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (intent === "cancel") {
     await cancelActiveSubscriptions(billing, isTest);
     await setShopBillingPlan(session.shop, "free");
+    await clearPendingBillingPlan(session.shop);
     return redirect("/app/billing");
   }
 
@@ -123,6 +135,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (plan === "free") {
       await cancelActiveSubscriptions(billing, isTest);
       await setShopBillingPlan(session.shop, "free");
+      await clearPendingBillingPlan(session.shop);
       return redirect("/app/billing");
     }
 
@@ -132,9 +145,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     try {
-      await cancelActiveSubscriptions(billing, isTest);
-      await setShopBillingPlan(session.shop, plan);
-
+      await setPendingBillingPlan(session.shop, plan);
       return await billing.request({
         plan: shopifyPlan,
         isTest,
@@ -151,7 +162,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const tier = getTierForShopifyPlan(legacyPlan);
     if (tier) {
       try {
-        await setShopBillingPlan(session.shop, tier);
+        await setPendingBillingPlan(session.shop, tier);
         return await billing.request({
           plan: legacyPlan as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
           isTest,
@@ -176,7 +187,9 @@ function PlanCard({
   hasActiveSubscription: boolean;
 }) {
   const features = PLAN_FEATURES[plan];
-  const isCurrent = plan === currentPlan;
+  const isCurrent =
+    plan === currentPlan &&
+    (plan === "free" || hasActiveSubscription);
   const planIndex = PLAN_ORDER.indexOf(plan);
   const currentIndex = PLAN_ORDER.indexOf(currentPlan);
   const isUpgrade = planIndex > currentIndex;
@@ -238,12 +251,14 @@ export default function BillingPage() {
   const actionData = useActionData<typeof action>();
   const {
     billing,
+    pendingPlan,
     activeSubscriptionNames,
     needsSubscriptionApproval,
-    requiredShopifyPlan,
+    pendingShopifyPlan,
     billingTestMode,
     themeEditorUrl,
     activeSubscriptions,
+    hasActiveShopifySubscription,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -261,19 +276,20 @@ export default function BillingPage() {
           </s-text>
         </s-box>
 
-        {needsSubscriptionApproval && requiredShopifyPlan && (
+        {needsSubscriptionApproval && pendingPlan && pendingShopifyPlan && (
           <s-banner tone="warning">
             <s-stack direction="block" gap="base">
               <s-text>
-                You selected the {billing.planLabel} plan (
-                {formatPlanPrice(billing.plan)}/mo). Approve the subscription in
-                Shopify to activate billing.
+                Approve the {PLAN_LABELS[pendingPlan]} plan (
+                {formatPlanPrice(pendingPlan)}/mo) in Shopify to activate
+                billing. Your current plan stays {billing.planLabel} until
+                approval is complete.
               </s-text>
               <Form method="post">
                 <input type="hidden" name="intent" value="subscribe" />
-                <input type="hidden" name="plan" value={billing.plan} />
+                <input type="hidden" name="plan" value={pendingPlan} />
                 <s-button type="submit" variant="primary">
-                  Approve {billing.planLabel} in Shopify
+                  Approve {PLAN_LABELS[pendingPlan]} in Shopify
                 </s-button>
               </Form>
               {billingTestMode && (
@@ -332,7 +348,7 @@ export default function BillingPage() {
                   key={plan}
                   plan={plan}
                   currentPlan={billing.plan}
-                  hasActiveSubscription={activeSubscriptionNames.length > 0}
+                  hasActiveSubscription={hasActiveShopifySubscription}
                 />
               ))}
             </div>

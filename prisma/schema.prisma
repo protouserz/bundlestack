@@ -53,6 +53,7 @@ model BundleOffer {
 model ShopSettings {
   shop              String   @id
   billingPlan       String   @default("free")
+  pendingBillingPlan String  @default("")
   totalRevenue      Float    @default(0)
   onboardingDone    Boolean  @default(false)
   createdAt         DateTime @default(now())

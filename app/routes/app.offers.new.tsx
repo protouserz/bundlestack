@@ -12,7 +12,7 @@ import {
   parseOfferForm,
   updateOfferDiscountIds,
 } from "../models/bundle.server";
-import { replaceOfferDiscounts } from "../models/discount.server";
+import { applyOfferDiscountSync } from "../models/discount.server";
 import { OfferForm } from "../components/offer-form/OfferForm";
 import styles from "../components/offer-form/offer-form.module.css";
 
@@ -28,7 +28,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     const input = parseOfferForm(formData);
     const offer = await createOffer(session.shop, input);
-    const discountIds = await replaceOfferDiscounts(admin, offer, []);
+    const discountIds = await applyOfferDiscountSync(admin, offer, []);
     await updateOfferDiscountIds(offer.id, discountIds);
     return redirect("/app/offers");
   } catch (error) {

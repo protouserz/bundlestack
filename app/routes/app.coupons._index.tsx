@@ -8,6 +8,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { EmptyState } from "../components/EmptyState";
 import { CouponCard } from "../components/CouponCard";
+import { PLAN_LABELS } from "../billing.plans";
 import { assertCouponsPlanAccess } from "../models/coupon-access.server";
 import {
   deleteAllCoupons,
@@ -16,7 +17,6 @@ import {
   removeCouponRecord,
 } from "../models/coupon.server";
 import { deleteShopifyDiscountCodes } from "../models/discount-code.server";
-import { PLAN_LABELS } from "../billing.server";
 import { SButton, SPage } from "../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -26,12 +26,21 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (!access.allowed) {
     return {
       coupons: [] as Awaited<ReturnType<typeof listCoupons>>,
-      access,
+      access: {
+        ...access,
+        planLabel: PLAN_LABELS[access.plan],
+      },
     };
   }
 
   const coupons = await listCoupons(session.shop);
-  return { coupons, access };
+  return {
+    coupons,
+    access: {
+      ...access,
+      planLabel: PLAN_LABELS[access.plan],
+    },
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -82,7 +91,7 @@ export default function CouponsIndex() {
             <s-text>
               Coupons are available on the <strong>Starter</strong>,{" "}
               <strong>Growth</strong>, and <strong>Pro</strong> plans. Your
-              current plan is <strong>{PLAN_LABELS[access.plan]}</strong>.
+              current plan is <strong>{access.planLabel}</strong>.
             </s-text>
             <SButton variant="primary" href="/app/billing">
               Upgrade to unlock coupons
@@ -115,7 +124,7 @@ export default function CouponsIndex() {
               Create checkout codes for percentage or fixed-amount discounts.
               Fixed-amount codes work like gift-card style credits at checkout
               (Shopify discount codes — not Gift Card balances). Included on{" "}
-              {PLAN_LABELS[access.plan]}.
+              {access.planLabel}.
             </s-text>
             {coupons.length > 0 ? (
               <SButton

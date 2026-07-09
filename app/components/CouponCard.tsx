@@ -1,12 +1,10 @@
 import { Link, useSubmit } from "react-router";
-import type { listCoupons } from "../models/coupon.server";
+import type { CouponRecord } from "../models/coupon.types";
 import { formatCouponValue } from "../utils/coupon";
 import { SButton } from "./polaris";
 
-type Coupon = Awaited<ReturnType<typeof listCoupons>>[number];
-
 type CouponCardProps = {
-  coupon: Coupon;
+  coupon: CouponRecord;
   showDelete?: boolean;
 };
 

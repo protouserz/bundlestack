@@ -36,6 +36,8 @@ export async function deleteShopifyDiscounts(
   discountIds: string[],
 ) {
   for (const id of discountIds) {
+    if (!id) continue;
+
     const response = await admin.graphql(
       `#graphql
         mutation discountAutomaticDelete($id: ID!) {
@@ -52,12 +54,27 @@ export async function deleteShopifyDiscounts(
 
     const json = (await response.json()) as GraphqlResponse;
     assertGraphqlOk(json, "discountAutomaticDelete");
+
+    const payload = json.data?.discountAutomaticDelete as
+      | { userErrors?: Array<{ message: string }> }
+      | undefined;
+    const userErrors = payload?.userErrors ?? [];
+    if (userErrors.length > 0) {
+      const onlyMissing = userErrors.every((error) =>
+        /not found|does not exist/i.test(error.message),
+      );
+      if (!onlyMissing) {
+        throw new Error(
+          userErrors.map((error) => error.message).join(", "),
+        );
+      }
+    }
   }
 }
 
 async function deleteOrphanedOfferDiscounts(
   admin: AdminApiContext,
-  offerId: string,
+  offer: SerializedOffer,
   excludeIds: string[] = [],
 ) {
   const response = await admin.graphql(
@@ -82,14 +99,23 @@ async function deleteOrphanedOfferDiscounts(
   const nodes =
     (json.data?.discountNodes as { nodes?: Array<{ id: string; discount?: { title?: string } }> })
       ?.nodes ?? [];
-  const marker = `BundleStack ${offerId}`;
+  const marker = `BundleStack ${offer.id}`;
   const legacyPrefix = "Buy more, save more · Buy";
+  const plannedTitles = new Set(
+    offer.tiers
+      .filter((tier) => tier.discountType === "percentage")
+      .map((tier) => discountTitleForTier(offer.id, tier)),
+  );
   const exclude = new Set(excludeIds);
 
   const toDelete = nodes
     .filter((node) => {
       const title = node.discount?.title ?? "";
-      return title.startsWith(marker) || title.startsWith(legacyPrefix);
+      return (
+        title.startsWith(marker) ||
+        title.startsWith(legacyPrefix) ||
+        plannedTitles.has(title)
+      );
     })
     .map((node) => node.id)
     .filter((id) => !exclude.has(id));
@@ -203,12 +229,11 @@ export async function replaceOfferDiscounts(
   offer: SerializedOffer,
   existingDiscountIds: string[],
 ): Promise<string[]> {
-  const newIds = await syncOfferDiscounts(admin, offer);
-
+  // Remove stale Shopify discounts first — creating before delete fails when titles already exist.
   await deleteShopifyDiscounts(admin, existingDiscountIds);
-  await deleteOrphanedOfferDiscounts(admin, offer.id, newIds);
+  await deleteOrphanedOfferDiscounts(admin, offer);
 
-  return newIds;
+  return syncOfferDiscounts(admin, offer);
 }
 
 export async function applyOfferDiscountSync(
@@ -219,7 +244,7 @@ export async function applyOfferDiscountSync(
   if (offer.status !== "active") {
     if (existingDiscountIds.length > 0) {
       await deleteShopifyDiscounts(admin, existingDiscountIds);
-      await deleteOrphanedOfferDiscounts(admin, offer.id);
+      await deleteOrphanedOfferDiscounts(admin, offer);
     }
     return [];
   }

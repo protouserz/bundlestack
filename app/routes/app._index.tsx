@@ -127,15 +127,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       };
     }
 
-    const skippedNote =
-      skipped.length > 0 ? ` Skipped: ${skipped.join("; ")}.` : "";
-
-    return {
-      fixResult: {
-        success: true,
-        message: `Synced discounts for ${synced} active offer(s).${skippedNote}`,
-      },
-    };
+    return redirect("/app");
   }
 
   if (intent === "refresh-stats") {
@@ -270,9 +262,11 @@ export default function Dashboard() {
             <h2 className={styles.panelTitle}>System checks</h2>
 
             {fixResult && (
-              <s-banner tone={fixResult.success ? "success" : "critical"}>
-                {fixResult.message}
-              </s-banner>
+              <div className={styles.healthFixBanner}>
+                <s-banner tone={fixResult.success ? "success" : "critical"}>
+                  {fixResult.message}
+                </s-banner>
+              </div>
             )}
 
             <div className={styles.healthChecks}>

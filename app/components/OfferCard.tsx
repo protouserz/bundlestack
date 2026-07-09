@@ -1,4 +1,4 @@
-import { Form, Link } from "react-router";
+import { Link, useSubmit } from "react-router";
 import type { listOffers } from "../models/bundle.server";
 import { SButton } from "./polaris";
 
@@ -15,6 +15,20 @@ export function OfferCard({
   showTiers = false,
   showDelete = false,
 }: OfferCardProps) {
+  const submit = useSubmit();
+
+  const handleDelete = () => {
+    const confirmed = window.confirm(
+      `Delete "${offer.title}"? Synced Shopify discounts for this offer will be removed.`,
+    );
+    if (!confirmed) return;
+
+    void submit(
+      { intent: "delete", offerId: offer.id },
+      { method: "post" },
+    );
+  };
+
   return (
     <s-box padding="large" borderWidth="base" borderRadius="base">
       <s-stack direction="block" gap="base">
@@ -52,13 +66,14 @@ export function OfferCard({
             </s-text>
           )}
           {showDelete && (
-            <Form method="post">
-              <input type="hidden" name="intent" value="delete" />
-              <input type="hidden" name="offerId" value={offer.id} />
-              <SButton type="submit" tone="critical" variant="tertiary">
-                Delete
-              </SButton>
-            </Form>
+            <SButton
+              type="button"
+              tone="critical"
+              variant="tertiary"
+              onClick={handleDelete}
+            >
+              Delete
+            </SButton>
           )}
         </s-stack>
       </s-stack>

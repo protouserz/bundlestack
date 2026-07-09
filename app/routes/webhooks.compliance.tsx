@@ -16,6 +16,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     console.log(`Received ${topic} webhook for ${shop}`);
   }
 
+  if (topic === "customers/data_request" || topic === "customers/redact") {
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        `Acknowledged ${topic} for ${shop} — BundleStack stores no customer PII`,
+      );
+    }
+  }
+
   if (topic === "shop/redact") {
     const shopDomain =
       typeof payload === "object" &&

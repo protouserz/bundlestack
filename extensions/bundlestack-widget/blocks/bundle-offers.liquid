@@ -14,12 +14,14 @@
   data-proxy-path="/apps/bundlestack/offers"
 >
   <div class="bundlestack-widget__header">
-    <p class="bundlestack-widget__title">BundleStack</p>
-    <p class="bundlestack-widget__subtitle">{{ block.settings.heading }}</p>
+    <p class="bundlestack-widget__title">{{ block.settings.heading }}</p>
   </div>
   <div class="bundlestack-widget__tiers" role="group" aria-label="{{ block.settings.heading }}" aria-live="polite">
     <p class="bundlestack-widget__loading">{{ 'bundlestack.widget.loading' | t }}</p>
   </div>
+  <p class="bundlestack-widget__attribution">
+    {{ 'bundlestack.widget.powered_by' | t }}
+  </p>
 </div>
 
 <script src="{{ 'bundlestack-widget.js' | asset_url }}" defer></script>

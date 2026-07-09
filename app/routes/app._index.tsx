@@ -41,7 +41,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const [settings, health, stats] = await Promise.all([
     getShopSettings(shop),
     getShopHealth(admin, shop, offers),
-    getShopStats(shop),
+    getShopStats(shop, offers),
   ]);
 
   if (stats.totalOffers > 0 && !settings.onboardingDone) {
@@ -49,28 +49,36 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     settings.onboardingDone = true;
   }
 
-  const billingCheck = await billing.check();
-  const activeSubscriptionNames = billingCheck.appSubscriptions
-    .filter((subscription) => subscription.status === "ACTIVE")
-    .map((subscription) => subscription.name);
   const requestUrl = new URL(request.url);
+  const hasBillingCallback =
+    requestUrl.searchParams.has("plan_handle") ||
+    requestUrl.searchParams.has("charge_id");
   const storedPlan = isBillingPlan(settings.billingPlan)
     ? settings.billingPlan
     : "free";
-  const currentPlan = resolveCurrentBillingPlan({
-    activeSubscriptionNames,
-    planHandle: requestUrl.searchParams.get("plan_handle"),
-    chargeId: requestUrl.searchParams.get("charge_id"),
-    storedPlan,
-  });
+  let currentPlan = storedPlan;
 
-  if (currentPlan !== settings.billingPlan) {
-    await setShopBillingPlan(shop, currentPlan);
-  }
+  if (hasBillingCallback) {
+    const billingCheck = await billing.check();
+    const activeSubscriptionNames = billingCheck.appSubscriptions
+      .filter((subscription) => subscription.status === "ACTIVE")
+      .map((subscription) => subscription.name);
 
-  if (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan) {
-    const { clearPendingBillingPlan } = await import("../models/bundle.server");
-    await clearPendingBillingPlan(shop);
+    currentPlan = resolveCurrentBillingPlan({
+      activeSubscriptionNames,
+      planHandle: requestUrl.searchParams.get("plan_handle"),
+      chargeId: requestUrl.searchParams.get("charge_id"),
+      storedPlan,
+    });
+
+    if (currentPlan !== settings.billingPlan) {
+      await setShopBillingPlan(shop, currentPlan);
+    }
+
+    if (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan) {
+      const { clearPendingBillingPlan } = await import("../models/bundle.server");
+      await clearPendingBillingPlan(shop);
+    }
   }
 
   const billingSummary = getBillingSummary(

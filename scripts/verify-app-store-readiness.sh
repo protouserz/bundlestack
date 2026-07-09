@@ -30,6 +30,7 @@ check "Compliance webhook routes exist" "test -f app/routes/webhooks.compliance.
 check "Compliance topics in shopify.app.toml" "grep -q 'compliance_topics' shopify.app.toml"
 check "App icon present" "test -f docs/app-store/icon.png"
 check "Billing config in shopify.server" "grep -q shopifyBillingConfig app/shopify.server.ts"
+check "Health includes database check" "curl -sf '$APP_URL/health' | grep -q '\"database\":\"ok\"'"
 
 echo ""
 echo "Passed: $PASS  Failed: $FAIL"

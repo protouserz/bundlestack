@@ -46,6 +46,14 @@
   color: var(--bs-text-muted);
 }
 
+.bundlestack-widget__attribution {
+  margin: 0.875rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  color: var(--bs-text-muted);
+  text-align: right;
+}
+
 .bundlestack-widget__tiers {
   display: flex;
   flex-direction: column;

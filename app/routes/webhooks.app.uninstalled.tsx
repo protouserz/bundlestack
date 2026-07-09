@@ -23,6 +23,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     } catch (error) {
       console.error(`Failed to cleanup discounts for ${shop}:`, error);
     }
+  } else {
+    console.warn(
+      `app/uninstalled for ${shop}: no admin API context — Shopify discount cleanup may be incomplete`,
+    );
   }
 
   await redactShopRecords(shop);

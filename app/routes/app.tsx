@@ -9,12 +9,20 @@ import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 
 import { authenticate } from "../shopify.server";
+import { AppLoadingIndicator } from "../components/AppLoadingIndicator";
+import { AppSupportFooter } from "../components/AppSupportFooter";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
 
+  const appUrl = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
+
   // eslint-disable-next-line no-undef
-  return { apiKey: process.env.SHOPIFY_API_KEY || "" };
+  return {
+    apiKey: process.env.SHOPIFY_API_KEY || "",
+    supportUrl: appUrl ? `${appUrl}/support` : "/support",
+    privacyUrl: appUrl ? `${appUrl}/privacy` : "/privacy",
+  };
 };
 
 // Partners embedded-app scanner looks for this meta tag in the initial HTML.
@@ -24,7 +32,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData<typeof loader>();
+  const { apiKey, supportUrl, privacyUrl } = useLoaderData<typeof loader>();
 
   return (
     <AppProvider embedded apiKey={apiKey}>
@@ -33,7 +41,9 @@ export default function App() {
         <Link to="/app/offers">Offers</Link>
         <Link to="/app/billing">Billing</Link>
       </NavMenu>
+      <AppLoadingIndicator />
       <Outlet />
+      <AppSupportFooter supportUrl={supportUrl} privacyUrl={privacyUrl} />
     </AppProvider>
   );
 }

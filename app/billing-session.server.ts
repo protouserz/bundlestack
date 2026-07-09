@@ -2,8 +2,31 @@ import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { BillingError } from "@shopify/shopify-api";
 import {
   shopifyBillingConfig,
+  SHOPIFY_BILLING_PLANS,
   type ShopifyBillingPlanName,
 } from "./billing.shopify";
+
+export const SHOPIFY_APP_HANDLE = "bundlestack";
+
+export function getShopifyAppPricingUrl(
+  shop: string,
+  appHandle = SHOPIFY_APP_HANDLE,
+): string {
+  const storeHandle = shop.replace(".myshopify.com", "");
+  return `https://admin.shopify.com/store/${storeHandle}/charges/${appHandle}/pricing_plans`;
+}
+
+export function usesShopifyAppPricingSubscriptions(
+  activeSubscriptionNames: string[],
+): boolean {
+  if (activeSubscriptionNames.length === 0) return false;
+
+  return !activeSubscriptionNames.some((name) =>
+    Object.values(SHOPIFY_BILLING_PLANS).includes(
+      name as ShopifyBillingPlanName,
+    ),
+  );
+}
 
 const APP_SUBSCRIPTION_CREATE = `#graphql
   mutation AppSubscriptionCreate(
@@ -144,7 +167,7 @@ export async function createBillingConfirmationUrl(
 
 export function formatBillingError(error: unknown): string {
   if (isManagedPricingBillingError(error)) {
-    return "Managed App Pricing is enabled for this app in the Partner Dashboard. Disable it under Distribution → Pricing to use in-app upgrades, or manage billing only through Shopify's app settings.";
+    return "This app uses Shopify App Pricing. Click upgrade again to open Shopify's plan selection page.";
   }
 
   if (error instanceof BillingError) {

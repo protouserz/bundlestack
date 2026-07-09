@@ -1,7 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
-import { cleanupShopData } from "../models/bundle.server";
+import { redactShopRecords } from "../models/bundle.server";
 import { cleanupAllShopDiscounts } from "../models/discount.server";
-import db from "../db.server";
 import {
   authenticateWebhookRequest,
   headers,
@@ -12,7 +11,7 @@ import {
 export { headers, loader };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { shop, session, topic, admin } = await authenticateWebhookRequest(request);
+  const { shop, topic, admin } = await authenticateWebhookRequest(request);
 
   if (process.env.NODE_ENV !== "production") {
     console.log(`Received ${topic} webhook for ${shop}`);
@@ -26,11 +25,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
-  await cleanupShopData(shop);
-
-  if (session) {
-    await db.session.deleteMany({ where: { shop } });
-  }
+  await redactShopRecords(shop);
 
   return webhookOk();
 };

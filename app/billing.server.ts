@@ -16,12 +16,17 @@ export {
   formatPlanPrice,
 } from "./billing.plans";
 
-export function getPlanForRevenue(revenueGenerated: number): BillingPlan {
-  if (revenueGenerated >= PLAN_THRESHOLDS.pro) return "pro";
-  if (revenueGenerated >= PLAN_THRESHOLDS.scale) return "scale";
-  if (revenueGenerated >= PLAN_THRESHOLDS.starter) return "starter";
+export function getSuggestedPlanForRedemptions(
+  discountRedemptions: number,
+): BillingPlan {
+  if (discountRedemptions >= PLAN_THRESHOLDS.pro) return "pro";
+  if (discountRedemptions >= PLAN_THRESHOLDS.scale) return "scale";
+  if (discountRedemptions >= PLAN_THRESHOLDS.starter) return "starter";
   return "free";
 }
+
+/** @deprecated Use getSuggestedPlanForRedemptions */
+export const getPlanForRevenue = getSuggestedPlanForRedemptions;
 
 export function getNextPlan(current: BillingPlan): BillingPlan | null {
   if (current === "free") return "starter";
@@ -34,12 +39,14 @@ export type BillingSummary = {
   plan: BillingPlan;
   planLabel: string;
   monthlyPrice: number;
-  revenueGenerated: number;
+  discountRedemptions: number;
+  suggestedPlan: BillingPlan;
+  suggestedPlanLabel: string;
   nextPlan: BillingPlan | null;
   nextPlanLabel: string | null;
   nextPlanPrice: number | null;
-  revenueUntilNextTier: number | null;
-  progressToNextTier: number;
+  redemptionsUntilSuggestedTier: number | null;
+  progressToSuggestedTier: number;
   alertAtEightyPercent: boolean;
 };
 
@@ -47,36 +54,39 @@ export function getBillingSummary(
   plan: BillingPlan,
   discountUses: number,
 ): BillingSummary {
+  const suggestedPlan = getSuggestedPlanForRedemptions(discountUses);
   const nextPlan = getNextPlan(plan);
   const monthlyPrice = PLAN_PRICES[plan];
 
-  let revenueUntilNextTier: number | null = null;
-  let progressToNextTier = 100;
+  let redemptionsUntilSuggestedTier: number | null = null;
+  let progressToSuggestedTier = 100;
 
   if (nextPlan) {
     const nextThreshold = PLAN_THRESHOLDS[nextPlan];
     const currentThreshold = PLAN_THRESHOLDS[plan];
-    revenueUntilNextTier = Math.max(0, nextThreshold - discountUses);
+    redemptionsUntilSuggestedTier = Math.max(0, nextThreshold - discountUses);
     const range = nextThreshold - currentThreshold;
-    progressToNextTier =
+    progressToSuggestedTier =
       range > 0
         ? Math.min(100, ((discountUses - currentThreshold) / range) * 100)
         : 100;
   }
 
   const alertAtEightyPercent =
-    nextPlan !== null && progressToNextTier >= 80 && progressToNextTier < 100;
+    nextPlan !== null && progressToSuggestedTier >= 80 && progressToSuggestedTier < 100;
 
   return {
     plan,
     planLabel: PLAN_LABELS[plan],
     monthlyPrice,
-    revenueGenerated: discountUses,
+    discountRedemptions: discountUses,
+    suggestedPlan,
+    suggestedPlanLabel: PLAN_LABELS[suggestedPlan],
     nextPlan,
     nextPlanLabel: nextPlan ? PLAN_LABELS[nextPlan] : null,
     nextPlanPrice: nextPlan ? PLAN_PRICES[nextPlan] : null,
-    revenueUntilNextTier,
-    progressToNextTier: Math.round(Math.max(0, progressToNextTier)),
+    redemptionsUntilSuggestedTier,
+    progressToSuggestedTier: Math.round(Math.max(0, progressToSuggestedTier)),
     alertAtEightyPercent,
   };
 }

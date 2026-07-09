@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs } from "react-router";
-import { cleanupShopData } from "../models/bundle.server";
+import { redactShopRecords } from "../models/bundle.server";
 import {
   authenticateWebhookRequest,
   headers,
@@ -25,7 +25,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         ? payload.shop_domain
         : shop;
 
-    await cleanupShopData(shopDomain);
+    await redactShopRecords(shopDomain);
   }
 
   return webhookOk();

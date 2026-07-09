@@ -121,12 +121,12 @@ Copy for tagline, description, keywords: [`app-store-listing.md`](./app-store-li
 
 | Plan | Price | Notes |
 |------|-------|-------|
-| Free | $0/mo | Up to $500 app-generated revenue / month |
-| Starter | $7.99/mo | Up to $2,000 app-generated revenue / month |
-| Growth | $14.99/mo | Up to $5,000 app-generated revenue / month |
-| Pro | $29.99/mo | Unlimited app-generated revenue |
+| Free | $0/mo | Unlimited offers, theme widget, discount sync |
+| Starter | $7.99/mo | Paid support for growing stores |
+| Growth | $14.99/mo | Priority support for scaling stores |
+| Pro | $29.99/mo | High-volume stores |
 
-Merchants on the free tier pay nothing. Paid tiers activate when app-attributed revenue crosses thresholds; merchants approve charges via Shopify Billing.
+Merchants choose a paid plan on the in-app Billing page and approve the charge in Shopify. Plans do not upgrade automatically.
 
 ---
 
@@ -146,11 +146,11 @@ Steps to verify:
 3. Online Store → Themes → Customize → Product template → Add app block "BundleStack" → Save.
 4. View the product on the storefront → select a tier → Add to cart → Checkout → confirm discount applies.
 
-Billing: Free until $500/mo app-generated revenue. Paid tiers use Shopify Billing API; approve on the in-app Billing page if prompted.
+Billing: Free to install. Merchants select paid plans on the in-app Billing page and approve charges in Shopify (no automatic upgrades).
 
-Uninstall: Discounts and offer data are removed automatically. Theme block can be removed in the theme editor.
+Uninstall: Discounts, offer data, and shop records are removed automatically. Theme block can be removed in the theme editor.
 
-Protected customer data: Not used. App stores shop session, offer config, and aggregate revenue only — no customer names, emails, or order line items.
+Protected customer data: Not used. App stores shop session, offer config, and discount redemption counts only — no customer names, emails, or order line items.
 
 Privacy: https://bundlestack-pfee.onrender.com/privacy
 Support: https://bundlestack-pfee.onrender.com/support

@@ -4,11 +4,11 @@ Shopify app for **quantity breaks and bundle discounts** — the Kaching playboo
 
 ## What's included (MVP)
 
-- **Admin dashboard** — active offers, revenue generated, billing tier
+- **Admin dashboard** — active offers, discount redemptions, billing tier
 - **Offer CRUD** — create quantity breaks (Buy 2 save 10%, Buy 3 save 15%, etc.)
 - **Theme widget** — product page block that displays tiers and sets quantity on click
 - **App proxy API** — `/apps/bundlestack/offers?product_id=...` for storefront
-- **Usage-based billing** — performance pricing that scales with app-generated revenue (Shopify Billing API wiring in v2)
+- **Shopify Billing** — free tier plus paid plans merchants approve in the Billing page
 
 ## Prerequisites
 
@@ -52,24 +52,24 @@ Press `p` to open the app in your dev store admin.
 1. **Create offer** — Admin → Create offer → add product GIDs + quantity tiers
 2. **Activate** — set status to Active
 3. **Theme** — Online Store → Customize → Product page → Add block → **BundleStack offers**
-4. **Track** — Dashboard shows revenue generated per offer
+4. **Track** — Dashboard shows discount redemptions per offer
 
-## Pricing (performance-based)
+## Pricing
 
-Tiers upgrade automatically when app-generated revenue crosses each threshold. You only pay more when BundleStack earns more for your store.
+Free to install. Merchants choose a paid plan on the in-app **Billing** page when they are ready — Shopify approves the charge. Plans do not upgrade automatically.
 
-| Plan | Price | When it applies | Revenue ceiling |
-|------|-------|-----------------|-----------------|
-| **Free** | $0/mo | Launch & first sales | Up to $500 app revenue / mo |
-| **Starter** | $7.99/mo | After $500 app revenue | Up to $2,000 app revenue / mo |
-| **Growth** | $14.99/mo | After $2,000 app revenue | Up to $5,000 app revenue / mo |
-| **Pro** | $29.99/mo | After $5,000 app revenue | Unlimited app revenue |
+| Plan | Price | Best for |
+|------|-------|----------|
+| **Free** | $0/mo | Getting started |
+| **Starter** | $7.99/mo | Steady bundle sales |
+| **Growth** | $14.99/mo | Growing bundle volume |
+| **Pro** | $29.99/mo | High-volume stores |
 
-Compared to leading bundle apps: Growth at $14.99 covers up to $5k revenue (Kaching charges $29.99 for the same band). Pro unlimited at $29.99 undercuts Appstle's $39.99 unlimited tier.
+Compared to leading bundle apps: Growth at $14.99 undercuts Kaching's $29.99 band for similar stores. Pro unlimited at $29.99 undercuts Appstle's $39.99 unlimited tier.
 
-Billing is calculated from revenue attributed to BundleStack offers. Shopify bills on a 30-day cycle. Uninstalling removes all app discounts and offer data automatically.
+Shopify bills approved plans on a 30-day cycle. Uninstalling removes app discounts and offer data automatically.
 
-> **Note:** Tier logic is implemented in `app/billing.plans.ts`. Shopify Billing API charge creation is planned for v2.
+> Tier definitions live in `app/billing.plans.ts`. Charge creation uses the Shopify Billing API (with Managed Pricing fallback) in `app/billing.shopify.ts`.
 
 ## Growth plan
 
@@ -88,7 +88,7 @@ To publish on the App Store, see **[docs/APP_STORE.md](docs/APP_STORE.md)** for 
 4. Complete listing in Partners Dashboard (copy in `docs/app-store-listing.md`)
 5. Submit for review on the App Store review page
 
-Compliance webhooks and a public privacy policy (`/privacy`) are implemented. Wire the Shopify Billing API before enabling paid charges.
+Compliance webhooks and a public privacy policy (`/privacy`) are implemented. Paid plans use Shopify Billing (see Billing page in the app).
 
 ## Project structure
 

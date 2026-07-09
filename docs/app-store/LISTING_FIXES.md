@@ -29,7 +29,7 @@ Create an offer, select products, define quantity tiers, set the offer to Active
 
 Built for consumables, supplements, coffee, skincare, apparel, and any catalog where buying more should save more.
 
-Free to install. Paid tiers scale with app-generated revenue and are billed through Shopify on a 30-day cycle.
+Free to install. Merchants choose paid plans on the in-app Billing page and approve charges through Shopify on a 30-day cycle.
 ```
 
 ---

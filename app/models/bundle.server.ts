@@ -314,6 +314,12 @@ export async function cleanupShopData(shop: string) {
   await prisma.shopSettings.deleteMany({ where: { shop } });
 }
 
+/** GDPR shop/redact and full shop data removal (offers, settings, OAuth sessions). */
+export async function redactShopRecords(shop: string) {
+  await cleanupShopData(shop);
+  await prisma.session.deleteMany({ where: { shop } });
+}
+
 export async function listOffersRaw(shop: string) {
   return prisma.bundleOffer.findMany({ where: { shop } });
 }

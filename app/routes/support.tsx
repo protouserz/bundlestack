@@ -1,8 +1,5 @@
 import { PublicPageLayout } from "../components/public/PublicPageLayout";
 
-const SUPPORT_EMAIL =
-  process.env.SUPPORT_EMAIL || "protouserz@proton.me";
-
 export default function SupportPage() {
   return (
     <PublicPageLayout
@@ -10,12 +7,12 @@ export default function SupportPage() {
       subtitle="BundleStack · Quantity breaks for Shopify"
     >
       <section>
-        <h2>Get help</h2>
+        <h2>Get help in Shopify admin</h2>
         <p>
-          Email us at{" "}
-          <a href={`mailto:${SUPPORT_EMAIL.split(" ")[0]}`}>{SUPPORT_EMAIL}</a>{" "}
-          with your shop domain and a short description of the issue. We
-          typically respond within one business day.
+          Open <strong>BundleStack</strong> from your Shopify admin sidebar and go
+          to <strong>Support</strong>. Messages are tied to your Shopify staff
+          account — we reply to the email on your Shopify login, not a public
+          inbox.
         </p>
       </section>
 
@@ -46,16 +43,9 @@ export default function SupportPage() {
       <section>
         <h2>Bug reports & feature requests</h2>
         <p>
-          Open an issue on{" "}
-          <a
-            href="https://github.com/protouserz/bundlestack/issues"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>{" "}
-          with steps to reproduce and your shop domain (no customer data
-          please).
+          Use the in-app Support page from your Shopify admin. Include your shop
+          domain, steps to reproduce, and what you expected — no customer personal
+          data, please.
         </p>
       </section>
     </PublicPageLayout>

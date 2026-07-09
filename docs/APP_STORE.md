@@ -138,7 +138,7 @@ In Partners → **App Store review**:
 
 ## Step 6 — Billing
 
-Tier logic lives in `app/billing.plans.ts`. **Shopify Billing API** is wired in `app/billing.shopify.ts` and the in-app Billing page — merchants approve paid tiers through Shopify when revenue thresholds are crossed.
+Tier logic lives in `app/billing.plans.ts`. **Shopify Billing API** is wired in `app/billing.shopify.ts` and the in-app Billing page — merchants choose and approve paid plans through Shopify (no automatic upgrades).
 
 For development stores, set `SHOPIFY_BILLING_TEST=true` on Render so charges appear as test subscriptions.
 

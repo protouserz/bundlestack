@@ -1,6 +1,6 @@
 export type BillingPlan = "free" | "starter" | "scale" | "pro";
 
-/** Suggested monthly store volume for each plan tier. */
+/** Suggested monthly discount redemption counts when choosing a paid plan. */
 export const PLAN_THRESHOLDS: Record<BillingPlan, number> = {
   free: 0,
   starter: 500,
@@ -24,8 +24,8 @@ export const PLAN_LABELS: Record<BillingPlan, string> = {
 
 export const PLAN_REVENUE_CAPS: Record<BillingPlan, string> = {
   free: "Best for stores getting started",
-  starter: "For growing stores up to ~$2k/mo volume",
-  scale: "For scaling stores up to ~$5k/mo volume",
+  starter: "For stores with steady bundle sales",
+  scale: "For stores with growing bundle volume",
   pro: "For high-volume stores with no cap",
 };
 
@@ -37,17 +37,17 @@ export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   ],
   starter: [
     "Everything in Free",
-    "Higher revenue ceiling",
+    "For stores ready for paid support",
     "Email support",
   ],
   scale: [
     "Everything in Starter",
-    "5× revenue headroom vs Starter",
+    "For higher bundle volume",
     "Priority support",
   ],
   pro: [
     "Everything in Growth",
-    "No revenue cap",
+    "No redemption tracking limits",
     "Best value at scale",
   ],
 };

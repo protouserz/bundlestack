@@ -30,7 +30,7 @@ Create an offer, select products, define quantity tiers, set the offer to Active
 
 Built for consumables, supplements, coffee, skincare, apparel, and any catalog where buying more should save more.
 
-Free to install. Paid tiers scale with app-generated revenue and are billed through Shopify on a 30-day cycle.
+Free to install. Paid plans are selected on the in-app Billing page and approved through Shopify on a 30-day cycle.
 
 ## Search keywords
 
@@ -46,10 +46,10 @@ quantity breaks, volume discount, bundle discounts, buy more save more, tiered p
 
 | Plan | Price | Description |
 |------|-------|-------------|
-| Free | $0/mo | Up to $500 app-generated revenue / month |
-| Starter | $7.99/mo | Up to $2,000 app-generated revenue / month |
-| Growth | $14.99/mo | Up to $5,000 app-generated revenue / month |
-| Pro | $29.99/mo | Unlimited app-generated revenue |
+| Free | $0/mo | Unlimited offers, theme widget, automatic discount sync |
+| Starter | $7.99/mo | Paid support tier for growing stores |
+| Growth | $14.99/mo | Priority support for scaling stores |
+| Pro | $29.99/mo | High-volume stores, no redemption tracking limits |
 
 ## Screenshot captions (suggested)
 

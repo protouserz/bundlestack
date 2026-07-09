@@ -481,7 +481,7 @@ export default function BillingPage() {
               />
               <StatCard
                 label="Discount redemptions"
-                value={String(billing.revenueGenerated)}
+                value={String(billing.discountRedemptions)}
               />
             </div>
 
@@ -503,8 +503,9 @@ export default function BillingPage() {
         <s-section heading="Pricing plans">
           <s-stack direction="block" gap="large">
             <s-paragraph>
-              Pick a plan below. You can change plans without reinstalling the
-              app or contacting support.
+              Choose a plan below when you are ready. Paid plans are approved
+              through Shopify — you can upgrade, downgrade, or return to Free
+              anytime without reinstalling or contacting support.
             </s-paragraph>
 
             <div className={styles.gridCards}>
@@ -530,7 +531,7 @@ export default function BillingPage() {
                   </s-list-item>
                   <s-list-item>
                     Select a paid plan when you are ready — approve the charge in
-                    Shopify
+                    Shopify (plans are not upgraded automatically)
                   </s-list-item>
                   <s-list-item>
                     Switch plans or return to Free anytime from this page

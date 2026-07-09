@@ -52,13 +52,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const activeSubscriptionNames = billingCheck.appSubscriptions
     .filter((subscription) => subscription.status === "ACTIVE")
     .map((subscription) => subscription.name);
-  const currentPlan = resolveBillingPlan(
-    settings.billingPlan,
-    activeSubscriptionNames,
-  );
+  const currentPlan = resolveBillingPlan(activeSubscriptionNames);
 
   if (currentPlan !== settings.billingPlan) {
     await setShopBillingPlan(shop, currentPlan);
+  }
+
+  if (activeSubscriptionNames.length > 0 && settings.pendingBillingPlan) {
+    const { clearPendingBillingPlan } = await import("../models/bundle.server");
+    await clearPendingBillingPlan(shop);
   }
 
   const billingSummary = getBillingSummary(
@@ -82,24 +84,38 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const intent = formData.get("intent");
 
   if (intent === "sync-discounts") {
-    const { synced, failed } = await syncAllActiveOfferDiscounts(
+    const { synced, failed, skipped } = await syncAllActiveOfferDiscounts(
       admin,
       session.shop,
     );
 
-    if (failed.length > 0) {
+    if (failed.length > 0 || synced === 0) {
+      const parts = [
+        ...failed,
+        ...skipped,
+        synced === 0 && failed.length === 0
+          ? "No offers were synchronized."
+          : null,
+      ].filter(Boolean);
+
       return {
         fixResult: {
           success: false,
-          message: `Synced ${synced} offer(s). Failed: ${failed.join("; ")}`,
+          message:
+            synced > 0
+              ? `Synced ${synced} offer(s). Issues: ${parts.join("; ")}`
+              : parts.join("; "),
         },
       };
     }
 
+    const skippedNote =
+      skipped.length > 0 ? ` Skipped: ${skipped.join("; ")}.` : "";
+
     return {
       fixResult: {
         success: true,
-        message: `Synced discounts for ${synced} active offer(s).`,
+        message: `Synced discounts for ${synced} active offer(s).${skippedNote}`,
       },
     };
   }

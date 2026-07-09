@@ -64,3 +64,10 @@ export function formatBillingError(error: unknown): string {
 
   return "Unable to start billing. Please try again.";
 }
+
+/** billing.request() throws a Response redirect for embedded apps — must propagate. */
+export function rethrowIfResponse(error: unknown): void {
+  if (error instanceof Response) {
+    throw error;
+  }
+}

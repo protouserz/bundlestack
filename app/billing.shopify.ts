@@ -83,5 +83,16 @@ export function getTierForShopifyPlan(
   const entry = Object.entries(BILLING_PLAN_BY_TIER).find(
     ([, name]) => name === planName,
   );
-  return entry ? (entry[0] as Exclude<BillingPlan, "free">) : null;
+  if (entry) {
+    return entry[0] as Exclude<BillingPlan, "free">;
+  }
+
+  const normalized = planName.toLowerCase();
+  if (normalized.includes("pro")) return "pro";
+  if (normalized.includes("growth") || normalized.includes("scale")) {
+    return "scale";
+  }
+  if (normalized.includes("starter")) return "starter";
+
+  return null;
 }

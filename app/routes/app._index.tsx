@@ -6,7 +6,7 @@ import type {
 import { Link, redirect, useFetcher, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { getBillingSummary } from "../billing.server";
+import { getBillingSummary, isBillingPlan } from "../billing.server";
 import { DashboardMetrics } from "../components/dashboard/DashboardMetrics";
 import { OffersTable } from "../components/dashboard/OffersTable";
 import { RevenueChart } from "../components/dashboard/RevenueChart";
@@ -18,7 +18,7 @@ import {
   getShopSettings,
   getShopStats,
   listOffers,
-  resolveBillingPlan,
+  resolveCurrentBillingPlan,
   setOnboardingDone,
   setShopBillingPlan,
 } from "../models/bundle.server";
@@ -52,7 +52,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const activeSubscriptionNames = billingCheck.appSubscriptions
     .filter((subscription) => subscription.status === "ACTIVE")
     .map((subscription) => subscription.name);
-  const currentPlan = resolveBillingPlan(activeSubscriptionNames);
+  const requestUrl = new URL(request.url);
+  const storedPlan = isBillingPlan(settings.billingPlan)
+    ? settings.billingPlan
+    : "free";
+  const currentPlan = resolveCurrentBillingPlan({
+    activeSubscriptionNames,
+    planHandle: requestUrl.searchParams.get("plan_handle"),
+    chargeId: requestUrl.searchParams.get("charge_id"),
+    storedPlan,
+  });
 
   if (currentPlan !== settings.billingPlan) {
     await setShopBillingPlan(shop, currentPlan);

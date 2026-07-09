@@ -64,24 +64,24 @@ export default function OffersIndex() {
         Create offer
       </SButton>
 
-      {offers.length > 0 && (
-        <SButton
-          slot="secondary-actions"
-          tone="critical"
-          variant="tertiary"
-          command="--show"
-          commandFor="delete-all-offers-modal"
-        >
-          Delete all
-        </SButton>
-      )}
-
       <s-stack direction="block" gap="large">
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
-          <s-text tone="neutral">
-            Quantity-break offers encourage shoppers to buy more with tiered
-            discounts — synced automatically as Shopify discounts at checkout.
-          </s-text>
+          <s-stack direction="inline" gap="base">
+            <s-text tone="neutral">
+              Quantity-break offers encourage shoppers to buy more with tiered
+              discounts — synced automatically as Shopify discounts at checkout.
+            </s-text>
+            {offers.length > 0 && (
+              <SButton
+                variant="secondary"
+                tone="critical"
+                command="--show"
+                commandFor="delete-all-offers-modal"
+              >
+                Delete all
+              </SButton>
+            )}
+          </s-stack>
         </s-box>
 
         {offers.length === 0 ? (
@@ -108,7 +108,11 @@ export default function OffersIndex() {
       </s-stack>
 
       {offers.length > 0 && (
-        <s-modal id="delete-all-offers-modal" heading="Delete all offers?">
+        <s-modal
+          id="delete-all-offers-modal"
+          heading="Delete all offers?"
+          accessibilityLabel="Confirm deleting all offers"
+        >
           <s-stack direction="block" gap="base">
             <s-paragraph>
               This will permanently delete {offers.length} offer
@@ -119,7 +123,7 @@ export default function OffersIndex() {
 
           <SButton
             slot="secondary-actions"
-            variant="tertiary"
+            variant="secondary"
             commandFor="delete-all-offers-modal"
             command="--hide"
           >

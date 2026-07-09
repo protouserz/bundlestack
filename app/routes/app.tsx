@@ -20,7 +20,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // eslint-disable-next-line no-undef
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
-    supportUrl: appUrl ? `${appUrl}/support` : "/support",
     privacyUrl: appUrl ? `${appUrl}/privacy` : "/privacy",
   };
 };
@@ -32,7 +31,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function App() {
-  const { apiKey, supportUrl, privacyUrl } = useLoaderData<typeof loader>();
+  const { apiKey, privacyUrl } = useLoaderData<typeof loader>();
 
   return (
     <AppProvider embedded apiKey={apiKey}>
@@ -40,10 +39,11 @@ export default function App() {
         <Link to="/app">Dashboard</Link>
         <Link to="/app/offers">Offers</Link>
         <Link to="/app/billing">Billing</Link>
+        <Link to="/app/support">Support</Link>
       </NavMenu>
       <AppLoadingIndicator />
       <Outlet />
-      <AppSupportFooter supportUrl={supportUrl} privacyUrl={privacyUrl} />
+      <AppSupportFooter privacyUrl={privacyUrl} />
     </AppProvider>
   );
 }

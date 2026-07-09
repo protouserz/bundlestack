@@ -1,23 +1,24 @@
+import { Link } from "react-router";
+import styles from "./support-footer.module.css";
+
 type AppSupportFooterProps = {
-  supportUrl: string;
   privacyUrl: string;
 };
 
-export function AppSupportFooter({
-  supportUrl,
-  privacyUrl,
-}: AppSupportFooterProps) {
+export function AppSupportFooter({ privacyUrl }: AppSupportFooterProps) {
   return (
-    <footer style={{ marginTop: "1.5rem", paddingBottom: "1rem" }}>
-      <s-text tone="neutral">
-        <a href={supportUrl} target="_blank" rel="noreferrer">
-          Support
-        </a>
-        {" · "}
-        <a href={privacyUrl} target="_blank" rel="noreferrer">
-          Privacy policy
-        </a>
-      </s-text>
+    <footer className={styles.footer}>
+      <div className={styles.inner}>
+        <p className={styles.label}>Help & trust</p>
+        <div className={styles.links}>
+          <Link className={styles.link} to="/app/support">
+            Support
+          </Link>
+          <a className={styles.link} href={privacyUrl} target="_blank" rel="noreferrer">
+            Privacy policy
+          </a>
+        </div>
+      </div>
     </footer>
   );
 }

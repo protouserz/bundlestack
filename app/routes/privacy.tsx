@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import { PublicPageLayout } from "../components/public/PublicPageLayout";
 
 export default function PrivacyPolicy() {
@@ -58,9 +57,9 @@ export default function PrivacyPolicy() {
       <section>
         <h2>Contact</h2>
         <p>
-          For privacy questions, visit our{" "}
-          <Link to="/support">support page</Link> or contact us through the
-          Shopify App Store listing.
+          For privacy questions, open BundleStack in your Shopify admin and go
+          to <strong>Support</strong>. We reply using the email on your Shopify
+          staff account.
         </p>
       </section>
     </PublicPageLayout>

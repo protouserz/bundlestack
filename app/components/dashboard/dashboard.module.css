@@ -294,6 +294,10 @@
   transition: width 0.3s ease;
 }
 
+.healthFixBanner {
+  margin-bottom: 1rem;
+}
+
 .healthChecks {
   display: flex;
   flex-direction: column;

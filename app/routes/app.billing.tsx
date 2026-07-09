@@ -17,12 +17,12 @@ import { StatCard } from "../components/StatCard";
 import styles from "../components/ui.module.css";
 import {
   billingReturnUrl,
-  extractBillingRedirectFromError,
+  buildExitIframePath,
+  createBillingConfirmationUrl,
   formatBillingError,
-  rethrowIfResponse,
   resolveBillingTestMode,
 } from "../billing-session.server";
-import { openBillingApprovalUrl } from "../billing-client";
+import { openBillingHandoff } from "../billing-client";
 import {
   getShopifyPlanForTier,
   getTierForShopifyPlan,
@@ -50,7 +50,7 @@ import {
 type BillingContext = Awaited<ReturnType<typeof authenticate.admin>>;
 
 async function requestPaidPlan(
-  { billing, admin, session }: BillingContext,
+  { admin, session }: BillingContext,
   request: Request,
   plan: Exclude<BillingPlan, "free">,
 ) {
@@ -60,12 +60,19 @@ async function requestPaidPlan(
   }
 
   const isTest = await resolveBillingTestMode(admin);
-  await setPendingBillingPlan(session.shop, plan);
-  await billing.request({
-    plan: shopifyPlan,
+  const returnUrl = billingReturnUrl(request);
+  const confirmationUrl = await createBillingConfirmationUrl(
+    admin,
+    shopifyPlan,
+    returnUrl,
     isTest,
-    returnUrl: billingReturnUrl(request),
-  });
+  );
+
+  await setPendingBillingPlan(session.shop, plan);
+
+  return {
+    exitIframePath: buildExitIframePath(request, session.shop, confirmationUrl),
+  };
 }
 
 async function loadBillingPage(request: Request, billingContext: BillingContext) {
@@ -190,13 +197,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     try {
-      await requestPaidPlan(billingContext, request, plan);
+      return await requestPaidPlan(billingContext, request, plan);
     } catch (error) {
-      const billingRedirect = extractBillingRedirectFromError(error);
-      if (billingRedirect) {
-        return billingRedirect;
-      }
-      rethrowIfResponse(error);
       return { error: formatBillingError(error) };
     }
   }
@@ -207,13 +209,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const tier = getTierForShopifyPlan(legacyPlan);
     if (tier) {
       try {
-        await requestPaidPlan(billingContext, request, tier);
+        return await requestPaidPlan(billingContext, request, tier);
       } catch (error) {
-        const billingRedirect = extractBillingRedirectFromError(error);
-        if (billingRedirect) {
-          return billingRedirect;
-        }
-        rethrowIfResponse(error);
         return { error: formatBillingError(error) };
       }
     }
@@ -278,45 +275,44 @@ function PlanCard({
         </s-stack>
 
         {!isCurrent && plan === "free" && (
-          <s-button
-            type="button"
-            variant="tertiary"
-            {...(isBusy ? { loading: true } : {})}
-            onClick={() =>
-              subscribeFetcher.submit(
-                { intent: "subscribe", plan: "free" },
-                { method: "post" },
-              )
-            }
-          >
-            {buttonLabel}
-          </s-button>
+          <subscribeFetcher.Form method="post">
+            <input type="hidden" name="intent" value="subscribe" />
+            <input type="hidden" name="plan" value="free" />
+            <s-button
+              type="submit"
+              variant="tertiary"
+              {...(isBusy ? { loading: true } : {})}
+            >
+              {buttonLabel}
+            </s-button>
+          </subscribeFetcher.Form>
         )}
 
         {!isCurrent && plan !== "free" && (
-          <s-button
-            type="button"
-            variant={isUpgrade ? "primary" : "tertiary"}
-            {...(isBusy ? { loading: true } : {})}
-            onClick={() =>
-              subscribeFetcher.submit({ intent: "subscribe", plan }, { method: "post" })
-            }
-          >
-            {buttonLabel}
-          </s-button>
+          <subscribeFetcher.Form method="post">
+            <input type="hidden" name="intent" value="subscribe" />
+            <input type="hidden" name="plan" value={plan} />
+            <s-button
+              type="submit"
+              variant={isUpgrade ? "primary" : "tertiary"}
+              {...(isBusy ? { loading: true } : {})}
+            >
+              {buttonLabel}
+            </s-button>
+          </subscribeFetcher.Form>
         )}
 
         {isCurrent && plan !== "free" && hasActiveSubscription && (
-          <s-button
-            type="button"
-            variant="tertiary"
-            {...(isBusy ? { loading: true } : {})}
-            onClick={() =>
-              subscribeFetcher.submit({ intent: "cancel" }, { method: "post" })
-            }
-          >
-            Cancel paid subscription
-          </s-button>
+          <subscribeFetcher.Form method="post">
+            <input type="hidden" name="intent" value="cancel" />
+            <s-button
+              type="submit"
+              variant="tertiary"
+              {...(isBusy ? { loading: true } : {})}
+            >
+              Cancel paid subscription
+            </s-button>
+          </subscribeFetcher.Form>
         )}
       </s-stack>
     </s-box>
@@ -342,18 +338,13 @@ function PendingApprovalBanner({
           {formatPlanPrice(pendingPlan)}/mo) in Shopify to activate billing. Your
           current plan stays {currentPlanLabel} until approval is complete.
         </s-text>
-        <s-button
-          type="button"
-          variant="primary"
-          onClick={() =>
-            subscribeFetcher.submit(
-              { intent: "subscribe", plan: pendingPlan },
-              { method: "post" },
-            )
-          }
-        >
-          Approve {PLAN_LABELS[pendingPlan]} in Shopify
-        </s-button>
+        <subscribeFetcher.Form method="post">
+          <input type="hidden" name="intent" value="subscribe" />
+          <input type="hidden" name="plan" value={pendingPlan} />
+          <s-button type="submit" variant="primary">
+            Approve {PLAN_LABELS[pendingPlan]} in Shopify
+          </s-button>
+        </subscribeFetcher.Form>
         {billingTestMode && (
           <s-text tone="neutral">
             Test billing mode is on for this store — charges appear as test
@@ -385,16 +376,9 @@ export default function BillingPage() {
     billingError;
 
   useEffect(() => {
-    if (!fetcherData) return;
-
-    if ("confirmationUrl" in fetcherData && fetcherData.confirmationUrl) {
-      openBillingApprovalUrl(fetcherData.confirmationUrl);
-      return;
-    }
-
-    if ("exitIframeUrl" in fetcherData && fetcherData.exitIframeUrl) {
-      openBillingApprovalUrl(fetcherData.exitIframeUrl);
-    }
+    if (!fetcherData || !("exitIframePath" in fetcherData)) return;
+    if (!fetcherData.exitIframePath) return;
+    openBillingHandoff(fetcherData.exitIframePath);
   }, [fetcherData]);
 
   return (

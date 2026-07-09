@@ -1,5 +1,31 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { BillingError } from "@shopify/shopify-api";
+import {
+  shopifyBillingConfig,
+  type ShopifyBillingPlanName,
+} from "./billing.shopify";
+
+const APP_SUBSCRIPTION_CREATE = `#graphql
+  mutation AppSubscriptionCreate(
+    $name: String!
+    $returnUrl: URL!
+    $test: Boolean
+    $lineItems: [AppSubscriptionLineItemInput!]!
+  ) {
+    appSubscriptionCreate(
+      name: $name
+      returnUrl: $returnUrl
+      test: $test
+      lineItems: $lineItems
+    ) {
+      confirmationUrl
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
 
 export async function isPartnerDevelopmentStore(
   admin: AdminApiContext,
@@ -45,6 +71,75 @@ export function billingReturnUrl(request: Request): string {
     process.env.SHOPIFY_APP_URL || new URL(request.url).origin
   ).replace(/\/$/, "");
   return `${appUrl}/app/billing`;
+}
+
+export function buildExitIframePath(
+  request: Request,
+  shop: string,
+  confirmationUrl: string,
+): string {
+  const requestUrl = new URL(request.url);
+  const params = new URLSearchParams({
+    shop,
+    exitIframe: confirmationUrl,
+  });
+  const host = requestUrl.searchParams.get("host");
+  if (host) {
+    params.set("host", host);
+  }
+  return `/auth/exit-iframe?${params.toString()}`;
+}
+
+export async function createBillingConfirmationUrl(
+  admin: AdminApiContext,
+  planName: ShopifyBillingPlanName,
+  returnUrl: string,
+  isTest: boolean,
+): Promise<string> {
+  const planConfig = shopifyBillingConfig()[planName];
+  const lineItems = planConfig.lineItems.map((item) => ({
+    plan: {
+      appRecurringPricingDetails: {
+        interval: item.interval,
+        price: {
+          amount: item.amount,
+          currencyCode: item.currencyCode,
+        },
+      },
+    },
+  }));
+
+  const response = await admin.graphql(APP_SUBSCRIPTION_CREATE, {
+    variables: {
+      name: planName,
+      returnUrl,
+      test: isTest,
+      lineItems,
+    },
+  });
+
+  const json = await response.json();
+  const payload = json.data?.appSubscriptionCreate as
+    | {
+        confirmationUrl?: string | null;
+        userErrors?: Array<{ field?: string[] | null; message: string }>;
+      }
+    | undefined;
+  const userErrors = payload?.userErrors ?? [];
+
+  if (userErrors.length > 0) {
+    throw new BillingError({
+      message: userErrors.map((entry) => entry.message).join(" "),
+      errorData: userErrors,
+    });
+  }
+
+  const confirmationUrl = payload?.confirmationUrl;
+  if (!confirmationUrl) {
+    throw new Error("Shopify did not return a billing confirmation URL.");
+  }
+
+  return confirmationUrl;
 }
 
 export function formatBillingError(error: unknown): string {

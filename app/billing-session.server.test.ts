@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { extractBillingRedirectFromError } from "./billing-session.server";
+import {
+  buildExitIframePath,
+  extractBillingRedirectFromError,
+} from "./billing-session.server";
+
+describe("buildExitIframePath", () => {
+  it("builds exit-iframe path with shop, host, and confirmation URL", () => {
+    const request = new Request(
+      "https://app.example.com/app/billing?embedded=1&host=abc123",
+    );
+
+    expect(
+      buildExitIframePath(
+        request,
+        "bundlestack-dev.myshopify.com",
+        "https://admin.shopify.com/charges/confirm",
+      ),
+    ).toBe(
+      "/auth/exit-iframe?shop=bundlestack-dev.myshopify.com&exitIframe=https%3A%2F%2Fadmin.shopify.com%2Fcharges%2Fconfirm&host=abc123",
+    );
+  });
+});
 
 describe("extractBillingRedirectFromError", () => {
   it("extracts confirmation URL from billing redirect response", () => {

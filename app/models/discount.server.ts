@@ -1,5 +1,6 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import type { DiscountTier } from "./bundle.server";
+import { listAllAutomaticDiscountNodes, normalizeDiscountNodeId } from "../utils/graphql.server";
 
 type SerializedOffer = {
   id: string;
@@ -15,12 +16,46 @@ type GraphqlResponse = {
   data?: Record<string, unknown>;
 };
 
-function discountTitleForTier(offerId: string, tier: DiscountTier): string {
-  return `BundleStack ${offerId} · Qty ${tier.minQty}+ · ${tier.discountValue}% off`;
+function percentageTiers(offer: SerializedOffer): DiscountTier[] {
+  return offer.tiers.filter((tier) => tier.discountType === "percentage");
+}
+
+function discountTitleForTier(
+  offerId: string,
+  tier: DiscountTier,
+  tierIndex: number,
+): string {
+  return `BundleStack ${offerId} · ${tierIndex + 1} · Qty ${tier.minQty}+ · ${tier.discountValue}% off`;
+}
+
+function plannedDiscountTitles(offer: SerializedOffer): Set<string> {
+  return new Set(
+    percentageTiers(offer).map((tier, index) =>
+      discountTitleForTier(offer.id, tier, index),
+    ),
+  );
 }
 
 function percentageTierCount(offer: SerializedOffer): number {
-  return offer.tiers.filter((tier) => tier.discountType === "percentage").length;
+  return percentageTiers(offer).length;
+}
+
+export function isOfferDiscountTitle(
+  title: string,
+  offer: SerializedOffer,
+  plannedTitles: Set<string>,
+): boolean {
+  const normalized = title.toLowerCase();
+  const offerTitle = offer.title.trim().toLowerCase();
+  const marker = `bundlestack ${offer.id}`.toLowerCase();
+
+  return (
+    normalized.startsWith(marker) ||
+    normalized.startsWith("buy more, save more · buy") ||
+    normalized.startsWith(`${offerTitle} ·`) ||
+    normalized.startsWith(offerTitle) ||
+    plannedTitles.has(title)
+  );
 }
 
 function assertGraphqlOk(json: GraphqlResponse, context: string) {
@@ -72,79 +107,48 @@ export async function deleteShopifyDiscounts(
   }
 }
 
+async function deleteDiscountsWithTitle(
+  admin: AdminApiContext,
+  title: string,
+) {
+  const nodes = await listAllAutomaticDiscountNodes(admin);
+  const ids = nodes
+    .filter((node) => node.title === title)
+    .map((node) => node.id);
+
+  await deleteShopifyDiscounts(admin, ids);
+}
+
+async function findOfferDiscountNodes(admin: AdminApiContext, offer: SerializedOffer) {
+  const plannedTitles = plannedDiscountTitles(offer);
+  const nodes = await listAllAutomaticDiscountNodes(admin);
+
+  return nodes.filter(
+    (node) => node.title && isOfferDiscountTitle(node.title, offer, plannedTitles),
+  );
+}
+
 async function deleteOrphanedOfferDiscounts(
   admin: AdminApiContext,
   offer: SerializedOffer,
-  excludeIds: string[] = [],
 ) {
-  const response = await admin.graphql(
-    `#graphql
-      query listAutomaticDiscounts {
-        discountNodes(first: 100) {
-          nodes {
-            id
-            discount {
-              ... on DiscountAutomaticBasic {
-                title
-              }
-            }
-          }
-        }
-      }`,
+  const offerNodes = await findOfferDiscountNodes(admin, offer);
+  await deleteShopifyDiscounts(
+    admin,
+    offerNodes.map((node) => node.id),
   );
-
-  const json = (await response.json()) as GraphqlResponse;
-  assertGraphqlOk(json, "listAutomaticDiscounts");
-
-  const nodes =
-    (json.data?.discountNodes as { nodes?: Array<{ id: string; discount?: { title?: string } }> })
-      ?.nodes ?? [];
-  const marker = `BundleStack ${offer.id}`;
-  const legacyPrefix = "Buy more, save more · Buy";
-  const plannedTitles = new Set(
-    offer.tiers
-      .filter((tier) => tier.discountType === "percentage")
-      .map((tier) => discountTitleForTier(offer.id, tier)),
-  );
-  const exclude = new Set(excludeIds);
-
-  const toDelete = nodes
-    .filter((node) => {
-      const title = node.discount?.title ?? "";
-      return (
-        title.startsWith(marker) ||
-        title.startsWith(legacyPrefix) ||
-        plannedTitles.has(title)
-      );
-    })
-    .map((node) => node.id)
-    .filter((id) => !exclude.has(id));
-
-  await deleteShopifyDiscounts(admin, toDelete);
 }
 
-export async function syncOfferDiscounts(
+async function createAutomaticDiscountForTier(
   admin: AdminApiContext,
   offer: SerializedOffer,
-): Promise<string[]> {
-  if (offer.status !== "active") {
-    return [];
-  }
+  tier: DiscountTier,
+  tierIndex: number,
+  startsAt: string,
+): Promise<string> {
+  const discountTitle = discountTitleForTier(offer.id, tier, tierIndex);
 
-  const expectedTierCount = percentageTierCount(offer);
-  if (expectedTierCount === 0) {
-    throw new Error("Add at least one percentage discount tier before activating.");
-  }
-
-  const startsAt = new Date().toISOString();
-  const createdIds: string[] = [];
-
-  for (const tier of offer.tiers) {
-    if (tier.discountType !== "percentage") {
-      continue;
-    }
-
-    const discountTitle = discountTitleForTier(offer.id, tier);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     const response = await admin.graphql(
       `#graphql
         mutation discountAutomaticBasicCreate($automaticBasicDiscount: DiscountAutomaticBasicInput!) {
@@ -199,9 +203,12 @@ export async function syncOfferDiscounts(
       | undefined;
     const userErrors = payload?.userErrors ?? [];
     if (userErrors.length > 0) {
-      throw new Error(
-        userErrors.map((error) => error.message).join(", "),
-      );
+      const message = userErrors.map((error) => error.message).join(", ");
+      if (attempt === 0 && /unique/i.test(message)) {
+        await deleteDiscountsWithTitle(admin, discountTitle);
+        continue;
+      }
+      throw new Error(message);
     }
 
     const id = payload?.automaticDiscountNode?.id;
@@ -211,7 +218,43 @@ export async function syncOfferDiscounts(
       );
     }
 
-    createdIds.push(id);
+    return normalizeDiscountNodeId(id);
+  }
+
+  throw new Error(`Could not create discount "${discountTitle}".`);
+}
+
+export async function syncOfferDiscounts(
+  admin: AdminApiContext,
+  offer: SerializedOffer,
+): Promise<string[]> {
+  if (offer.status !== "active") {
+    return [];
+  }
+
+  const tiers = percentageTiers(offer);
+  const expectedTierCount = tiers.length;
+  if (expectedTierCount === 0) {
+    throw new Error("Add at least one percentage discount tier before activating.");
+  }
+
+  const startsAt = new Date().toISOString();
+  const createdIds: string[] = [];
+
+  try {
+    for (const [tierIndex, tier] of tiers.entries()) {
+      const id = await createAutomaticDiscountForTier(
+        admin,
+        offer,
+        tier,
+        tierIndex,
+        startsAt,
+      );
+      createdIds.push(id);
+    }
+  } catch (error) {
+    await deleteShopifyDiscounts(admin, createdIds);
+    throw error;
   }
 
   if (createdIds.length !== expectedTierCount) {
@@ -224,14 +267,42 @@ export async function syncOfferDiscounts(
   return createdIds;
 }
 
+export async function forceRecreateOfferDiscounts(
+  admin: AdminApiContext,
+  offer: SerializedOffer,
+): Promise<string[]> {
+  const offerNodes = await findOfferDiscountNodes(admin, offer);
+  await deleteShopifyDiscounts(
+    admin,
+    offerNodes.map((node) => node.id),
+  );
+  return syncOfferDiscounts(admin, offer);
+}
+
 export async function replaceOfferDiscounts(
   admin: AdminApiContext,
   offer: SerializedOffer,
   existingDiscountIds: string[],
 ): Promise<string[]> {
-  // Remove stale Shopify discounts first — creating before delete fails when titles already exist.
+  const expectedTierCount = percentageTierCount(offer);
+  if (expectedTierCount === 0) {
+    return [];
+  }
+
   await deleteShopifyDiscounts(admin, existingDiscountIds);
-  await deleteOrphanedOfferDiscounts(admin, offer);
+
+  const offerNodes = await findOfferDiscountNodes(admin, offer);
+  if (offerNodes.length === expectedTierCount) {
+    return offerNodes
+      .slice()
+      .sort((left, right) => (left.title ?? "").localeCompare(right.title ?? ""))
+      .map((node) => normalizeDiscountNodeId(node.id));
+  }
+
+  await deleteShopifyDiscounts(
+    admin,
+    offerNodes.map((node) => node.id),
+  );
 
   return syncOfferDiscounts(admin, offer);
 }
@@ -268,38 +339,13 @@ export async function cleanupAllShopDiscounts(
   });
 
   await deleteShopifyDiscounts(admin, ids);
-  await deleteOrphanedOfferDiscountsForShop(admin);
-}
 
-async function deleteOrphanedOfferDiscountsForShop(admin: AdminApiContext) {
-  const response = await admin.graphql(
-    `#graphql
-      query listAutomaticDiscounts {
-        discountNodes(first: 100) {
-          nodes {
-            id
-            discount {
-              ... on DiscountAutomaticBasic {
-                title
-              }
-            }
-          }
-        }
-      }`,
-  );
-
-  const json = (await response.json()) as GraphqlResponse;
-  assertGraphqlOk(json, "listAutomaticDiscounts");
-
-  const nodes =
-    (json.data?.discountNodes as { nodes?: Array<{ id: string; discount?: { title?: string } }> })
-      ?.nodes ?? [];
-
-  const toDelete = nodes
-    .filter((node) => node.discount?.title?.startsWith("BundleStack "))
+  const nodes = await listAllAutomaticDiscountNodes(admin);
+  const bundleStackIds = nodes
+    .filter((node) => node.title?.startsWith("BundleStack "))
     .map((node) => node.id);
 
-  await deleteShopifyDiscounts(admin, toDelete);
+  await deleteShopifyDiscounts(admin, bundleStackIds);
 }
 
 function parseDiscountIds(raw: string | null | undefined): string[] {

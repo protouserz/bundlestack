@@ -10,6 +10,7 @@ import {
   useActionData,
   useFetcher,
   useLoaderData,
+  useNavigation,
 } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -82,17 +83,19 @@ export default function EditOffer() {
   const { offer, products } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const deleteFetcher = useFetcher<typeof action>();
+  const navigation = useNavigation();
   const [formKey, setFormKey] = useState(0);
   const isDeleting = deleteFetcher.state !== "idle";
+  const isSaving = navigation.state === "submitting";
+  const formId = "edit-offer-form";
 
   return (
     <SPage heading="Edit offer">
       <Form
+        id={formId}
         key={formKey}
         method="post"
         className={styles.offerPage}
-        data-save-bar
-        data-discard-confirmation
         onReset={() => setFormKey((current) => current + 1)}
       >
         <OfferForm
@@ -106,6 +109,7 @@ export default function EditOffer() {
           error={actionData?.error}
           discountUses={offer.discountUses}
           discountCount={offer.discountIds.length}
+          isSaving={isSaving}
           deleteButton={
             <SButton
               type="button"

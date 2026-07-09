@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Link } from "react-router";
 import type { DiscountTier } from "../../models/bundle.server";
 import { ProductPickerField, type SelectedProduct } from "../ProductPickerField";
 import { SButton } from "../polaris";
@@ -31,6 +30,7 @@ type OfferFormProps = {
   discountUses?: number;
   discountCount?: number;
   deleteButton?: ReactNode;
+  isSaving?: boolean;
 };
 
 function offerTypeLabel(value: string) {
@@ -52,6 +52,7 @@ export function OfferForm({
   discountUses,
   discountCount,
   deleteButton,
+  isSaving = false,
 }: OfferFormProps) {
   const [tiers, setTiers] = useState<DiscountTier[]>(initialTiers);
   const [title, setTitle] = useState(defaultTitle);
@@ -115,9 +116,25 @@ export function OfferForm({
   return (
     <>
       <div className={styles.pageHeader}>
-        <Link className={styles.backLink} to="/app/offers" aria-label="Back to offers">
+        <SButton variant="tertiary" href="/app/offers">
           ← Back to offers
-        </Link>
+        </SButton>
+        <div className={styles.formActions}>
+          <SButton variant="secondary" href="/app/offers">
+            Cancel
+          </SButton>
+          <button
+            type="submit"
+            className={styles.saveButton}
+            disabled={isSaving}
+          >
+            {isSaving
+              ? "Saving…"
+              : mode === "create"
+                ? "Create offer"
+                : "Save"}
+          </button>
+        </div>
       </div>
 
       {error && (

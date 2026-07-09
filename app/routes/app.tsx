@@ -38,6 +38,7 @@ export default function App() {
       <NavMenu>
         <Link to="/app">Dashboard</Link>
         <Link to="/app/offers">Offers</Link>
+        <Link to="/app/coupons">Coupons</Link>
         <Link to="/app/billing">Billing</Link>
         <Link to="/app/support">Support</Link>
       </NavMenu>

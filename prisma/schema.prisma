@@ -59,3 +59,24 @@ model ShopSettings {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+
+/// Merchant-created discount codes (coupons / gift-card-style fixed amounts).
+model Coupon {
+  id                    String    @id @default(cuid())
+  shop                  String
+  title                 String
+  code                  String
+  status                String    @default("draft")
+  discountType          String    @default("percentage")
+  discountValue         Float
+  appliesOncePerCustomer Boolean  @default(true)
+  usageLimit            Int?
+  startsAt              DateTime?
+  endsAt                DateTime?
+  discountId            String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([shop, code])
+  @@index([shop, status])
+}

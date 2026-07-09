@@ -316,6 +316,7 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
 
 export async function cleanupShopData(shop: string) {
   await prisma.bundleOffer.deleteMany({ where: { shop } });
+  await prisma.coupon.deleteMany({ where: { shop } });
   await prisma.shopSettings.deleteMany({ where: { shop } });
 }
 

@@ -149,8 +149,13 @@ export async function getActiveOffersForProduct(shop: string, productId: string)
     .filter((offer) => offer.productIds.includes(productId));
 }
 
-export async function getShopStats(shop: string) {
-  const offers = await prisma.bundleOffer.findMany({ where: { shop } });
+export async function getShopStats(
+  shop: string,
+  offersInput?: Awaited<ReturnType<typeof listOffers>>,
+) {
+  const offers =
+    offersInput ??
+    (await prisma.bundleOffer.findMany({ where: { shop } }));
 
   const activeOffers = offers.filter((o) => o.status === "active").length;
   const totalDiscountUses = offers.reduce(

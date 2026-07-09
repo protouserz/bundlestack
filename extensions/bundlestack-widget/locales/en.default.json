@@ -2,7 +2,8 @@
   "bundlestack": {
     "widget": {
       "heading": "Buy more, save more",
-      "loading": "Loading offers..."
+      "loading": "Loading offers...",
+      "powered_by": "Powered by BundleStack"
     }
   }
 }

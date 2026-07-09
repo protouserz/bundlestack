@@ -84,7 +84,13 @@ export function RevenueChart({ offers }: RevenueChartProps) {
         </div>
       ) : (
         <div className={styles.chartWrap}>
-          <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%">
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            width="100%"
+            height="100%"
+            role="img"
+            aria-label="Discount redemptions over the last 30 days"
+          >
             <defs>
               <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#22c55e" stopOpacity="0.22" />

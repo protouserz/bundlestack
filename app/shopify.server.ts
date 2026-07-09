@@ -8,6 +8,10 @@ import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prism
 import { shopifyBillingConfig } from "./billing.shopify";
 import prisma from "./db.server";
 
+if (process.env.NODE_ENV === "production" && !process.env.SHOPIFY_API_SECRET) {
+  throw new Error("SHOPIFY_API_SECRET is required in production");
+}
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",

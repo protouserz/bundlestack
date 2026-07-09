@@ -295,7 +295,33 @@
 }
 
 .healthFixBanner {
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.fixButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.75rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--p-color-border-secondary, #c9cccf);
+  border-radius: 0.5rem;
+  background: var(--p-color-bg-fill, #ffffff);
+  color: var(--p-color-text, #303030);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fixButton:hover:not(:disabled) {
+  background: var(--p-color-bg-fill-hover, #f6f6f7);
+}
+
+.fixButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .healthChecks {

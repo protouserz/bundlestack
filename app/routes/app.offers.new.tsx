@@ -4,7 +4,7 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Form, redirect, useActionData } from "react-router";
+import { Form, redirect, useActionData, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -45,16 +45,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function NewOffer() {
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
   const [formKey, setFormKey] = useState(0);
+  const isSaving = navigation.state === "submitting";
+  const formId = "create-offer-form";
 
   return (
     <SPage heading="Create offer">
       <Form
+        id={formId}
         key={formKey}
         method="post"
         className={styles.offerPage}
-        data-save-bar
-        data-discard-confirmation
         onReset={() => setFormKey((current) => current + 1)}
       >
         <OfferForm
@@ -63,6 +65,7 @@ export default function NewOffer() {
           defaultTitle="Volume Discount Offer"
           defaultStatus="active"
           error={actionData?.error}
+          isSaving={isSaving}
         />
       </Form>
     </SPage>

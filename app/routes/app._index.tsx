@@ -3,7 +3,9 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
+import { useEffect, useRef } from "react";
 import { Link, redirect, useFetcher, useLoaderData } from "react-router";
+import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getBillingSummary, isBillingPlan } from "../billing.server";
@@ -29,6 +31,77 @@ import {
 } from "../models/health.server";
 import { syncDiscountUsesForShop } from "../models/usage.server";
 import { SButton, SPage } from "../components/polaris";
+
+type FixResult = {
+  success: boolean;
+  message: string;
+};
+
+function buildSyncFixResult(
+  synced: number,
+  failed: string[],
+  skipped: string[],
+  healthAfterSync: Awaited<ReturnType<typeof getShopHealth>>,
+): FixResult {
+  const discountChecks = healthAfterSync.checks.filter(
+    (check) => check.id === "discount-exists" || check.id === "discount-sync",
+  );
+  const discountIssues = discountChecks
+    .filter((check) => check.status === "error")
+    .map((check) => check.message);
+
+  if (failed.length > 0 || synced === 0) {
+    const parts = [
+      ...failed,
+      ...skipped,
+      synced === 0 && failed.length === 0
+        ? "No offers were synchronized."
+        : null,
+    ].filter(Boolean);
+
+    return {
+      success: false,
+      message:
+        synced > 0
+          ? `Synced ${synced} offer(s). Issues: ${parts.join("; ")}`
+          : parts.join("; "),
+    };
+  }
+
+  if (discountIssues.length > 0) {
+    return {
+      success: false,
+      message: `Synced ${synced} offer(s), but verification still failed: ${discountIssues.join(" ")}`,
+    };
+  }
+
+  const skippedNote =
+    skipped.length > 0 ? ` Skipped: ${skipped.join("; ")}.` : "";
+
+  return {
+    success: true,
+    message: `Synced discounts for ${synced} active offer(s).${skippedNote}`,
+  };
+}
+
+function redirectWithSyncFeedback(request: Request, fixResult: FixResult) {
+  const url = new URL(request.url);
+  const params = new URLSearchParams(url.searchParams);
+  params.set("syncStatus", fixResult.success ? "ok" : "error");
+  params.set("syncMessage", fixResult.message);
+  return redirect(`${url.pathname}?${params.toString()}`);
+}
+
+function readSyncFeedback(request: Request): FixResult | null {
+  const url = new URL(request.url);
+  const message = url.searchParams.get("syncMessage");
+  if (!message) return null;
+
+  return {
+    message,
+    success: url.searchParams.get("syncStatus") === "ok",
+  };
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session, billing } = await authenticate.admin(request);
@@ -93,6 +166,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     offers,
     onboardingDone: settings.onboardingDone,
     themeEditorUrl: health.themeEditorUrl,
+    syncFeedback: readSyncFeedback(request),
   };
 };
 
@@ -106,28 +180,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       admin,
       session.shop,
     );
+    const offers = await listOffers(session.shop);
+    const healthAfterSync = await getShopHealth(admin, session.shop, offers);
 
-    if (failed.length > 0 || synced === 0) {
-      const parts = [
-        ...failed,
-        ...skipped,
-        synced === 0 && failed.length === 0
-          ? "No offers were synchronized."
-          : null,
-      ].filter(Boolean);
-
-      return {
-        fixResult: {
-          success: false,
-          message:
-            synced > 0
-              ? `Synced ${synced} offer(s). Issues: ${parts.join("; ")}`
-              : parts.join("; "),
-        },
-      };
-    }
-
-    return redirect("/app");
+    return redirectWithSyncFeedback(
+      request,
+      buildSyncFixResult(synced, failed, skipped, healthAfterSync),
+    );
   }
 
   if (intent === "refresh-stats") {
@@ -163,9 +222,13 @@ function HealthCheckFixButton({
   return (
     <fetcher.Form method="post">
       <input type="hidden" name="intent" value={fix.intent} />
-      <SButton type="submit" {...(isLoading ? { loading: true } : {})}>
-        Try to fix
-      </SButton>
+      <button
+        type="submit"
+        className={styles.fixButton}
+        disabled={isLoading}
+      >
+        {isLoading ? "Fixing…" : "Try to fix"}
+      </button>
     </fetcher.Form>
   );
 }
@@ -185,15 +248,46 @@ function formatDateRange() {
 }
 
 export default function Dashboard() {
-  const { stats, billing, health, offers, onboardingDone, themeEditorUrl } =
-    useLoaderData<typeof loader>();
+  const {
+    stats,
+    billing,
+    health,
+    offers,
+    onboardingDone,
+    themeEditorUrl,
+    syncFeedback,
+  } = useLoaderData<typeof loader>();
   const fixFetcher = useFetcher<typeof action>();
   const onboardingFetcher = useFetcher<typeof action>();
   const statsFetcher = useFetcher<typeof action>();
-  const fixResult = fixFetcher.data?.fixResult;
-  const showHealthDetails =
-    health.overall !== "healthy" || health.checks.some((c) => c.fix);
+  const shopify = useAppBridge();
+  const lastToastKey = useRef<string | null>(null);
+  const fixResult = syncFeedback;
   const showWelcome = !onboardingDone && stats.totalOffers === 0;
+
+  useEffect(() => {
+    if (!fixResult) return;
+
+    const toastKey = `${fixResult.success}:${fixResult.message}`;
+    if (lastToastKey.current === toastKey) return;
+    lastToastKey.current = toastKey;
+
+    shopify.toast.show(fixResult.message, { isError: !fixResult.success });
+
+    if (!syncFeedback) return;
+
+    const url = new URL(window.location.href);
+    if (
+      !url.searchParams.has("syncMessage") &&
+      !url.searchParams.has("syncStatus")
+    ) {
+      return;
+    }
+
+    url.searchParams.delete("syncMessage");
+    url.searchParams.delete("syncStatus");
+    window.history.replaceState({}, "", url.toString());
+  }, [fixResult, shopify, syncFeedback]);
 
   return (
     <SPage heading="Dashboard">
@@ -202,6 +296,14 @@ export default function Dashboard() {
       </SButton>
 
       <div className={styles.dashboard}>
+        {fixResult ? (
+          <div className={styles.healthFixBanner}>
+            <s-banner tone={fixResult.success ? "success" : "critical"}>
+              {fixResult.message}
+            </s-banner>
+          </div>
+        ) : null}
+
         <s-text tone="neutral">
           Reporting period: {formatDateRange()}
         </s-text>
@@ -257,49 +359,39 @@ export default function Dashboard() {
 
         <OffersTable offers={offers} />
 
-        {showHealthDetails && (
-          <div className={styles.panel}>
-            <h2 className={styles.panelTitle}>System checks</h2>
+        <div className={styles.panel}>
+          <h2 className={styles.panelTitle}>System checks</h2>
 
-            {fixResult && (
-              <div className={styles.healthFixBanner}>
-                <s-banner tone={fixResult.success ? "success" : "critical"}>
-                  {fixResult.message}
-                </s-banner>
-              </div>
-            )}
-
-            <div className={styles.healthChecks}>
-              {health.checks.map((check) => (
-                <div key={check.id} className={styles.healthCheckRow}>
-                  <div className={styles.healthCheckMeta}>
-                    <p className={styles.healthCheckLabel}>{check.label}</p>
-                    <p className={styles.healthCheckMessage}>{check.message}</p>
-                  </div>
-                  <s-stack direction="inline" gap="base">
-                    <s-badge
-                      tone={
-                        check.status === "ok"
-                          ? "success"
-                          : check.status === "warning"
-                            ? "warning"
-                            : "critical"
-                      }
-                    >
-                      {check.status}
-                    </s-badge>
-                    {check.fix ? (
-                      <HealthCheckFixButton
-                        fix={check.fix}
-                        fetcher={fixFetcher}
-                      />
-                    ) : null}
-                  </s-stack>
+          <div className={styles.healthChecks}>
+            {health.checks.map((check) => (
+              <div key={check.id} className={styles.healthCheckRow}>
+                <div className={styles.healthCheckMeta}>
+                  <p className={styles.healthCheckLabel}>{check.label}</p>
+                  <p className={styles.healthCheckMessage}>{check.message}</p>
                 </div>
-              ))}
-            </div>
+                <s-stack direction="inline" gap="base">
+                  <s-badge
+                    tone={
+                      check.status === "ok"
+                        ? "success"
+                        : check.status === "warning"
+                          ? "warning"
+                          : "critical"
+                    }
+                  >
+                    {check.status}
+                  </s-badge>
+                  {check.fix ? (
+                    <HealthCheckFixButton
+                      fix={check.fix}
+                      fetcher={fixFetcher}
+                    />
+                  ) : null}
+                </s-stack>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
         <p className={styles.metricSubtext}>
           Current plan: <strong>{billing.planLabel}</strong>

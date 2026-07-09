@@ -1,7 +1,7 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { listOffers, type DiscountTier } from "./bundle.server";
 import { parseDiscountIds } from "./discount.server";
-import { fetchDiscountNodesByIds } from "../utils/graphql.server";
+import { countExistingDiscountIds } from "../utils/graphql.server";
 
 export type HealthFixAction = {
   intent: string;
@@ -92,8 +92,11 @@ export async function getShopHealth(
   }
 
   const allDiscountIds = activeOffers.flatMap((o) => o.discountIds);
-  const discountNodes = await fetchDiscountNodesByIds(admin, allDiscountIds);
-  const missingInShopify = allDiscountIds.filter((id) => !discountNodes.has(id)).length;
+  const existingDiscountCount = await countExistingDiscountIds(
+    admin,
+    allDiscountIds,
+  );
+  const missingInShopify = allDiscountIds.length - existingDiscountCount;
 
   if (missingInShopify > 0) {
     checks.push({
@@ -153,7 +156,10 @@ export async function syncAllActiveOfferDiscounts(
   shop: string,
 ): Promise<SyncDiscountsResult> {
   const { listOffers, updateOfferDiscountIds } = await import("./bundle.server");
-  const { replaceOfferDiscounts } = await import("./discount.server");
+  const { forceRecreateOfferDiscounts, replaceOfferDiscounts } = await import(
+    "./discount.server"
+  );
+  const { countExistingDiscountIds } = await import("../utils/graphql.server");
 
   const offers = await listOffers(shop);
   const activeOffers = offers.filter((o) => o.status === "active");
@@ -178,7 +184,7 @@ export async function syncAllActiveOfferDiscounts(
     }
 
     try {
-      const discountIds = await replaceOfferDiscounts(
+      let discountIds = await replaceOfferDiscounts(
         admin,
         offer,
         offer.discountIds,
@@ -192,6 +198,27 @@ export async function syncAllActiveOfferDiscounts(
       }
 
       await updateOfferDiscountIds(offer.id, discountIds);
+
+      const verifiedCount = await countExistingDiscountIds(admin, discountIds);
+      if (verifiedCount < discountIds.length) {
+        discountIds = await forceRecreateOfferDiscounts(admin, offer);
+        if (discountIds.length !== expected) {
+          failed.push(
+            `${offer.title}: recreated ${discountIds.length}/${expected} Shopify discount(s) after verification failed`,
+          );
+          continue;
+        }
+        await updateOfferDiscountIds(offer.id, discountIds);
+
+        const recreatedCount = await countExistingDiscountIds(admin, discountIds);
+        if (recreatedCount < discountIds.length) {
+          failed.push(
+            `${offer.title}: discounts were created but could not be verified in Shopify`,
+          );
+          continue;
+        }
+      }
+
       synced += 1;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";

@@ -48,6 +48,10 @@ export function billingReturnUrl(request: Request): string {
 }
 
 export function formatBillingError(error: unknown): string {
+  if (isManagedPricingBillingError(error)) {
+    return "Managed App Pricing is enabled for this app in the Partner Dashboard. Disable it under Distribution → Pricing to use in-app upgrades, or manage billing only through Shopify's app settings.";
+  }
+
   if (error instanceof BillingError) {
     if (Array.isArray(error.errorData) && error.errorData.length > 0) {
       return error.errorData
@@ -70,4 +74,14 @@ export function rethrowIfResponse(error: unknown): void {
   if (error instanceof Response) {
     throw error;
   }
+}
+
+export function isManagedPricingBillingError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  return /managed pricing/i.test(message);
 }

@@ -1,5 +1,5 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
-import type { CouponDiscountType } from "./coupon.server";
+import type { CouponDiscountType } from "./coupon.types";
 
 type SerializedCoupon = {
   id: string;

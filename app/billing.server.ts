@@ -94,3 +94,8 @@ export function getBillingSummary(
 export function isBillingPlan(value: string): value is BillingPlan {
   return value === "free" || value === "starter" || value === "scale" || value === "pro";
 }
+
+/** Coupons require Starter or higher. */
+export function planIncludesCoupons(plan: BillingPlan): boolean {
+  return plan === "starter" || plan === "scale" || plan === "pro";
+}

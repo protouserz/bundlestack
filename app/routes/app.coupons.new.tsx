@@ -13,17 +13,26 @@ import {
   updateCouponDiscountId,
 } from "../models/coupon.server";
 import { applyCouponDiscountSync } from "../models/discount-code.server";
+import { assertCouponsPlanAccess } from "../models/coupon-access.server";
 import { CouponForm } from "../components/coupon-form/CouponForm";
 import { SPage } from "../components/polaris";
 import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
+  const access = await assertCouponsPlanAccess(session.shop, billing);
+  if (!access.allowed) {
+    return redirect("/app/coupons");
+  }
   return null;
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
+  const access = await assertCouponsPlanAccess(session.shop, billing);
+  if (!access.allowed) {
+    return redirect("/app/billing");
+  }
   const formData = await request.formData();
 
   try {

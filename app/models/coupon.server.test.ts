@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatCouponValue, parseCouponForm } from "./coupon.server";
+import { parseCouponForm } from "./coupon.server";
+import { formatCouponValue } from "../utils/coupon";
 
 describe("parseCouponForm", () => {
   it("parses a percentage coupon", () => {

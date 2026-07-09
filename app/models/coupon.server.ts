@@ -1,6 +1,7 @@
 import prisma from "../db.server";
+import type { CouponDiscountType } from "./coupon.types";
 
-export type CouponDiscountType = "percentage" | "fixed";
+export type { CouponDiscountType } from "./coupon.types";
 
 export type CouponInput = {
   title: string;
@@ -204,13 +205,4 @@ export function parseCouponForm(formData: FormData): CouponInput {
     startsAt,
     endsAt,
   };
-}
-
-export function formatCouponValue(coupon: {
-  discountType: CouponDiscountType;
-  discountValue: number;
-}) {
-  return coupon.discountType === "percentage"
-    ? `${coupon.discountValue}% off`
-    : `$${coupon.discountValue.toFixed(2)} off`;
 }

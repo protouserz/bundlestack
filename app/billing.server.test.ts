@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getBillingSummary,
   getSuggestedPlanForRedemptions,
+  planIncludesCoupons,
 } from "./billing.server";
 
 describe("getSuggestedPlanForRedemptions", () => {
@@ -25,5 +26,14 @@ describe("getBillingSummary", () => {
     expect(summary.suggestedPlan).toBe("starter");
     expect(summary.suggestedPlanLabel).toBe("Starter");
     expect(summary.plan).toBe("free");
+  });
+});
+
+describe("planIncludesCoupons", () => {
+  it("allows starter and higher only", () => {
+    expect(planIncludesCoupons("free")).toBe(false);
+    expect(planIncludesCoupons("starter")).toBe(true);
+    expect(planIncludesCoupons("scale")).toBe(true);
+    expect(planIncludesCoupons("pro")).toBe(true);
   });
 });

@@ -3,11 +3,12 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { redirect, useLoaderData, useSubmit } from "react-router";
+import { Link, redirect, useLoaderData, useSubmit } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { EmptyState } from "../components/EmptyState";
 import { CouponCard } from "../components/CouponCard";
+import { assertCouponsPlanAccess } from "../models/coupon-access.server";
 import {
   deleteAllCoupons,
   deleteCoupon,
@@ -15,16 +16,31 @@ import {
   removeCouponRecord,
 } from "../models/coupon.server";
 import { deleteShopifyDiscountCodes } from "../models/discount-code.server";
+import { PLAN_LABELS } from "../billing.server";
 import { SButton, SPage } from "../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
+  const access = await assertCouponsPlanAccess(session.shop, billing);
+
+  if (!access.allowed) {
+    return {
+      coupons: [] as Awaited<ReturnType<typeof listCoupons>>,
+      access,
+    };
+  }
+
   const coupons = await listCoupons(session.shop);
-  return { coupons };
+  return { coupons, access };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
+  const access = await assertCouponsPlanAccess(session.shop, billing);
+  if (!access.allowed) {
+    return redirect("/app/billing");
+  }
+
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -55,8 +71,27 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function CouponsIndex() {
-  const { coupons } = useLoaderData<typeof loader>();
+  const { coupons, access } = useLoaderData<typeof loader>();
   const submit = useSubmit();
+
+  if (!access.allowed) {
+    return (
+      <SPage heading="Coupons">
+        <s-banner tone="warning">
+          <s-stack direction="block" gap="base">
+            <s-text>
+              Coupons are available on the <strong>Starter</strong>,{" "}
+              <strong>Growth</strong>, and <strong>Pro</strong> plans. Your
+              current plan is <strong>{PLAN_LABELS[access.plan]}</strong>.
+            </s-text>
+            <SButton variant="primary" href="/app/billing">
+              Upgrade to unlock coupons
+            </SButton>
+          </s-stack>
+        </s-banner>
+      </SPage>
+    );
+  }
 
   const handleDeleteAll = () => {
     submit({ intent: "delete-all" }, { method: "post" });
@@ -79,7 +114,8 @@ export default function CouponsIndex() {
             <s-text tone="neutral">
               Create checkout codes for percentage or fixed-amount discounts.
               Fixed-amount codes work like gift-card style credits at checkout
-              (Shopify discount codes — not Gift Card balances).
+              (Shopify discount codes — not Gift Card balances). Included on{" "}
+              {PLAN_LABELS[access.plan]}.
             </s-text>
             {coupons.length > 0 ? (
               <SButton
@@ -146,6 +182,11 @@ export default function CouponsIndex() {
           </SButton>
         </s-modal>
       ) : null}
+
+      <s-text tone="neutral">
+        Need a higher plan?{" "}
+        <Link to="/app/billing">View billing</Link>
+      </s-text>
     </SPage>
   );
 }

@@ -3,7 +3,16 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import {
+  Link,
+  redirect,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  useSearchParams,
+  useSubmit,
+} from "react-router";
+import { useMemo } from "react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { StatCard } from "../components/StatCard";
@@ -38,8 +47,29 @@ import {
   setShopBillingPlan,
 } from "../models/bundle.server";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session, billing, admin } = await authenticate.admin(request);
+type BillingContext = Awaited<ReturnType<typeof authenticate.admin>>;
+
+async function requestPaidPlan(
+  { billing, admin, session }: BillingContext,
+  request: Request,
+  plan: Exclude<BillingPlan, "free">,
+) {
+  const shopifyPlan = getShopifyPlanForTier(plan);
+  if (!shopifyPlan) {
+    throw new Error("Invalid billing plan selected.");
+  }
+
+  const isTest = await resolveBillingTestMode(admin);
+  await setPendingBillingPlan(session.shop, plan);
+  await billing.request({
+    plan: shopifyPlan,
+    isTest,
+    returnUrl: billingReturnUrl(request),
+  });
+}
+
+async function loadBillingPage(request: Request, billingContext: BillingContext) {
+  const { session, billing, admin } = billingContext;
   const requestUrl = new URL(request.url);
 
   const [stats, settings, billingTestMode] = await Promise.all([
@@ -84,6 +114,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     pendingPlan !== null &&
     pendingShopifyPlan !== null &&
     !activeSubscriptionNames.includes(pendingShopifyPlan);
+  const billingError = requestUrl.searchParams.get("billing_error");
 
   return {
     billing: billingSummary,
@@ -94,12 +125,33 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     needsSubscriptionApproval,
     pendingShopifyPlan,
     billingTestMode,
+    billingError,
     themeEditorUrl: `https://admin.shopify.com/store/${shopHandle}/themes/current/editor?context=apps`,
   };
+}
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const billingContext = await authenticate.admin(request);
+  const requestUrl = new URL(request.url);
+  const subscribePlan = requestUrl.searchParams.get("subscribe");
+
+  if (subscribePlan && isBillingPlan(subscribePlan) && subscribePlan !== "free") {
+    try {
+      await requestPaidPlan(billingContext, request, subscribePlan);
+    } catch (error) {
+      rethrowIfResponse(error);
+      const params = new URLSearchParams(requestUrl.searchParams);
+      params.delete("subscribe");
+      params.set("billing_error", formatBillingError(error));
+      throw redirect(`/app/billing?${params.toString()}`);
+    }
+  }
+
+  return loadBillingPage(request, billingContext);
 };
 
 async function cancelActiveSubscriptions(
-  billing: Awaited<ReturnType<typeof authenticate.admin>>["billing"],
+  billing: BillingContext["billing"],
   isTest: boolean,
 ) {
   const billingCheck = await billing.check();
@@ -115,10 +167,10 @@ async function cancelActiveSubscriptions(
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { billing, session, admin } = await authenticate.admin(request);
+  const billingContext = await authenticate.admin(request);
+  const { billing, session, admin } = billingContext;
   const formData = await request.formData();
   const intent = String(formData.get("intent") ?? "");
-  const returnUrl = billingReturnUrl(request);
   const isTest = await resolveBillingTestMode(admin);
 
   if (intent === "cancel") {
@@ -143,18 +195,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return redirect("/app/billing");
     }
 
-    const shopifyPlan = getShopifyPlanForTier(plan);
-    if (!shopifyPlan) {
-      return { error: "Invalid billing plan selected." };
-    }
-
     try {
-      await setPendingBillingPlan(session.shop, plan);
-      await billing.request({
-        plan: shopifyPlan,
-        isTest,
-        returnUrl,
-      });
+      await requestPaidPlan(billingContext, request, plan);
     } catch (error) {
       rethrowIfResponse(error);
       return { error: formatBillingError(error) };
@@ -167,12 +209,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const tier = getTierForShopifyPlan(legacyPlan);
     if (tier) {
       try {
-        await setPendingBillingPlan(session.shop, tier);
-        await billing.request({
-          plan: legacyPlan as (typeof SHOPIFY_BILLING_PLANS)[keyof typeof SHOPIFY_BILLING_PLANS],
-          isTest,
-          returnUrl,
-        });
+        await requestPaidPlan(billingContext, request, tier);
       } catch (error) {
         rethrowIfResponse(error);
         return { error: formatBillingError(error) };
@@ -183,6 +220,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return { error: "Invalid billing action." };
 };
 
+function useSubscribeHref(plan: BillingPlan) {
+  const [searchParams] = useSearchParams();
+
+  return useMemo(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set("subscribe", plan);
+    return `?${params.toString()}`;
+  }, [searchParams, plan]);
+}
+
 function PlanCard({
   plan,
   currentPlan,
@@ -192,6 +239,9 @@ function PlanCard({
   currentPlan: BillingPlan;
   hasActiveSubscription: boolean;
 }) {
+  const submit = useSubmit();
+  const navigation = useNavigation();
+  const subscribeHref = useSubscribeHref(plan);
   const features = PLAN_FEATURES[plan];
   const isCurrent =
     plan === currentPlan &&
@@ -199,6 +249,14 @@ function PlanCard({
   const planIndex = PLAN_ORDER.indexOf(plan);
   const currentIndex = PLAN_ORDER.indexOf(currentPlan);
   const isUpgrade = planIndex > currentIndex;
+  const isBusy = navigation.state !== "idle";
+
+  const buttonLabel =
+    plan === "free"
+      ? "Switch to Free"
+      : isUpgrade
+        ? `Upgrade to ${PLAN_LABELS[plan]}`
+        : `Downgrade to ${PLAN_LABELS[plan]}`;
 
   return (
     <s-box
@@ -226,30 +284,74 @@ function PlanCard({
           ))}
         </s-stack>
 
-        {!isCurrent && (
-          <Form method="post">
-            <input type="hidden" name="intent" value="subscribe" />
-            <input type="hidden" name="plan" value={plan} />
-            <s-button type="submit" variant={isUpgrade ? "primary" : "tertiary"}>
-              {plan === "free"
-                ? "Switch to Free"
-                : isUpgrade
-                  ? `Upgrade to ${PLAN_LABELS[plan]}`
-                  : `Downgrade to ${PLAN_LABELS[plan]}`}
+        {!isCurrent && plan === "free" && (
+          <s-button
+            type="button"
+            variant="tertiary"
+            {...(isBusy ? { loading: true } : {})}
+            onClick={() =>
+              submit({ intent: "subscribe", plan: "free" }, { method: "post" })
+            }
+          >
+            {buttonLabel}
+          </s-button>
+        )}
+
+        {!isCurrent && plan !== "free" && (
+          <Link to={subscribeHref} reloadDocument className={styles.planActionLink}>
+            <s-button type="button" variant={isUpgrade ? "primary" : "tertiary"}>
+              {buttonLabel}
             </s-button>
-          </Form>
+          </Link>
         )}
 
         {isCurrent && plan !== "free" && hasActiveSubscription && (
-          <Form method="post">
-            <input type="hidden" name="intent" value="cancel" />
-            <s-button type="submit" variant="tertiary">
-              Cancel paid subscription
-            </s-button>
-          </Form>
+          <s-button
+            type="button"
+            variant="tertiary"
+            {...(isBusy ? { loading: true } : {})}
+            onClick={() => submit({ intent: "cancel" }, { method: "post" })}
+          >
+            Cancel paid subscription
+          </s-button>
         )}
       </s-stack>
     </s-box>
+  );
+}
+
+function PendingApprovalBanner({
+  pendingPlan,
+  currentPlanLabel,
+  billingTestMode,
+}: {
+  pendingPlan: BillingPlan;
+  currentPlanLabel: string;
+  billingTestMode: boolean;
+}) {
+  const pendingSubscribeHref = useSubscribeHref(pendingPlan);
+
+  return (
+    <s-banner tone="warning">
+      <s-stack direction="block" gap="base">
+        <s-text>
+          Approve the {PLAN_LABELS[pendingPlan]} plan (
+          {formatPlanPrice(pendingPlan)}/mo) in Shopify to activate billing. Your
+          current plan stays {currentPlanLabel} until approval is complete.
+        </s-text>
+        <Link to={pendingSubscribeHref} reloadDocument className={styles.planActionLink}>
+          <s-button type="button" variant="primary">
+            Approve {PLAN_LABELS[pendingPlan]} in Shopify
+          </s-button>
+        </Link>
+        {billingTestMode && (
+          <s-text tone="neutral">
+            Test billing mode is on for this store — charges appear as test
+            subscriptions until you install on a live store.
+          </s-text>
+        )}
+      </s-stack>
+    </s-banner>
   );
 }
 
@@ -265,13 +367,15 @@ export default function BillingPage() {
     themeEditorUrl,
     activeSubscriptions,
     hasActiveShopifySubscription,
+    billingError,
   } = useLoaderData<typeof loader>();
+  const errorMessage = actionData?.error ?? billingError;
 
   return (
     <s-page heading="Billing & uninstall">
       <s-stack direction="block" gap="large">
-        {actionData?.error && (
-          <s-banner tone="critical">{actionData.error}</s-banner>
+        {errorMessage && (
+          <s-banner tone="critical">{errorMessage}</s-banner>
         )}
 
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
@@ -283,29 +387,11 @@ export default function BillingPage() {
         </s-box>
 
         {needsSubscriptionApproval && pendingPlan && pendingShopifyPlan && (
-          <s-banner tone="warning">
-            <s-stack direction="block" gap="base">
-              <s-text>
-                Approve the {PLAN_LABELS[pendingPlan]} plan (
-                {formatPlanPrice(pendingPlan)}/mo) in Shopify to activate
-                billing. Your current plan stays {billing.planLabel} until
-                approval is complete.
-              </s-text>
-              <Form method="post">
-                <input type="hidden" name="intent" value="subscribe" />
-                <input type="hidden" name="plan" value={pendingPlan} />
-                <s-button type="submit" variant="primary">
-                  Approve {PLAN_LABELS[pendingPlan]} in Shopify
-                </s-button>
-              </Form>
-              {billingTestMode && (
-                <s-text tone="neutral">
-                  Test billing mode is on for this store — charges appear as test
-                  subscriptions until you install on a live store.
-                </s-text>
-              )}
-            </s-stack>
-          </s-banner>
+          <PendingApprovalBanner
+            pendingPlan={pendingPlan}
+            currentPlanLabel={billing.planLabel}
+            billingTestMode={billingTestMode}
+          />
         )}
 
         <s-section heading="Current plan">

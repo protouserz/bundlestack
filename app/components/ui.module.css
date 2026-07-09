@@ -24,7 +24,7 @@
   transition: width 0.3s ease;
 }
 
-.priceLarge {
-  font-size: 1.75rem;
-  font-weight: 600;
+.planActionLink {
+  display: inline-block;
+  text-decoration: none;
 }

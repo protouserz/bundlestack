@@ -32,6 +32,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     } catch (error) {
       console.error(`Failed to cleanup coupon discounts for ${shop}:`, error);
     }
+
+    try {
+      const { cleanupAllShopPromotionDiscounts } = await import(
+        "../models/promotion-sync.server"
+      );
+      await cleanupAllShopPromotionDiscounts(admin, shop);
+    } catch (error) {
+      console.error(
+        `Failed to cleanup promotion discounts for ${shop}:`,
+        error,
+      );
+    }
   } else {
     console.warn(
       `app/uninstalled for ${shop}: no admin API context — Shopify discount cleanup may be incomplete`,

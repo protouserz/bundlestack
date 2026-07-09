@@ -1,0 +1,32 @@
+{
+  "name": "bundlestack-discount",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "shopify": "npm exec -- shopify",
+    "typegen": "npm exec -- shopify app function typegen",
+    "build": "node ./build.mjs",
+    "preview": "npm exec -- shopify app function run",
+    "test": "vitest run"
+  },
+  "codegen": {
+    "schema": "schema.graphql",
+    "documents": "src/*.graphql",
+    "generates": {
+      "./generated/api.ts": {
+        "plugins": [
+          "typescript",
+          "typescript-operations"
+        ]
+      }
+    }
+  },
+  "dependencies": {
+    "@shopify/shopify_function": "2.0.0",
+    "graphql": "16.14.2"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}

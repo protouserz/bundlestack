@@ -14,25 +14,45 @@ import {
   updatePromotionDiscountIds,
 } from "../models/promotion.server";
 import { applyPromotionDiscountSync } from "../models/promotion-sync.server";
+import { assertPromotionPlanAccess } from "../models/promotion-access.server";
 import { promotionTypeFromSlug } from "../models/promotion-routes";
 import { PROMOTION_TYPE_META } from "../models/promotion.types";
 import { SPage } from "../components/polaris";
 import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const promotionType = promotionTypeFromSlug(params.type);
   if (!promotionType) {
     throw new Response("Not found", { status: 404 });
   }
+
+  const access = await assertPromotionPlanAccess(
+    session.shop,
+    promotionType,
+    billing,
+  );
+  if (!access.allowed) {
+    return redirect(PROMOTION_TYPE_META[promotionType].href);
+  }
+
   return { promotionType };
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
   const promotionType = promotionTypeFromSlug(params.type);
   if (!promotionType) {
     throw new Response("Not found", { status: 404 });
+  }
+
+  const access = await assertPromotionPlanAccess(
+    session.shop,
+    promotionType,
+    billing,
+  );
+  if (!access.allowed) {
+    return redirect("/app/billing");
   }
 
   const formData = await request.formData();

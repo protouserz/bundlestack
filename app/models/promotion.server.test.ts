@@ -48,4 +48,26 @@ describe("parsePromotionForm", () => {
       status: "draft",
     });
   });
+
+  it("parses newline-separated product IDs for BOGO", () => {
+    const formData = new FormData();
+    formData.set("title", "BOGO tees");
+    formData.set("status", "active");
+    formData.set(
+      "config",
+      JSON.stringify(defaultConfigForType("bogo")),
+    );
+    formData.set(
+      "productIds",
+      "gid://shopify/Product/1\ngid://shopify/Product/2",
+    );
+
+    expect(parsePromotionForm(formData, "bogo")).toMatchObject({
+      title: "BOGO tees",
+      productIds: [
+        "gid://shopify/Product/1",
+        "gid://shopify/Product/2",
+      ],
+    });
+  });
 });

@@ -24,16 +24,32 @@ import {
   updatePromotionDiscountIds,
 } from "../models/promotion.server";
 import { applyPromotionDiscountSync } from "../models/promotion-sync.server";
+import { assertPromotionPlanAccess } from "../models/promotion-access.server";
 import { promotionTypeFromSlug } from "../models/promotion-routes";
-import { PROMOTION_TYPE_META } from "../models/promotion.types";
+import {
+  PROMOTION_TYPE_META,
+  type BogoConfig,
+  type FreeGiftConfig,
+  type FbtConfig,
+} from "../models/promotion.types";
+import { fetchProductTitles } from "../models/bundle.server";
 import { SButton, SPage } from "../components/polaris";
 import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
   const promotionType = promotionTypeFromSlug(params.type);
   if (!promotionType) {
     throw new Response("Not found", { status: 404 });
+  }
+
+  const access = await assertPromotionPlanAccess(
+    session.shop,
+    promotionType,
+    billing,
+  );
+  if (!access.allowed) {
+    return redirect(PROMOTION_TYPE_META[promotionType].href);
   }
 
   const promotion = await getPromotion(session.shop, params.id!);
@@ -41,14 +57,67 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw new Response("Not found", { status: 404 });
   }
 
-  return { promotion, promotionType };
+  const config = promotion.config;
+  const getProductIds =
+    promotionType === "bogo"
+      ? (config as BogoConfig).getProductIds ?? []
+      : [];
+  const giftProductIds =
+    promotionType === "free_gift"
+      ? (config as FreeGiftConfig).giftProductIds ?? []
+      : [];
+  const recommendedProductIds =
+    promotionType === "fbt"
+      ? (config as FbtConfig).recommendedProductIds ?? []
+      : [];
+
+  const allIds = [
+    ...new Set([
+      ...promotion.productIds,
+      ...getProductIds,
+      ...giftProductIds,
+      ...recommendedProductIds,
+    ]),
+  ];
+  const products = await fetchProductTitles(admin, allIds);
+  const titleById = new Map(products.map((product) => [product.id, product.title]));
+
+  return {
+    promotion,
+    promotionType,
+    defaultProducts: promotion.productIds.map((id) => ({
+      id,
+      title: titleById.get(id) ?? id,
+    })),
+    defaultGetProducts: getProductIds.map((id) => ({
+      id,
+      title: titleById.get(id) ?? id,
+    })),
+    defaultGiftProducts: giftProductIds.map((id) => ({
+      id,
+      title: titleById.get(id) ?? id,
+    })),
+    defaultRecommendedProducts: recommendedProductIds.map((id) => ({
+      id,
+      title: titleById.get(id) ?? id,
+    })),
+  };
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
   const promotionType = promotionTypeFromSlug(params.type);
   if (!promotionType) {
     throw new Response("Not found", { status: 404 });
+  }
+
+  const access = await assertPromotionPlanAccess(
+    session.shop,
+    promotionType,
+    billing,
+  );
+  if (!access.allowed) {
+    return redirect("/app/billing");
   }
 
   const listPath = PROMOTION_TYPE_META[promotionType].href;
@@ -89,7 +158,14 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function EditPromotion() {
-  const { promotion, promotionType } = useLoaderData<typeof loader>();
+  const {
+    promotion,
+    promotionType,
+    defaultProducts,
+    defaultGetProducts,
+    defaultGiftProducts,
+    defaultRecommendedProducts,
+  } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const deleteFetcher = useFetcher<typeof action>();
   const navigation = useNavigation();
@@ -114,7 +190,10 @@ export default function EditPromotion() {
           defaultTitle={promotion.title}
           defaultStatus={promotion.status}
           defaultConfig={promotion.config}
-          defaultProductIds={promotion.productIds}
+          defaultProducts={defaultProducts}
+          defaultGetProducts={defaultGetProducts}
+          defaultGiftProducts={defaultGiftProducts}
+          defaultRecommendedProducts={defaultRecommendedProducts}
           error={actionData?.error}
           isSaving={isSaving}
           deleteButton={

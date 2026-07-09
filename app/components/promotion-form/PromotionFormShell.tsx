@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { SButton } from "../polaris";
+import {
+  ProductPickerField,
+  type SelectedProduct,
+} from "../ProductPickerField";
 import styles from "../offer-form/offer-form.module.css";
 import type {
   PromotionType,
@@ -14,7 +18,7 @@ const STATUS_OPTIONS = [
   {
     value: "active",
     label: "Active",
-    help: "Offer is live for shoppers (checkout sync may still be pending for this type).",
+    help: "Offer is live for shoppers when checkout sync is available for this type.",
   },
   {
     value: "draft",
@@ -36,6 +40,10 @@ type PromotionFormProps = {
   defaultStatus?: string;
   defaultConfig?: PromotionConfigMap[PromotionType];
   defaultProductIds?: string[];
+  defaultProducts?: SelectedProduct[];
+  defaultGetProducts?: SelectedProduct[];
+  defaultGiftProducts?: SelectedProduct[];
+  defaultRecommendedProducts?: SelectedProduct[];
   error?: string;
   isSaving?: boolean;
   deleteButton?: ReactNode;
@@ -50,6 +58,10 @@ export function PromotionFormShell({
   defaultStatus = "draft",
   defaultConfig,
   defaultProductIds = [],
+  defaultProducts,
+  defaultGetProducts = [],
+  defaultGiftProducts = [],
+  defaultRecommendedProducts = [],
   error,
   isSaving = false,
   deleteButton,
@@ -61,9 +73,11 @@ export function PromotionFormShell({
   const [config, setConfig] = useState<PromotionConfigMap[PromotionType]>(
     defaultConfig ?? defaultConfigForType(promotionType),
   );
-  const [productIds] = useState(defaultProductIds);
   const configInputRef = useRef<HTMLInputElement>(null);
-  const productIdsInputRef = useRef<HTMLInputElement>(null);
+
+  const initialProducts =
+    defaultProducts ??
+    defaultProductIds.map((id) => ({ id, title: id }));
 
   useEffect(() => {
     const input = configInputRef.current;
@@ -75,18 +89,10 @@ export function PromotionFormShell({
     }
   }, [config]);
 
-  useEffect(() => {
-    const input = productIdsInputRef.current;
-    if (!input) return;
-    const value = JSON.stringify(productIds);
-    if (input.value !== value) {
-      input.value = value;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-  }, [productIds]);
-
   const statusHelp =
     STATUS_OPTIONS.find((option) => option.value === status)?.help ?? "";
+
+  const syncReady = promotionType === "bogo";
 
   return (
     <>
@@ -118,25 +124,28 @@ export function PromotionFormShell({
         </div>
       ) : null}
 
-      <s-banner tone="info">
-        <s-text>
-          {meta.description} Checkout discount sync for this offer type is
-          scaffolding — save configs now; Shopify Functions / BXGY wiring comes
-          next.
-        </s-text>
-      </s-banner>
+      {syncReady ? (
+        <s-banner tone="info">
+          <s-text>
+            Active BOGO offers sync to Shopify via the BundleStack Discount
+            Function. Deploy the app (including the discount extension) before
+            testing at checkout.
+          </s-text>
+        </s-banner>
+      ) : (
+        <s-banner tone="info">
+          <s-text>
+            {meta.description} Checkout discount sync for this offer type is
+            still scaffolding — save configs now; Functions wiring comes next.
+          </s-text>
+        </s-banner>
+      )}
 
       <input
         ref={configInputRef}
         type="hidden"
         name="config"
         defaultValue={JSON.stringify(config)}
-      />
-      <input
-        ref={productIdsInputRef}
-        type="hidden"
-        name="productIds"
-        defaultValue={JSON.stringify(productIds)}
       />
       <input type="hidden" name="collectionIds" value="[]" />
 
@@ -156,6 +165,77 @@ export function PromotionFormShell({
               />
             </label>
           </section>
+
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              {promotionType === "fbt" ? "Anchor products" : "Products"}
+            </h2>
+            <p className={styles.cardDescription}>
+              {promotionType === "free_gift"
+                ? "Optional qualifying products. Leave empty to apply storewide when thresholds are met."
+                : promotionType === "fbt"
+                  ? "Products where the frequently-bought-together upsell should appear."
+                  : "Products included in this promotion."}
+            </p>
+            <ProductPickerField
+              name="productIds"
+              initialProducts={initialProducts}
+              required={
+                promotionType === "bogo" ||
+                promotionType === "mix_match" ||
+                promotionType === "fbt"
+              }
+              browseLabel="Browse products"
+            />
+          </section>
+
+          {promotionType === "bogo" &&
+          !(config as PromotionConfigMap["bogo"]).sameProduct ? (
+            <section className={styles.card}>
+              <h2 className={styles.cardTitle}>Get products</h2>
+              <p className={styles.cardDescription}>
+                Products the shopper receives discounted when the buy condition
+                is met.
+              </p>
+              <ProductPickerField
+                name="getProductIds"
+                initialProducts={defaultGetProducts}
+                required
+                browseLabel="Browse get products"
+              />
+            </section>
+          ) : null}
+
+          {promotionType === "free_gift" ? (
+            <section className={styles.card}>
+              <h2 className={styles.cardTitle}>Gift products</h2>
+              <p className={styles.cardDescription}>
+                Products awarded when the cart meets the threshold.
+              </p>
+              <ProductPickerField
+                name="giftProductIds"
+                initialProducts={defaultGiftProducts}
+                required={false}
+                browseLabel="Browse gift products"
+              />
+            </section>
+          ) : null}
+
+          {promotionType === "fbt" ? (
+            <section className={styles.card}>
+              <h2 className={styles.cardTitle}>Recommended products</h2>
+              <p className={styles.cardDescription}>
+                Complementary items discounted when bought with an anchor
+                product.
+              </p>
+              <ProductPickerField
+                name="recommendedProductIds"
+                initialProducts={defaultRecommendedProducts}
+                required
+                browseLabel="Browse recommended products"
+              />
+            </section>
+          ) : null}
 
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>Rules</h2>
@@ -370,10 +450,6 @@ function ConfigEditor({
             <option value="true">Yes — add automatically</option>
           </select>
         </label>
-        <p className={styles.cardDescription}>
-          Gift product picker wiring uses product IDs in a follow-up. For now,
-          save the threshold rules.
-        </p>
       </div>
     );
   }
@@ -479,7 +555,7 @@ function ConfigEditor({
         </label>
         <p className={styles.cardDescription}>
           Default steps: &quot;Choose your base&quot; and &quot;Add extras&quot;.
-          Step product pickers land in the next iteration.
+          Per-step product pickers land in a follow-up.
         </p>
       </div>
     );

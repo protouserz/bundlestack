@@ -156,6 +156,31 @@ export async function deletePromotionsByType(shop: string, type: PromotionType) 
   return rows.map(serializePromotion);
 }
 
+function parseIdList(raw: string): string[] {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+
+  if (trimmed.startsWith("[")) {
+    return safeJsonParse<string[]>(trimmed, []).filter(Boolean);
+  }
+
+  return trimmed
+    .split(/[\n,]/)
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+function assertProductGids(ids: string[], label: string) {
+  for (const id of ids) {
+    if (!/^gid:\/\/shopify\/Product\/\d+$/.test(id)) {
+      throw new Response(
+        `Invalid ${label} "${id}". Use the product picker.`,
+        { status: 400 },
+      );
+    }
+  }
+}
+
 export function parsePromotionForm(
   formData: FormData,
   expectedType: PromotionType,
@@ -163,8 +188,13 @@ export function parsePromotionForm(
   const title = String(formData.get("title") ?? "").trim();
   const status = String(formData.get("status") ?? "draft");
   const configRaw = String(formData.get("config") ?? "{}");
-  const productIdsRaw = String(formData.get("productIds") ?? "[]");
+  const productIdsRaw = String(formData.get("productIds") ?? "");
   const collectionIdsRaw = String(formData.get("collectionIds") ?? "[]");
+  const getProductIdsRaw = String(formData.get("getProductIds") ?? "");
+  const giftProductIdsRaw = String(formData.get("giftProductIds") ?? "");
+  const recommendedProductIdsRaw = String(
+    formData.get("recommendedProductIds") ?? "",
+  );
 
   if (!title) {
     throw new Response("Title is required", { status: 400 });
@@ -175,12 +205,37 @@ export function parsePromotionForm(
     defaultConfigForType(expectedType),
   ) as PromotionConfigMap[PromotionType];
 
+  const productIds = parseIdList(productIdsRaw);
+  assertProductGids(productIds, "product ID");
+
+  if (expectedType === "bogo") {
+    const bogo = config as PromotionConfigMap["bogo"];
+    const getProductIds = parseIdList(getProductIdsRaw);
+    assertProductGids(getProductIds, "get product ID");
+    bogo.getProductIds = getProductIds;
+  }
+
+  if (expectedType === "free_gift") {
+    const gift = config as PromotionConfigMap["free_gift"];
+    const giftProductIds = parseIdList(giftProductIdsRaw);
+    assertProductGids(giftProductIds, "gift product ID");
+    gift.giftProductIds = giftProductIds;
+  }
+
+  if (expectedType === "fbt") {
+    const fbt = config as PromotionConfigMap["fbt"];
+    fbt.anchorProductIds = productIds;
+    const recommendedProductIds = parseIdList(recommendedProductIdsRaw);
+    assertProductGids(recommendedProductIds, "recommended product ID");
+    fbt.recommendedProductIds = recommendedProductIds;
+  }
+
   return {
     title,
     promotionType: expectedType,
     status,
     config,
-    productIds: safeJsonParse<string[]>(productIdsRaw, []),
-    collectionIds: safeJsonParse<string[]>(collectionIdsRaw, []),
+    productIds,
+    collectionIds: parseIdList(collectionIdsRaw),
   };
 }

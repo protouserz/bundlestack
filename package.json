@@ -73,7 +73,8 @@
     "@shopify/plugin-cloudflare"
   ],
   "overrides": {
-    "p-map": "^4.0.0"
+    "p-map": "^4.0.0",
+    "graphql": "16.14.2"
   },
   "allowScripts": {
     "@prisma/client@6.19.3": true,

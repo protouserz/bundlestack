@@ -1,16 +1,16 @@
 # AOV promotion suite (feature/aov-offer-suite)
 
-Scaffold for competitor-parity offer types beyond quantity breaks.
+Competitor-parity offer types beyond quantity breaks.
 
 ## Offer types
 
-| Type | Admin path | Status |
-|------|------------|--------|
-| BOGO | `/app/promotions/bogo` | Config CRUD scaffold |
-| Free gifts | `/app/promotions/free-gifts` | Config CRUD scaffold |
-| Mix & match | `/app/promotions/mix-match` | Config CRUD scaffold |
-| Bundle builder | `/app/promotions/builders` | Config CRUD scaffold |
-| FBT / upsells | `/app/promotions/fbt` | Config CRUD scaffold |
+| Type | Admin path | Plan | Checkout sync |
+|------|------------|------|---------------|
+| BOGO | `/app/promotions/bogo` | Starter+ | Discount Function (`bundlestack-discount`) |
+| Free gifts | `/app/promotions/free-gifts` | Starter+ | Config only (pending) |
+| Mix & match | `/app/promotions/mix-match` | Starter+ | Config only (pending) |
+| Bundle builder | `/app/promotions/builders` | Growth+ | Config only (pending) |
+| FBT / upsells | `/app/promotions/fbt` | Growth+ | Config only (pending) |
 
 Hub: `/app/promotions`
 
@@ -19,12 +19,27 @@ Hub: `/app/promotions`
 - Prisma `Promotion` model with `promotionType` + JSON `config`
 - Shared types in `app/models/promotion.types.ts`
 - CRUD in `app/models/promotion.server.ts`
-- Sync stub in `app/models/promotion-sync.server.ts` (Functions/BXGY next)
+- Plan gates in `app/models/promotion-access.server.ts`
+- Sync in `app/models/promotion-sync.server.ts`
+- Function extension: `extensions/bundlestack-discount`
+
+## BOGO checkout sync
+
+Active BOGO promotions call `discountAutomaticAppCreate` with:
+
+- `functionHandle`: `bundlestack-discount`
+- `discountClasses`: `PRODUCT`
+- Metafield `$app` / `function-configuration` (JSON buy/get rules + product IDs)
+
+Deploy the app (including the Function extension) before testing at checkout:
+
+```bash
+npm run deploy
+```
 
 ## Next implementation phases
 
-1. **Shopify Functions** discount app extension for BOGO / mix & match / FBT
-2. Product/collection pickers on each form (reuse `ProductPickerField`)
-3. Theme blocks for builder + FBT widget
-4. Plan gating (Starter+ for BOGO/gifts/mix; Growth+ for builders/FBT)
-5. Dashboard metrics per promotion type
+1. Functions / BXGY for free gifts, mix & match, FBT
+2. Theme blocks for builder + FBT widget
+3. Per-step product pickers on bundle builders
+4. Dashboard metrics per promotion type

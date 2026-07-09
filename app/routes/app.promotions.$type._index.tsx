@@ -15,26 +15,61 @@ import {
   removePromotionRecord,
 } from "../models/promotion.server";
 import { applyPromotionDiscountSync } from "../models/promotion-sync.server";
+import { assertPromotionPlanAccess } from "../models/promotion-access.server";
 import { promotionTypeFromSlug } from "../models/promotion-routes";
 import { PROMOTION_TYPE_META } from "../models/promotion.types";
+import { PLAN_LABELS } from "../billing.plans";
 import { SButton, SPage } from "../components/polaris";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const promotionType = promotionTypeFromSlug(params.type);
   if (!promotionType) {
     throw new Response("Not found", { status: 404 });
   }
 
+  const access = await assertPromotionPlanAccess(
+    session.shop,
+    promotionType,
+    billing,
+  );
+
+  if (!access.allowed) {
+    return {
+      promotions: [] as Awaited<ReturnType<typeof listPromotions>>,
+      promotionType,
+      access: {
+        ...access,
+        planLabel: PLAN_LABELS[access.plan],
+      },
+    };
+  }
+
   const promotions = await listPromotions(session.shop, promotionType);
-  return { promotions, promotionType };
+  return {
+    promotions,
+    promotionType,
+    access: {
+      ...access,
+      planLabel: PLAN_LABELS[access.plan],
+    },
+  };
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
   const promotionType = promotionTypeFromSlug(params.type);
   if (!promotionType) {
     throw new Response("Not found", { status: 404 });
+  }
+
+  const access = await assertPromotionPlanAccess(
+    session.shop,
+    promotionType,
+    billing,
+  );
+  if (!access.allowed) {
+    return redirect("/app/billing");
   }
 
   const formData = await request.formData();
@@ -65,10 +100,31 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function PromotionTypeIndex() {
-  const { promotions, promotionType } = useLoaderData<typeof loader>();
+  const { promotions, promotionType, access } = useLoaderData<typeof loader>();
   const params = useParams();
   const submit = useSubmit();
   const meta = PROMOTION_TYPE_META[promotionType];
+
+  if (!access.allowed) {
+    const needsGrowth =
+      promotionType === "bundle_builder" || promotionType === "fbt";
+    return (
+      <SPage heading={meta.label}>
+        <s-banner tone="warning">
+          <s-stack direction="block" gap="base">
+            <s-text>
+              {meta.label} requires the{" "}
+              <strong>{needsGrowth ? "Growth" : "Starter"}</strong> plan or
+              higher. Your current plan is <strong>{access.planLabel}</strong>.
+            </s-text>
+            <SButton variant="primary" href="/app/billing">
+              Upgrade to unlock
+            </SButton>
+          </s-stack>
+        </s-banner>
+      </SPage>
+    );
+  }
 
   return (
     <SPage heading={meta.label}>
@@ -163,7 +219,6 @@ export default function PromotionTypeIndex() {
         </s-modal>
       ) : null}
 
-      {/* Keep params referenced for React Router typegen stability */}
       <span hidden>{params.type}</span>
     </SPage>
   );

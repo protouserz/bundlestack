@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   getBillingSummary,
   getSuggestedPlanForRedemptions,
+  planIncludesAdvancedPromotions,
+  planIncludesCorePromotions,
   planIncludesCoupons,
 } from "./billing.server";
 
@@ -35,5 +37,20 @@ describe("planIncludesCoupons", () => {
     expect(planIncludesCoupons("starter")).toBe(true);
     expect(planIncludesCoupons("scale")).toBe(true);
     expect(planIncludesCoupons("pro")).toBe(true);
+  });
+});
+
+describe("planIncludesCorePromotions", () => {
+  it("matches coupon gating (Starter+)", () => {
+    expect(planIncludesCorePromotions("free")).toBe(false);
+    expect(planIncludesCorePromotions("starter")).toBe(true);
+  });
+});
+
+describe("planIncludesAdvancedPromotions", () => {
+  it("requires Growth or Pro", () => {
+    expect(planIncludesAdvancedPromotions("starter")).toBe(false);
+    expect(planIncludesAdvancedPromotions("scale")).toBe(true);
+    expect(planIncludesAdvancedPromotions("pro")).toBe(true);
   });
 });

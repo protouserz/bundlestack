@@ -30,13 +30,64 @@
  */
 
 /**
+ * @typedef {{
+ *   id: string,
+ *   quantity: number,
+ *   cost: { amountPerQuantity: { amount: string } },
+ *   merchandise: { __typename: string, id?: string, product?: { id: string } }
+ * }} CartLine
+ */
+
+/**
+ * @param {CartLine[]} lines
+ * @param {Set<string>} productIds
+ * @param {boolean} allowAll
+ */
+function filterLines(lines, productIds, allowAll) {
+  return lines.filter((line) => {
+    if (line.merchandise?.__typename !== "ProductVariant") return false;
+    const productId = line.merchandise.product?.id;
+    if (!productId) return false;
+    if (allowAll || productIds.size === 0) return true;
+    return productIds.has(productId);
+  });
+}
+
+/**
+ * @param {CartLine[]} lines
+ */
+function expandUnits(lines) {
+  /** @type {Array<{ lineId: string, unitPrice: number }>} */
+  const units = [];
+  for (const line of lines) {
+    const unitPrice = Number(line.cost?.amountPerQuantity?.amount || 0);
+    for (let i = 0; i < line.quantity; i += 1) {
+      units.push({ lineId: line.id, unitPrice });
+    }
+  }
+  units.sort((a, b) => a.unitPrice - b.unitPrice);
+  return units;
+}
+
+/**
+ * @param {Map<string, number>} discountedQtyByLine
+ * @param {Array<{ lineId: string, unitPrice: number }>} units
+ * @param {number} count
+ */
+function takeCheapest(discountedQtyByLine, units, count) {
+  for (let i = 0; i < count; i += 1) {
+    const unit = units[i];
+    if (!unit) break;
+    discountedQtyByLine.set(
+      unit.lineId,
+      (discountedQtyByLine.get(unit.lineId) || 0) + 1,
+    );
+  }
+}
+
+/**
  * @param {{
- *   cart: { lines: Array<{
- *     id: string,
- *     quantity: number,
- *     cost: { amountPerQuantity: { amount: string } },
- *     merchandise: { __typename: string, id?: string, product?: { id: string } }
- *   }> },
+ *   cart: { lines: CartLine[] },
  *   discount: {
  *     discountClasses: string[],
  *     metafield?: { value?: string } | null
@@ -64,53 +115,42 @@ export function cartLinesDiscountsGenerateRun(input) {
 
   const buyQuantity = Math.max(1, Number(config.buyQuantity) || 1);
   const getQuantity = Math.max(1, Number(config.getQuantity) || 1);
-  const groupSize = buyQuantity + getQuantity;
   const productIds = new Set(config.productIds || []);
-  const getProductIds = new Set(
-    config.sameProduct === false
-      ? config.getProductIds || []
-      : config.productIds || [],
-  );
+  const getProductIds = new Set(config.getProductIds || []);
   const getDiscountType = config.getDiscountType || "free";
   const getDiscountValue = Number(config.getDiscountValue) || 100;
+  const sameProduct = config.sameProduct !== false;
 
-  const eligibleLines = input.cart.lines.filter((line) => {
-    if (line.merchandise?.__typename !== "ProductVariant") return false;
-    const productId = line.merchandise.product?.id;
-    if (!productId) return false;
-    if (productIds.size === 0) return true;
-    return productIds.has(productId);
-  });
-
-  if (eligibleLines.length === 0) return { operations: [] };
-
-  // Expand units cheapest-first so "get" items receive the discount.
-  const units = [];
-  for (const line of eligibleLines) {
-    const unitPrice = Number(line.cost?.amountPerQuantity?.amount || 0);
-    for (let i = 0; i < line.quantity; i += 1) {
-      units.push({ lineId: line.id, unitPrice });
-    }
-  }
-  units.sort((a, b) => a.unitPrice - b.unitPrice);
-
+  /** @type {Map<string, number>} */
   const discountedQtyByLine = new Map();
-  const sets = Math.floor(units.length / groupSize);
-  const discountableUnits = sets * getQuantity;
 
-  for (let i = 0; i < discountableUnits; i += 1) {
-    const unit = units[i];
-    if (!unit) break;
-    // When get products differ, only discount matching get products.
-    if (config.sameProduct === false) {
-      const line = eligibleLines.find((entry) => entry.id === unit.lineId);
-      const productId = line?.merchandise?.product?.id;
-      if (!productId || !getProductIds.has(productId)) continue;
-    }
-    discountedQtyByLine.set(
-      unit.lineId,
-      (discountedQtyByLine.get(unit.lineId) || 0) + 1,
+  if (sameProduct) {
+    const eligibleLines = filterLines(input.cart.lines, productIds, false);
+    if (eligibleLines.length === 0) return { operations: [] };
+
+    const units = expandUnits(eligibleLines);
+    const groupSize = buyQuantity + getQuantity;
+    const sets = Math.floor(units.length / groupSize);
+    takeCheapest(discountedQtyByLine, units, sets * getQuantity);
+  } else {
+    // Buy X of productIds, get Y of getProductIds discounted.
+    const buyLines = filterLines(input.cart.lines, productIds, false);
+    const getLines = filterLines(
+      input.cart.lines,
+      getProductIds.size > 0 ? getProductIds : productIds,
+      false,
     );
+    if (buyLines.length === 0 || getLines.length === 0) {
+      return { operations: [] };
+    }
+
+    const buyUnits = expandUnits(buyLines);
+    const getUnits = expandUnits(getLines);
+    const sets = Math.min(
+      Math.floor(buyUnits.length / buyQuantity),
+      Math.floor(getUnits.length / getQuantity),
+    );
+    takeCheapest(discountedQtyByLine, getUnits, sets * getQuantity);
   }
 
   if (discountedQtyByLine.size === 0) return { operations: [] };

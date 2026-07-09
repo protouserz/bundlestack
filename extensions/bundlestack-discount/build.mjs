@@ -3,6 +3,13 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
+if (process.env.SHOPIFY_FUNCTION_BUILD_WRAPPER === "1") {
+  console.error(
+    "Refusing recursive Function build (SHOPIFY_FUNCTION_BUILD_WRAPPER=1).",
+  );
+  process.exit(1);
+}
+
 const extensionDir = path.dirname(fileURLToPath(import.meta.url));
 const patchPath = path.join(extensionDir, "patch-cpus.mjs");
 const nodeOptions = [process.env.NODE_OPTIONS, `--import ${JSON.stringify(patchPath)}`]
@@ -29,6 +36,7 @@ const result = spawnSync(
     env: {
       ...process.env,
       NODE_OPTIONS: nodeOptions,
+      SHOPIFY_FUNCTION_BUILD_WRAPPER: "1",
     },
     shell: process.platform === "win32",
   },

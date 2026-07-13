@@ -3,6 +3,10 @@ import { safeJsonParse } from "../utils/json.server";
 import {
   PROMOTION_TYPES,
   defaultConfigForType,
+  summarizePromotionConfig,
+  type BundleBuilderConfig,
+  type FbtConfig,
+  type FreeGiftConfig,
   type PromotionConfigMap,
   type PromotionRecord,
   type PromotionType,
@@ -69,6 +73,101 @@ export async function listPromotions(shop: string, type?: PromotionType) {
     orderBy: { updatedAt: "desc" },
   });
   return rows.map(serializePromotion);
+}
+
+export type StorefrontPromotion = {
+  id: string;
+  title: string;
+  promotionType: PromotionType;
+  summary: string;
+  config: PromotionConfigMap[PromotionType];
+  productIds: string[];
+  giftProductIds?: string[];
+  recommendedProductIds?: string[];
+  steps?: BundleBuilderConfig["steps"];
+};
+
+function promotionAppliesToProduct(
+  promotion: PromotionRecord,
+  productId: string,
+): boolean {
+  switch (promotion.promotionType) {
+    case "bogo":
+    case "mix_match":
+      return (
+        promotion.productIds.length === 0 ||
+        promotion.productIds.includes(productId)
+      );
+    case "free_gift": {
+      const gift = promotion.config as FreeGiftConfig;
+      const gifts = gift.giftProductIds ?? [];
+      if (promotion.productIds.length === 0) return true;
+      return (
+        promotion.productIds.includes(productId) || gifts.includes(productId)
+      );
+    }
+    case "bundle_builder": {
+      const builder = promotion.config as BundleBuilderConfig;
+      const stepIds = (builder.steps ?? []).flatMap((step) => step.productIds);
+      return (
+        promotion.productIds.includes(productId) ||
+        stepIds.includes(productId)
+      );
+    }
+    case "fbt": {
+      const fbt = promotion.config as FbtConfig;
+      const anchors =
+        fbt.anchorProductIds?.length > 0
+          ? fbt.anchorProductIds
+          : promotion.productIds;
+      const recommended = fbt.recommendedProductIds ?? [];
+      return (
+        anchors.includes(productId) || recommended.includes(productId)
+      );
+    }
+    default:
+      return false;
+  }
+}
+
+/** Active promotions that apply to a storefront product (app proxy). */
+export async function getActivePromotionsForProduct(
+  shop: string,
+  productId: string,
+): Promise<StorefrontPromotion[]> {
+  const promotions = await listPromotions(shop);
+  return promotions
+    .filter(
+      (promotion) =>
+        promotion.status === "active" &&
+        promotionAppliesToProduct(promotion, productId),
+    )
+    .map((promotion) => {
+      const base: StorefrontPromotion = {
+        id: promotion.id,
+        title: promotion.title,
+        promotionType: promotion.promotionType,
+        summary: summarizePromotionConfig(
+          promotion.promotionType,
+          promotion.config,
+        ),
+        config: promotion.config,
+        productIds: promotion.productIds,
+      };
+
+      if (promotion.promotionType === "free_gift") {
+        base.giftProductIds =
+          (promotion.config as FreeGiftConfig).giftProductIds ?? [];
+      }
+      if (promotion.promotionType === "fbt") {
+        const fbt = promotion.config as FbtConfig;
+        base.recommendedProductIds = fbt.recommendedProductIds ?? [];
+      }
+      if (promotion.promotionType === "bundle_builder") {
+        base.steps = (promotion.config as BundleBuilderConfig).steps ?? [];
+      }
+      return base;
+    });
 }
 
 export async function getPromotion(shop: string, id: string) {

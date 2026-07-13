@@ -49,8 +49,36 @@ function formFor(
   const formData = new FormData();
   formData.set("title", `E2E ${type}`);
   formData.set("status", "active");
-  formData.set("config", JSON.stringify(defaultConfigForType(type)));
+  let configJson = JSON.stringify(defaultConfigForType(type));
+  if (type === "bundle_builder") {
+    configJson = JSON.stringify({
+      ...defaultConfigForType("bundle_builder"),
+      steps: [
+        {
+          id: "step-1",
+          title: "Base",
+          minSelect: 1,
+          maxSelect: 1,
+          productIds: [PRODUCT_A],
+        },
+        {
+          id: "step-2",
+          title: "Add-on",
+          minSelect: 1,
+          maxSelect: 2,
+          productIds: [PRODUCT_B],
+        },
+      ],
+    });
+  }
+  formData.set("config", configJson);
   formData.set("productIds", PRODUCT_A);
+  if (type === "free_gift") {
+    formData.set("giftProductIds", PRODUCT_C);
+  }
+  if (type === "fbt") {
+    formData.set("recommendedProductIds", PRODUCT_B);
+  }
   for (const [key, value] of Object.entries(overrides)) {
     formData.set(key, value);
   }
@@ -298,8 +326,19 @@ describe("promotion discount sync e2e", () => {
 
     expect(ids).toEqual(["gid://shopify/DiscountAutomaticNode/99"]);
     expect(admin.graphql).toHaveBeenCalledOnce();
-    const variables = admin.graphql.mock.calls[0][1].variables
-      .automaticAppDiscount;
+    const [, options] = admin.graphql.mock.calls[0] as unknown as [
+      string,
+      {
+        variables: {
+          automaticAppDiscount: {
+            functionHandle: string;
+            discountClasses: string[];
+            metafields: Array<{ value: string }>;
+          };
+        };
+      },
+    ];
+    const variables = options.variables.automaticAppDiscount;
     expect(variables.functionHandle).toBe("bundlestack-discount");
     expect(variables.discountClasses).toEqual(["PRODUCT"]);
     expect(JSON.parse(variables.metafields[0].value)).toMatchObject({
@@ -340,27 +379,35 @@ describe("promotion discount sync e2e", () => {
     ).rejects.toThrow(/at least one product/i);
   });
 
-  it("does not create Shopify discounts for non-BOGO types yet", async () => {
-    const admin = mockAdmin();
-    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
-
+  it("creates Shopify Function discounts for all promotion types", async () => {
     for (const type of [
       "free_gift",
       "mix_match",
       "bundle_builder",
       "fbt",
     ] as const) {
+      const admin = mockAdmin(`gid://shopify/DiscountAutomaticNode/${type}`);
       const ids = await applyPromotionDiscountSync(
         admin as never,
         promotionFromForm(type),
         [],
       );
-      expect(ids).toEqual([]);
+      expect(ids).toEqual([`gid://shopify/DiscountAutomaticNode/${type}`]);
+      expect(admin.graphql).toHaveBeenCalledOnce();
+      const [, options] = admin.graphql.mock.calls[0] as unknown as [
+        string,
+        {
+          variables: {
+            automaticAppDiscount: {
+              metafields: Array<{ value: string }>;
+            };
+          };
+        },
+      ];
+      expect(JSON.parse(options.variables.automaticAppDiscount.metafields[0].value)).toMatchObject({
+        type,
+      });
     }
-
-    expect(admin.graphql).not.toHaveBeenCalled();
-    expect(info).toHaveBeenCalled();
-    info.mockRestore();
   });
 
   it("surfaces Shopify userErrors from discountAutomaticAppCreate", async () => {

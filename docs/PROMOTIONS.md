@@ -4,13 +4,13 @@ Competitor-parity offer types beyond quantity breaks.
 
 ## Offer types
 
-| Type | Admin path | Plan | Checkout sync |
-|------|------------|------|---------------|
-| BOGO | `/app/promotions/bogo` | Starter+ | Discount Function (`bundlestack-discount`) |
-| Free gifts | `/app/promotions/free-gifts` | Starter+ | Config only (pending) |
-| Mix & match | `/app/promotions/mix-match` | Starter+ | Config only (pending) |
-| Bundle builder | `/app/promotions/builders` | Growth+ | Config only (pending) |
-| FBT / upsells | `/app/promotions/fbt` | Growth+ | Config only (pending) |
+| Type | Admin path | Plan | Checkout sync | Product page |
+|------|------------|------|---------------|--------------|
+| BOGO | `/app/promotions/bogo` | Starter+ | Discount Function | Widget card |
+| Free gifts | `/app/promotions/free-gifts` | Starter+ | Discount Function | Widget card |
+| Mix & match | `/app/promotions/mix-match` | Starter+ | Discount Function | Widget card |
+| Bundle builder | `/app/promotions/builders` | Growth+ | Discount Function | Widget card |
+| FBT / upsells | `/app/promotions/fbt` | Growth+ | Discount Function | Widget card |
 
 Hub: `/app/promotions`
 
@@ -20,26 +20,36 @@ Hub: `/app/promotions`
 - Shared types in `app/models/promotion.types.ts`
 - CRUD in `app/models/promotion.server.ts`
 - Plan gates in `app/models/promotion-access.server.ts`
-- Sync in `app/models/promotion-sync.server.ts`
+- Sync in `app/models/promotion-sync.server.ts` (all types → `discountAutomaticAppCreate`)
 - Function extension: `extensions/bundlestack-discount`
+- Storefront: app proxy `/apps/bundlestack/offers` returns `{ offers, promotions }`; theme widget renders both
 
-## BOGO checkout sync
+## Checkout sync
 
-Active BOGO promotions call `discountAutomaticAppCreate` with:
+Active promotions call `discountAutomaticAppCreate` with:
 
 - `functionHandle`: `bundlestack-discount`
 - `discountClasses`: `PRODUCT`
-- Metafield `$app` / `function-configuration` (JSON buy/get rules + product IDs)
+- Metafield `$app` / `function-configuration` (JSON discriminated by `type`)
 
-Deploy the app (including the Function extension) before testing at checkout:
+Function rules (v1):
+
+| Type | Rule |
+|------|------|
+| `bogo` | Buy X get Y (same or different products) |
+| `free_gift` | Threshold on subtotal/qty → 100% off gift units already in cart |
+| `mix_match` | N+ units from product set → % / fixed on those lines |
+| `bundle_builder` | Enough step selections → % / fixed on matched lines |
+| `fbt` | Anchor + recommended (optional requireAll) → % / fixed on recommended |
+
+Deploy before testing at checkout:
 
 ```bash
 npm run deploy
 ```
 
-## Next implementation phases
+## Storefront
 
-1. Functions / BXGY for free gifts, mix & match, FBT
-2. Theme blocks for builder + FBT widget
-3. Per-step product pickers on bundle builders
-4. Dashboard metrics per promotion type
+1. Add the BundleStack theme block on a product template.
+2. Active quantity-break offers and AOV promotions for that product appear in the widget.
+3. Discounts apply at cart/checkout via the Discount Function (gift products must be in cart for free-gift).

@@ -1,5 +1,13 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
-import type { BogoConfig, PromotionRecord } from "./promotion.types";
+import type {
+  BogoConfig,
+  BundleBuilderConfig,
+  FbtConfig,
+  FreeGiftConfig,
+  MixMatchConfig,
+  PromotionRecord,
+  PromotionType,
+} from "./promotion.types";
 import { deleteShopifyDiscounts } from "./discount.server";
 
 type GraphqlResponse = {
@@ -17,29 +25,152 @@ function assertGraphqlOk(json: GraphqlResponse, context: string) {
   }
 }
 
-function bogoMetafieldValue(promotion: PromotionRecord): string {
-  const config = promotion.config as BogoConfig;
-  return JSON.stringify({
-    type: "bogo",
-    buyQuantity: config.buyQuantity,
-    getQuantity: config.getQuantity,
-    getDiscountType: config.getDiscountType,
-    getDiscountValue: config.getDiscountValue,
-    sameProduct: config.sameProduct,
-    productIds: promotion.productIds,
-    getProductIds: config.getProductIds ?? [],
-  });
+export function metafieldValueForPromotion(promotion: PromotionRecord): string {
+  switch (promotion.promotionType) {
+    case "bogo": {
+      const config = promotion.config as BogoConfig;
+      return JSON.stringify({
+        type: "bogo",
+        buyQuantity: config.buyQuantity,
+        getQuantity: config.getQuantity,
+        getDiscountType: config.getDiscountType,
+        getDiscountValue: config.getDiscountValue,
+        sameProduct: config.sameProduct,
+        productIds: promotion.productIds,
+        getProductIds: config.getProductIds ?? [],
+      });
+    }
+    case "free_gift": {
+      const config = promotion.config as FreeGiftConfig;
+      return JSON.stringify({
+        type: "free_gift",
+        minSubtotal: config.minSubtotal,
+        minQuantity: config.minQuantity,
+        giftProductIds: config.giftProductIds ?? [],
+        giftQuantity: config.giftQuantity,
+        productIds: promotion.productIds,
+      });
+    }
+    case "mix_match": {
+      const config = promotion.config as MixMatchConfig;
+      return JSON.stringify({
+        type: "mix_match",
+        minItems: config.minItems,
+        discountType: config.discountType,
+        discountValue: config.discountValue,
+        productIds: promotion.productIds,
+      });
+    }
+    case "bundle_builder": {
+      const config = promotion.config as BundleBuilderConfig;
+      const steps = (config.steps ?? []).map((step, index) => ({
+        ...step,
+        productIds:
+          step.productIds?.length > 0
+            ? step.productIds
+            : index === 0
+              ? promotion.productIds
+              : step.productIds ?? [],
+      }));
+      return JSON.stringify({
+        type: "bundle_builder",
+        steps,
+        discountType: config.discountType,
+        discountValue: config.discountValue,
+        minStepsCompleted: config.minStepsCompleted,
+        productIds: promotion.productIds,
+      });
+    }
+    case "fbt": {
+      const config = promotion.config as FbtConfig;
+      return JSON.stringify({
+        type: "fbt",
+        anchorProductIds:
+          config.anchorProductIds?.length > 0
+            ? config.anchorProductIds
+            : promotion.productIds,
+        recommendedProductIds: config.recommendedProductIds ?? [],
+        discountType: config.discountType,
+        discountValue: config.discountValue,
+        requireAll: config.requireAll,
+        productIds: promotion.productIds,
+      });
+    }
+    default: {
+      const exhaustive: never = promotion.promotionType;
+      throw new Error(`Unsupported promotion type: ${exhaustive}`);
+    }
+  }
 }
 
-async function createBogoAppDiscount(
+function validateActivePromotion(promotion: PromotionRecord) {
+  switch (promotion.promotionType) {
+    case "bogo":
+      if (promotion.productIds.length === 0) {
+        throw new Error("Select at least one product for an active BOGO offer");
+      }
+      break;
+    case "free_gift": {
+      const config = promotion.config as FreeGiftConfig;
+      if ((config.giftProductIds ?? []).length === 0) {
+        throw new Error("Select at least one gift product for an active free-gift offer");
+      }
+      break;
+    }
+    case "mix_match":
+      if (promotion.productIds.length === 0) {
+        throw new Error("Select at least one product for an active mix & match offer");
+      }
+      break;
+    case "bundle_builder": {
+      const config = promotion.config as BundleBuilderConfig;
+      if ((config.steps ?? []).length === 0) {
+        throw new Error("Add at least one builder step for an active bundle builder");
+      }
+      break;
+    }
+    case "fbt": {
+      const config = promotion.config as FbtConfig;
+      const anchors =
+        config.anchorProductIds?.length > 0
+          ? config.anchorProductIds
+          : promotion.productIds;
+      if (anchors.length === 0) {
+        throw new Error("Select at least one anchor product for an active FBT offer");
+      }
+      if ((config.recommendedProductIds ?? []).length === 0) {
+        throw new Error(
+          "Select at least one recommended product for an active FBT offer",
+        );
+      }
+      break;
+    }
+    default: {
+      const exhaustive: never = promotion.promotionType;
+      throw new Error(`Unsupported promotion type: ${exhaustive}`);
+    }
+  }
+}
+
+function titleFor(promotion: PromotionRecord): string {
+  const labels: Record<PromotionType, string> = {
+    bogo: "BOGO",
+    free_gift: "Gift",
+    mix_match: "Mix",
+    bundle_builder: "Builder",
+    fbt: "FBT",
+  };
+  return `BundleStack ${labels[promotion.promotionType]} · ${promotion.id} · ${promotion.title}`.slice(
+    0,
+    255,
+  );
+}
+
+async function createAppDiscount(
   admin: AdminApiContext,
   promotion: PromotionRecord,
 ): Promise<string> {
   const startsAt = new Date().toISOString();
-  const title = `BundleStack BOGO · ${promotion.id} · ${promotion.title}`.slice(
-    0,
-    255,
-  );
 
   const response = await admin.graphql(
     `#graphql
@@ -57,7 +188,7 @@ async function createBogoAppDiscount(
     {
       variables: {
         automaticAppDiscount: {
-          title,
+          title: titleFor(promotion),
           functionHandle: FUNCTION_HANDLE,
           startsAt,
           discountClasses: ["PRODUCT"],
@@ -71,7 +202,7 @@ async function createBogoAppDiscount(
               namespace: "$app",
               key: "function-configuration",
               type: "json",
-              value: bogoMetafieldValue(promotion),
+              value: metafieldValueForPromotion(promotion),
             },
           ],
         },
@@ -103,8 +234,7 @@ async function createBogoAppDiscount(
 }
 
 /**
- * Sync promotions to Shopify discounts.
- * BOGO uses the BundleStack Discount Function; other types remain pending.
+ * Sync promotions to Shopify Discount Function metafields.
  */
 export async function applyPromotionDiscountSync(
   admin: AdminApiContext,
@@ -119,26 +249,9 @@ export async function applyPromotionDiscountSync(
     return [];
   }
 
-  if (promotion.promotionType === "bogo") {
-    if (promotion.productIds.length === 0) {
-      throw new Error("Select at least one product for an active BOGO offer");
-    }
-    const discountId = await createBogoAppDiscount(admin, promotion);
-    return [discountId];
-  }
-
-  console.info(
-    JSON.stringify({
-      event: "promotion_sync_pending",
-      promotionType: promotion.promotionType,
-      promotionId: promotion.id,
-      shop: promotion.shop,
-      message:
-        "Promotion saved. Shopify Functions sync for this offer type is not implemented yet.",
-    }),
-  );
-
-  return [];
+  validateActivePromotion(promotion);
+  const discountId = await createAppDiscount(admin, promotion);
+  return [discountId];
 }
 
 export async function cleanupAllShopPromotionDiscounts(

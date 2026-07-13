@@ -18,7 +18,7 @@ const STATUS_OPTIONS = [
   {
     value: "active",
     label: "Active",
-    help: "Offer is live for shoppers when checkout sync is available for this type.",
+    help: "Offer is live for shoppers and syncs to the Shopify Discount Function.",
   },
   {
     value: "draft",
@@ -92,8 +92,6 @@ export function PromotionFormShell({
   const statusHelp =
     STATUS_OPTIONS.find((option) => option.value === status)?.help ?? "";
 
-  const syncReady = promotionType === "bogo";
-
   return (
     <>
       <div className={styles.pageHeader}>
@@ -124,22 +122,13 @@ export function PromotionFormShell({
         </div>
       ) : null}
 
-      {syncReady ? (
-        <s-banner tone="info">
-          <s-text>
-            Active BOGO offers sync to Shopify via the BundleStack Discount
-            Function. Deploy the app (including the discount extension) before
-            testing at checkout.
-          </s-text>
-        </s-banner>
-      ) : (
-        <s-banner tone="info">
-          <s-text>
-            {meta.description} Checkout discount sync for this offer type is
-            still scaffolding — save configs now; Functions wiring comes next.
-          </s-text>
-        </s-banner>
-      )}
+      <s-banner tone="info">
+        <s-text>
+          Active {meta.label} offers sync to Shopify via the BundleStack
+          Discount Function. Deploy the app (including the discount extension)
+          before testing at checkout. {meta.description}
+        </s-text>
+      </s-banner>
 
       <input
         ref={configInputRef}

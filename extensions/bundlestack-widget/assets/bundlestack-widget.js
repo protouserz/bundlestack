@@ -459,6 +459,8 @@
       .catch(() => {
         tiersEl.innerHTML =
           '<p class="bundlestack-widget__empty">Unable to load offers right now. Please refresh the page.</p>';
+        // Leave the empty message visible; clear pending so the block is not stuck.
+        root.classList.remove("bundlestack-widget--pending");
       });
   }
 

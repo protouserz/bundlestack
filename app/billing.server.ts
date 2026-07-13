@@ -94,3 +94,18 @@ export function getBillingSummary(
 export function isBillingPlan(value: string): value is BillingPlan {
   return value === "free" || value === "starter" || value === "scale" || value === "pro";
 }
+
+/** Coupons require Starter or higher. */
+export function planIncludesCoupons(plan: BillingPlan): boolean {
+  return plan === "starter" || plan === "scale" || plan === "pro";
+}
+
+/** BOGO, free gifts, and mix & match require Starter or higher. */
+export function planIncludesCorePromotions(plan: BillingPlan): boolean {
+  return plan === "starter" || plan === "scale" || plan === "pro";
+}
+
+/** Bundle builders and FBT require Growth (scale) or Pro. */
+export function planIncludesAdvancedPromotions(plan: BillingPlan): boolean {
+  return plan === "scale" || plan === "pro";
+}

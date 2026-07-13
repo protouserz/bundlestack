@@ -304,6 +304,89 @@
     root.classList.remove("bundlestack-widget--pending");
   }
 
+  function typeLabel(type) {
+    const labels = {
+      bogo: "BOGO",
+      free_gift: "Free gift",
+      mix_match: "Mix & match",
+      bundle_builder: "Bundle builder",
+      fbt: "Frequently bought together",
+    };
+    return labels[type] || type;
+  }
+
+  function promotionTypeHint(promo) {
+    const config = promo.config || {};
+    switch (promo.promotionType) {
+      case "bogo":
+        return `Add ${Number(config.buyQuantity || 1) + Number(config.getQuantity || 1)}+ to unlock`;
+      case "free_gift":
+        return "Add the gift to your cart — it discounts at checkout when the threshold is met";
+      case "mix_match":
+        return `Add ${config.minItems || 2}+ qualifying items for the discount`;
+      case "bundle_builder":
+        return "Complete the kit steps, then checkout for the bundle price";
+      case "fbt":
+        return config.headline || "Pair recommended products for a bundle discount";
+      default:
+        return promo.summary || "";
+    }
+  }
+
+  function renderPromotionCards(promotions) {
+    if (!promotions.length) return "";
+    return `
+      <div class="bundlestack-widget__promotions" data-testid="bundlestack-promotions">
+        ${promotions
+          .map(
+            (promo) => `
+          <article
+            class="bundlestack-widget__promo"
+            data-promo-type="${escapeHtml(promo.promotionType)}"
+            data-promo-id="${escapeHtml(promo.id)}"
+          >
+            <p class="bundlestack-widget__promo-type">${escapeHtml(typeLabel(promo.promotionType))}</p>
+            <h3 class="bundlestack-widget__promo-title">${escapeHtml(promo.title)}</h3>
+            <p class="bundlestack-widget__promo-summary">${escapeHtml(promo.summary || "")}</p>
+            <p class="bundlestack-widget__promo-hint">${escapeHtml(promotionTypeHint(promo))}</p>
+          </article>
+        `,
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  function renderTier(offer, priceCents, currency) {
+    return offer.tiers
+      .map((tier) => {
+        const label = tierLabel(tier);
+        const badge = formatBadge(tier);
+        const price = renderPrice(priceCents, tier, currency);
+        const showBadge =
+          tier.discountType === "percentage"
+            ? tier.discountValue > 0
+            : tier.discountValue > 0;
+
+        return `
+          <button
+            type="button"
+            class="bundlestack-widget__tier"
+            data-min-qty="${tier.minQty}"
+            aria-pressed="false"
+          >
+            <span class="bundlestack-widget__tier-radio" aria-hidden="true"></span>
+            <span class="bundlestack-widget__tier-label">${escapeHtml(label)}</span>
+            <span class="bundlestack-widget__tier-meta">
+              ${showBadge ? `<span class="bundlestack-widget__tier-badge">${escapeHtml(badge)}</span>` : ""}
+              ${price}
+            </span>
+          </button>
+        `;
+      })
+      .join("");
+  }
+
   function initWidget(root) {
     const productId = root.dataset.productId;
     const proxyPath = root.dataset.proxyPath;
@@ -331,41 +414,25 @@
       })
       .then((data) => {
         const offers = data.offers || [];
+        const promotions = data.promotions || [];
+        const hasTiers = offers.length > 0 && offers[0]?.tiers?.length;
+        const hasPromos = promotions.length > 0;
 
-        if (offers.length === 0 || !offers[0]?.tiers?.length) {
+        if (!hasTiers && !hasPromos) {
           hideWidget(root);
           return;
         }
 
         showWidget(root);
-        const offer = offers[0];
-        tiersEl.innerHTML = offer.tiers
-          .map((tier) => {
-            const label = tierLabel(tier);
-            const badge = formatBadge(tier);
-            const price = renderPrice(priceCents, tier, currency);
-            const showBadge =
-              tier.discountType === "percentage"
-                ? tier.discountValue > 0
-                : tier.discountValue > 0;
 
-            return `
-              <button
-                type="button"
-                class="bundlestack-widget__tier"
-                data-min-qty="${tier.minQty}"
-                aria-pressed="false"
-              >
-                <span class="bundlestack-widget__tier-radio" aria-hidden="true"></span>
-                <span class="bundlestack-widget__tier-label">${escapeHtml(label)}</span>
-                <span class="bundlestack-widget__tier-meta">
-                  ${showBadge ? `<span class="bundlestack-widget__tier-badge">${escapeHtml(badge)}</span>` : ""}
-                  ${price}
-                </span>
-              </button>
-            `;
-          })
-          .join("");
+        let html = "";
+        if (hasTiers) {
+          html += renderTier(offers[0], priceCents, currency);
+        }
+        if (hasPromos) {
+          html += renderPromotionCards(promotions);
+        }
+        tiersEl.innerHTML = html;
 
         tiersEl.querySelectorAll(".bundlestack-widget__tier").forEach((tierEl) => {
           tierEl.addEventListener("click", () => {
@@ -373,23 +440,27 @@
           });
         });
 
-        ensureClearButton(root, tiersEl);
-        updateClearButton(root);
+        if (hasTiers) {
+          ensureClearButton(root, tiersEl);
+          updateClearButton(root);
 
-        const qtyInput = findQuantityInput(root);
-        if (qtyInput) {
-          qtyInput.addEventListener("change", () =>
-            syncSelectedFromQuantity(root)
-          );
-          qtyInput.addEventListener("input", () =>
-            syncSelectedFromQuantity(root)
-          );
-          syncSelectedFromQuantity(root);
+          const qtyInput = findQuantityInput(root);
+          if (qtyInput) {
+            qtyInput.addEventListener("change", () =>
+              syncSelectedFromQuantity(root)
+            );
+            qtyInput.addEventListener("input", () =>
+              syncSelectedFromQuantity(root)
+            );
+            syncSelectedFromQuantity(root);
+          }
         }
       })
       .catch(() => {
         tiersEl.innerHTML =
           '<p class="bundlestack-widget__empty">Unable to load offers right now. Please refresh the page.</p>';
+        // Leave the empty message visible; clear pending so the block is not stuck.
+        root.classList.remove("bundlestack-widget--pending");
       });
   }
 

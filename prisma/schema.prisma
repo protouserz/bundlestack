@@ -59,3 +59,46 @@ model ShopSettings {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+
+/// Merchant-created discount codes (coupons / gift-card-style fixed amounts).
+model Coupon {
+  id                    String    @id @default(cuid())
+  shop                  String
+  title                 String
+  code                  String
+  status                String    @default("draft")
+  discountType          String    @default("percentage")
+  discountValue         Float
+  appliesOncePerCustomer Boolean  @default(true)
+  usageLimit            Int?
+  startsAt              DateTime?
+  endsAt                DateTime?
+  discountId            String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([shop, code])
+  @@index([shop, status])
+}
+
+/// AOV promotions beyond quantity breaks: BOGO, free gifts, mix & match, builders, FBT.
+model Promotion {
+  id               String   @id @default(cuid())
+  shop             String
+  title            String
+  /// bogo | free_gift | mix_match | bundle_builder | fbt
+  promotionType    String
+  status           String   @default("draft")
+  /// Type-specific JSON config (buy/get rules, gift products, builder steps, etc.)
+  config           String   @default("{}")
+  productIds       String   @default("[]")
+  collectionIds    String   @default("[]")
+  discountIds      String   @default("[]")
+  discountUses     Int      @default(0)
+  revenueGenerated Float    @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([shop, promotionType, status])
+  @@index([shop, status])
+}

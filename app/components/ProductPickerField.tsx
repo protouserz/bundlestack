@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import { useE2EMode } from "./E2EModeContext";
 import { SButton } from "./polaris";
 import styles from "./offer-form/offer-form.module.css";
 
@@ -16,7 +17,57 @@ type ProductPickerFieldProps = {
   onProductsChange?: (count: number) => void;
 };
 
-export function ProductPickerField({
+export function ProductPickerField(props: ProductPickerFieldProps) {
+  const e2eMode = useE2EMode();
+  if (e2eMode) {
+    return <ProductPickerFieldLocal {...props} />;
+  }
+  return <ProductPickerFieldShopify {...props} />;
+}
+
+function ProductPickerFieldLocal({
+  name = "productIds",
+  initialProducts = [],
+  required = true,
+  browseLabel = "Browse products",
+  onProductsChange,
+}: ProductPickerFieldProps) {
+  const [products, setProducts] = useState<SelectedProduct[]>(
+    initialProducts.length > 0
+      ? initialProducts
+      : [
+          {
+            id: "gid://shopify/Product/1001",
+            title: "E2E Sample Product",
+          },
+        ],
+  );
+
+  return (
+    <ProductPickerUI
+      name={name}
+      products={products}
+      setProducts={setProducts}
+      required={required}
+      browseLabel={browseLabel}
+      onProductsChange={onProductsChange}
+      onBrowse={() => {
+        setProducts([
+          {
+            id: "gid://shopify/Product/1001",
+            title: "E2E Sample Product",
+          },
+          {
+            id: "gid://shopify/Product/1002",
+            title: "E2E Sample Product 2",
+          },
+        ]);
+      }}
+    />
+  );
+}
+
+function ProductPickerFieldShopify({
   name = "productIds",
   initialProducts = [],
   required = true,
@@ -25,6 +76,54 @@ export function ProductPickerField({
 }: ProductPickerFieldProps) {
   const shopify = useAppBridge();
   const [products, setProducts] = useState<SelectedProduct[]>(initialProducts);
+
+  const openPicker = useCallback(async () => {
+    const selected = await shopify.resourcePicker({
+      type: "product",
+      multiple: true,
+      selectionIds: products.map((product) => ({ id: product.id })),
+    });
+
+    if (!selected || selected.length === 0) return;
+
+    setProducts(
+      selected.map((item) => ({
+        id: item.id,
+        title: "title" in item && item.title ? String(item.title) : item.id,
+      })),
+    );
+  }, [shopify, products]);
+
+  return (
+    <ProductPickerUI
+      name={name}
+      products={products}
+      setProducts={setProducts}
+      required={required}
+      browseLabel={browseLabel}
+      onProductsChange={onProductsChange}
+      onBrowse={openPicker}
+    />
+  );
+}
+
+function ProductPickerUI({
+  name,
+  products,
+  setProducts,
+  required,
+  browseLabel,
+  onProductsChange,
+  onBrowse,
+}: {
+  name: string;
+  products: SelectedProduct[];
+  setProducts: React.Dispatch<React.SetStateAction<SelectedProduct[]>>;
+  required: boolean;
+  browseLabel: string;
+  onProductsChange?: (count: number) => void;
+  onBrowse: () => void | Promise<void>;
+}) {
   const onProductsChangeRef = useRef(onProductsChange);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,23 +147,6 @@ export function ProductPickerField({
     }
   }, [hiddenValue]);
 
-  const openPicker = useCallback(async () => {
-    const selected = await shopify.resourcePicker({
-      type: "product",
-      multiple: true,
-      selectionIds: products.map((product) => ({ id: product.id })),
-    });
-
-    if (!selected || selected.length === 0) return;
-
-    setProducts(
-      selected.map((item) => ({
-        id: item.id,
-        title: "title" in item && item.title ? String(item.title) : item.id,
-      })),
-    );
-  }, [shopify, products]);
-
   const removeProduct = (id: string) => {
     setProducts((current) => current.filter((product) => product.id !== id));
   };
@@ -85,10 +167,18 @@ export function ProductPickerField({
           type="text"
           placeholder="Search products"
           readOnly
-          onFocus={openPicker}
+          onFocus={() => {
+            void onBrowse();
+          }}
           aria-label="Search products"
         />
-        <SButton type="button" variant="secondary" onClick={openPicker}>
+        <SButton
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            void onBrowse();
+          }}
+        >
           {browseLabel}
         </SButton>
       </div>

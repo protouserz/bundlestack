@@ -5,8 +5,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useRouteError,
 } from "react-router";
+import { isE2EAuthBypassEnabled } from "./e2e-auth.server";
+
+export const loader = async () => {
+  return { e2eMode: isE2EAuthBypassEnabled() };
+};
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -69,6 +75,8 @@ export function ErrorBoundary() {
 }
 
 export default function App() {
+  const { e2eMode } = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
@@ -79,6 +87,9 @@ export default function App() {
           rel="stylesheet"
           href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
         />
+        {e2eMode ? (
+          <script src="https://cdn.shopify.com/shopifycloud/polaris.js" />
+        ) : null}
         <Meta />
         <Links />
       </head>

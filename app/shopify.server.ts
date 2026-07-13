@@ -6,6 +6,10 @@ import {
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { shopifyBillingConfig } from "./billing.shopify";
+import {
+  createE2EAuthContext,
+  isE2EAuthBypassEnabled,
+} from "./e2e-auth.server";
 import prisma from "./db.server";
 
 if (process.env.NODE_ENV === "production" && !process.env.SHOPIFY_API_SECRET) {
@@ -39,8 +43,17 @@ export {
 export default shopify;
 export const apiVersion = ApiVersion.October25;
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
-export const authenticate = shopify.authenticate;
 export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;
+
+export const authenticate = {
+  ...shopify.authenticate,
+  admin: async (request: Request) => {
+    if (isE2EAuthBypassEnabled()) {
+      return createE2EAuthContext() as never;
+    }
+    return shopify.authenticate.admin(request);
+  },
+};

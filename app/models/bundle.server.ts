@@ -316,6 +316,8 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
 
 export async function cleanupShopData(shop: string) {
   await prisma.bundleOffer.deleteMany({ where: { shop } });
+  await prisma.coupon.deleteMany({ where: { shop } });
+  await prisma.promotion.deleteMany({ where: { shop } });
   await prisma.shopSettings.deleteMany({ where: { shop } });
 }
 
@@ -332,7 +334,7 @@ export async function listOffersRaw(shop: string) {
 export async function fetchProductTitles(
   admin: { graphql: (query: string, options?: { variables?: Record<string, unknown> }) => Promise<Response> },
   productIds: string[],
-) {
+): Promise<Array<{ id: string; title: string }>> {
   if (productIds.length === 0) return [];
 
   const response = await admin.graphql(
@@ -348,13 +350,15 @@ export async function fetchProductTitles(
     { variables: { ids: productIds } },
   );
 
-  const json = await response.json();
+  const json = (await response.json()) as {
+    data?: { nodes?: Array<{ id?: string; title?: string } | null> };
+  };
   const nodes = json.data?.nodes ?? [];
 
   return nodes
-    .filter((node: { id?: string; title?: string } | null) => node?.id)
-    .map((node: { id: string; title: string }) => ({
+    .filter((node): node is { id: string; title: string } => Boolean(node?.id))
+    .map((node) => ({
       id: node.id,
-      title: node.title,
+      title: node.title ?? node.id,
     }));
 }

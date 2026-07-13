@@ -37,17 +37,18 @@ export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   ],
   starter: [
     "Everything in Free",
-    "For stores ready for paid support",
+    "Coupon & gift-style discount codes",
+    "BOGO, free gifts & mix & match",
     "Email support",
   ],
   scale: [
     "Everything in Starter",
-    "For higher bundle volume",
+    "Bundle builders & FBT upsells",
     "Priority support",
   ],
   pro: [
     "Everything in Growth",
-    "No redemption tracking limits",
+    "Full AOV promotion suite",
     "Best value at scale",
   ],
 };

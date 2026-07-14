@@ -112,16 +112,10 @@ export async function countExistingDiscountIds(
   const uniqueIds = [...new Set(discountIds.filter(Boolean))];
   if (uniqueIds.length === 0) return 0;
 
-  const listed = await listAllAutomaticDiscountNodes(admin);
-  const listedNumericIds = new Set(
-    listed
-      .map((node) => discountNodeNumericId(node.id))
-      .filter((id): id is string => Boolean(id)),
-  );
-
+  const found = await fetchDiscountNodesByIds(admin, uniqueIds);
   return uniqueIds.filter((id) => {
-    const numericId = discountNodeNumericId(id);
-    return numericId !== null && listedNumericIds.has(numericId);
+    const normalized = normalizeDiscountNodeId(id);
+    return found.has(normalized) || found.has(id);
   }).length;
 }
 

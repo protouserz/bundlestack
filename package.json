@@ -19,7 +19,10 @@
     "vite": "vite",
     "typecheck": "react-router typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "node e2e/run.mjs",
+    "test:e2e:report": "node e2e/open-latest-report.mjs",
+    "test:e2e:coupons": "node e2e/run.mjs e2e/coupons.spec.ts"
   },
   "type": "module",
   "engines": {
@@ -42,6 +45,7 @@
     "vite-tsconfig-paths": "^6.0.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@shopify/api-codegen-preset": "^2.0.0",
     "@shopify/app": "^3.58.2",
     "@shopify/cli": "^4.3.0",

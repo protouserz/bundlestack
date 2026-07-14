@@ -39,18 +39,21 @@ export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   ],
   starter: [
     "Everything in Free",
+    "Coupon & gift-style discount codes",
     "Email support",
     "Suggested for ~500 discount redemptions / month",
     "Clean uninstall removes discounts & data",
   ],
   scale: [
     "Everything in Starter",
+    "Coupon & gift-style discount codes",
     "Priority email support",
     "Suggested for ~2,000 discount redemptions / month",
     "Faster help when offers need tuning",
   ],
   pro: [
     "Everything in Growth",
+    "Coupon & gift-style discount codes",
     "No redemption tracking limits",
     "Suggested for 5,000+ discount redemptions / month",
     "Best value at scale",

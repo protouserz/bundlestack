@@ -238,6 +238,7 @@ export function CouponForm({
               <div className={styles.field} style={{ marginTop: "1rem" }}>
                 <span className={styles.fieldLabel}>Products</span>
                 <ProductPickerField
+                  key="included-products"
                   name="productIds"
                   initialProducts={defaultProducts}
                   required
@@ -251,6 +252,7 @@ export function CouponForm({
               <div className={styles.field} style={{ marginTop: "1rem" }}>
                 <span className={styles.fieldLabel}>Excluded products</span>
                 <ProductPickerField
+                  key="excluded-products"
                   name="excludedProductIds"
                   initialProducts={defaultExcludedProducts}
                   required={false}

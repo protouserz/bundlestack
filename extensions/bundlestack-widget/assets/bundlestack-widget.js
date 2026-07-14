@@ -53,12 +53,27 @@
   }
 
   function findProductContext(widgetRoot) {
-    return (
-      widgetRoot.closest("product-info") ||
-      widgetRoot.closest(".product") ||
-      widgetRoot.closest("section") ||
-      document
-    );
+    const productInfo = widgetRoot.closest("product-info");
+    if (productInfo) return productInfo;
+
+    const product = widgetRoot.closest(".product");
+    if (product) return product;
+
+    // App blocks often live in their own section — walk up to a
+    // container that actually owns the product form / buy box.
+    let el = widgetRoot.parentElement;
+    while (el && el !== document.body) {
+      if (
+        el.querySelector?.(
+          'form[action*="/cart/add"], product-form form, product-form'
+        )
+      ) {
+        return el;
+      }
+      el = el.parentElement;
+    }
+
+    return document;
   }
 
   function findProductForm(widgetRoot) {
@@ -66,27 +81,61 @@
     return (
       ctx.querySelector("product-form form") ||
       ctx.querySelector('form[action*="/cart/add"]') ||
+      document.querySelector("product-form form") ||
       document.querySelector('form[action*="/cart/add"]')
     );
   }
 
-  function findQuantityInput(widgetRoot) {
-    const ctx = findProductContext(widgetRoot);
+  function quantityInputCandidates(widgetRoot) {
     const form = findProductForm(widgetRoot);
     const formId = form?.id;
+    const candidates = [];
 
-    if (formId) {
-      const associated = ctx.querySelector(
-        `input[name="quantity"][form="${formId}"], .quantity__input[form="${formId}"]`
-      );
-      if (associated) return associated;
+    if (form) {
+      form
+        .querySelectorAll('input[name="quantity"], .quantity__input')
+        .forEach((el) => candidates.push(el));
     }
 
+    if (formId) {
+      document
+        .querySelectorAll(
+          `input[name="quantity"][form="${formId}"], .quantity__input[form="${formId}"]`
+        )
+        .forEach((el) => candidates.push(el));
+    }
+
+    const ctx = findProductContext(widgetRoot);
+    ctx
+      .querySelectorAll('input[name="quantity"], .quantity__input')
+      .forEach((el) => candidates.push(el));
+
+    return [...new Set(candidates)];
+  }
+
+  function findQuantityInput(widgetRoot) {
+    const candidates = quantityInputCandidates(widgetRoot);
     return (
-      ctx.querySelector(".quantity__input[name='quantity']") ||
-      ctx.querySelector('input[name="quantity"]') ||
-      document.querySelector('input[name="quantity"]')
+      candidates.find((el) => el.matches?.(".quantity__input")) ||
+      candidates[0] ||
+      null
     );
+  }
+
+  function ensureQuantityInput(widgetRoot) {
+    let input = findQuantityInput(widgetRoot);
+    if (input) return input;
+
+    const form = findProductForm(widgetRoot);
+    if (!form) return null;
+
+    input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "quantity";
+    input.value = "1";
+    input.setAttribute("data-bundlestack-quantity", "true");
+    form.appendChild(input);
+    return input;
   }
 
   function getSelectedQty(widgetRoot) {
@@ -98,15 +147,22 @@
 
   function setProductQuantity(widgetRoot, qty) {
     const quantity = String(qty);
-    const input = findQuantityInput(widgetRoot);
-    if (!input) return false;
-
-    input.value = quantity;
-    input.setAttribute("value", quantity);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-
     widgetRoot.dataset.selectedQty = quantity;
+
+    const inputs = quantityInputCandidates(widgetRoot);
+    if (inputs.length === 0) {
+      const injected = ensureQuantityInput(widgetRoot);
+      if (!injected) return false;
+      inputs.push(injected);
+    }
+
+    inputs.forEach((input) => {
+      input.value = quantity;
+      input.setAttribute("value", quantity);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
     return true;
   }
 
@@ -144,43 +200,43 @@
 
   function getVariantId(widgetRoot) {
     const form = findProductForm(widgetRoot);
-    const input = form?.querySelector('[name="id"]');
-    return input?.value || null;
+    if (!form) {
+      return (
+        document.querySelector(
+          'form[action*="/cart/add"] [name="id"], product-form [name="id"]'
+        )?.value || null
+      );
+    }
+
+    const inside = form.querySelector('[name="id"]');
+    if (inside?.value) return inside.value;
+
+    if (form.id) {
+      const associated = document.querySelector(
+        `input[name="id"][form="${CSS.escape(form.id)}"], select[name="id"][form="${CSS.escape(form.id)}"]`
+      );
+      if (associated?.value) return associated.value;
+    }
+
+    return null;
   }
 
   function cartRoot() {
     return window.Shopify?.routes?.root || "/";
   }
 
-  async function checkoutWithQuantity(widgetRoot, quantity) {
-    const variantId = getVariantId(widgetRoot);
-    if (!variantId) return false;
+  function cartAddUrl() {
+    return window.Shopify?.routes?.root
+      ? `${window.Shopify.routes.root}cart/add.js`
+      : "/cart/add.js";
+  }
 
-    const qty = parseInt(quantity, 10);
-    if (!qty || qty < 1) return false;
-
-    try {
-      await fetch(`${cartRoot()}cart/clear.js`, {
-        method: "POST",
-        credentials: "same-origin",
-      });
-
-      const response = await fetch(`${cartRoot()}cart/add.js`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          items: [{ id: parseInt(variantId, 10), quantity: qty }],
-        }),
-      });
-
-      if (!response.ok) return false;
-
-      window.location.href = `${cartRoot()}checkout`;
-      return true;
-    } catch {
-      return false;
-    }
+  function findCartUi() {
+    return (
+      document.querySelector("cart-drawer") ||
+      document.querySelector("cart-notification") ||
+      null
+    );
   }
 
   function isDynamicCheckoutButton(target) {
@@ -191,40 +247,197 @@
     );
   }
 
-  function installCheckoutGuards(widgetRoot) {
-    const ctx = findProductContext(widgetRoot);
-    const form = findProductForm(widgetRoot);
+  function isAddToCartControl(target) {
+    if (isDynamicCheckoutButton(target)) return false;
+    return Boolean(
+      target.closest(
+        'button[name="add"], button[type="submit"][name="add"], form[action*="/cart/add"] button[type="submit"], product-form button[type="submit"]'
+      )
+    );
+  }
 
-    ctx.addEventListener(
+  async function postCartAdd(widgetRoot, quantity, { clearCart = false } = {}) {
+    const variantId = getVariantId(widgetRoot);
+    if (!variantId) return null;
+
+    const qty = parseInt(quantity, 10);
+    if (!qty || qty < 1) return null;
+
+    try {
+      if (clearCart) {
+        await fetch(`${cartRoot()}cart/clear.js`, {
+          method: "POST",
+          credentials: "same-origin",
+        });
+      }
+
+      const form = findProductForm(widgetRoot);
+      const formData = form ? new FormData(form) : new FormData();
+      formData.set("id", String(variantId));
+      formData.set("quantity", String(qty));
+      formData.delete("items");
+      formData.delete("sections");
+      formData.delete("sections_url");
+
+      const response = await fetch(cartAddUrl(), {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+        body: formData,
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || payload?.status) return null;
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  async function checkoutWithQuantity(widgetRoot, quantity) {
+    const payload = await postCartAdd(widgetRoot, quantity, { clearCart: true });
+    if (!payload) return false;
+    window.location.href = `${cartRoot()}checkout`;
+    return true;
+  }
+
+  async function fetchCartSections(cartUi) {
+    if (!cartUi?.getSectionsToRender) return null;
+    try {
+      const ids = cartUi
+        .getSectionsToRender()
+        .map((section) => section.id)
+        .filter(Boolean);
+      if (!ids.length) return null;
+
+      const response = await fetch(
+        `${window.location.pathname}?sections=${encodeURIComponent(ids.join(","))}`,
+        { credentials: "same-origin" }
+      );
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  async function addToCartWithQuantity(widgetRoot, quantity) {
+    const payload = await postCartAdd(widgetRoot, quantity);
+    if (!payload) return false;
+
+    const cartUi = findCartUi();
+    // Always refetch section HTML after add. cart/add.js sections can be
+    // incomplete and Dawn's renderContents will blank the drawer line items.
+    const sections = await fetchCartSections(cartUi);
+
+    if (
+      cartUi &&
+      typeof cartUi.renderContents === "function" &&
+      sections &&
+      Object.keys(sections).length > 0
+    ) {
+      cartUi.classList?.remove?.("is-empty");
+      cartUi
+        .querySelector?.(".drawer__inner.is-empty")
+        ?.classList?.remove("is-empty");
+      cartUi.renderContents({ ...payload, sections });
+      cartUi.classList?.remove?.("is-empty");
+      return true;
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("cart:updated", { detail: { cart: payload } })
+    );
+    document.documentElement.dispatchEvent(
+      new CustomEvent("cart:refresh", { bubbles: true })
+    );
+
+    if (cartUi && typeof cartUi.open === "function") {
+      cartUi.classList?.remove?.("is-empty");
+      cartUi.open();
+    } else {
+      window.location.href = `${cartRoot()}cart`;
+    }
+
+    return true;
+  }
+
+  function installCheckoutGuards(widgetRoot) {
+    ensureQuantityInput(widgetRoot);
+
+    // Capture on document so we still intercept ATC when the app block
+    // lives in a separate section from the buy box.
+    document.addEventListener(
       "click",
       async (event) => {
-        if (!isDynamicCheckoutButton(event.target)) return;
-
         const selectedQty = getSelectedQty(widgetRoot);
         if (!selectedQty) return;
 
-        syncQuantityFromSelection(widgetRoot);
-
         const minTierQty = parseInt(selectedQty, 10);
-        if (minTierQty < 2) return;
+        if (!minTierQty || minTierQty < 2) return;
+
+        const form = findProductForm(widgetRoot);
+        const inProductForm =
+          form &&
+          (form.contains(event.target) ||
+            event.target.closest?.(`button[form="${form.id}"]`) ||
+            event.target.getAttribute?.("form") === form.id);
+        if (!inProductForm && !isAddToCartControl(event.target)) return;
+
+        if (isDynamicCheckoutButton(event.target)) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+
+          const ok = await checkoutWithQuantity(widgetRoot, selectedQty);
+          if (!ok) syncQuantityFromSelection(widgetRoot);
+          return;
+        }
+
+        if (!isAddToCartControl(event.target)) return;
 
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
 
-        const ok = await checkoutWithQuantity(widgetRoot, selectedQty);
+        syncQuantityFromSelection(widgetRoot);
+        const ok = await addToCartWithQuantity(widgetRoot, selectedQty);
         if (!ok) {
+          // Fall back to letting the theme handle ATC with synced qty.
           syncQuantityFromSelection(widgetRoot);
+          form?.requestSubmit?.();
         }
       },
       true
     );
 
+    const form = findProductForm(widgetRoot);
     if (form) {
       form.addEventListener(
         "submit",
-        () => {
+        (event) => {
+          const selectedQty = getSelectedQty(widgetRoot);
+          if (!selectedQty) return;
+
           syncQuantityFromSelection(widgetRoot);
+
+          const minTierQty = parseInt(selectedQty, 10);
+          if (minTierQty < 2) return;
+
+          // ProductForm themes often preventDefault then read FormData —
+          // rewrite quantity here so AJAX ATC still gets the tier qty.
+          try {
+            const formData = new FormData(form);
+            if (formData.get("quantity") !== String(selectedQty)) {
+              // Ensure associated inputs are set before theme reads FormData.
+              setProductQuantity(widgetRoot, selectedQty);
+            }
+          } catch {
+            setProductQuantity(widgetRoot, selectedQty);
+          }
+
+          // Avoid duplicate handling if click interceptor already ran.
+          if (event.defaultPrevented) return;
         },
         true
       );
@@ -247,6 +460,7 @@
     });
     tierEl.classList.add("bundlestack-widget__tier--selected");
     tierEl.setAttribute("aria-pressed", "true");
+    root.dataset.selectedQty = String(qty);
     setProductQuantity(root, qty);
     updateClearButton(root);
   }

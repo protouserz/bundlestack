@@ -52,15 +52,15 @@ These are **not** instant code scans. Shopify collects **telemetry** when a merc
 
 **Do this (in order):**
 
-1. **Wake production** — open https://bundlestack-pfee.onrender.com/health and wait until you see `{"ok":true,"service":"bundlestack"}` (up to ~60s on free tier). Do **not** open the app in Shopify until this returns OK.
-2. **Open the app in admin** — https://admin.shopify.com/store/bundlestack-dev/apps/bundlestack — then **reload** if you previously saw the Render splash.
+1. **Confirm production is up** — open https://bundlestack-pfee.onrender.com/health; you should see `{"ok":true,"service":"bundlestack"}` immediately (Render Starter stays warm).
+2. **Open the app in admin** — https://admin.shopify.com/store/bundlestack-dev/apps/bundlestack — then **reload** if you previously saw a blank or error page.
 3. **Use a normal browser window** with ad blockers and script blockers **disabled** for `*.myshopify.com` and `bundlestack-pfee.onrender.com`.
 4. **Click through the app** for 2–3 minutes: Dashboard → Offers → open an offer → Billing. Each navigation should hit your backend.
 5. **Verify session tokens** — DevTools → Network → **clear the filter** (embedded apps do **not** call `onrender.com` in the browser — Shopify proxies everything through `admin.shopify.com`). Filter by `apps/bundlestack` or `bundlestack`, click **Offers**, and open the `.data` or document request. Check **Request URL** for `id_token=eyJ...` on first load, or **Request Headers** for `Authorization: Bearer eyJ...` on navigations.
 6. **Verify App Bridge** — Network should show `app-bridge.js` from `cdn.shopify.com/shopifycloud/`.
 7. **Wait** — recheck Partners after **2–48 hours**. If still pending after real usage, contact [Partner Support](https://partners.shopify.com/support) and ask for manual embedded-check verification (app ID `393084436481`).
 
-**"WELCOME TO RENDER" splash in the iframe?** That means the app never loaded — embedded checks **cannot pass** until you see the real BundleStack dashboard. Wake `/health` first, then reload the app in admin. For App Store submission, upgrade Render to **Starter ($7/mo)** so the service never sleeps; GitHub keep-warm alone is unreliable on free tier.
+**Blank / error page in the iframe?** That means the app never loaded — embedded checks **cannot pass** until you see the real BundleStack dashboard. Confirm `/health` returns OK, then reload the app in admin. Production runs on Render **Starter** (always-on); the old GitHub keep-warm cron was removed.
 
 ### Direct links (use after logging in via partners.shopify.com)
 
@@ -119,12 +119,14 @@ Copy for tagline, description, keywords: [`app-store-listing.md`](./app-store-li
 
 ### Pricing plans (App Store form)
 
+Paste feature bullets from [`app-store-listing.md`](./app-store-listing.md) into each plan’s **Features** field so store cards are not empty.
+
 | Plan | Price | Notes |
 |------|-------|-------|
-| Free | $0/mo | Unlimited offers, theme widget, discount sync |
-| Starter | $7.99/mo | Paid support for growing stores |
-| Growth | $14.99/mo | Priority support for scaling stores |
-| Pro | $29.99/mo | High-volume stores |
+| Free | $0/mo | Full core product (offers, widget, sync) |
+| Starter | $7.99/mo | Email support; ~500 redemptions/mo guidance |
+| Growth | $14.99/mo | Priority support; ~2,000 redemptions/mo |
+| Pro | $29.99/mo | No redemption tracking limits; 5,000+/mo |
 
 Merchants choose a paid plan on the in-app Billing page and approve the charge in Shopify. Plans do not upgrade automatically.
 

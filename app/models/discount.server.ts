@@ -21,18 +21,16 @@ function percentageTiers(offer: SerializedOffer): DiscountTier[] {
 }
 
 function discountTitleForTier(
-  offerId: string,
+  offer: SerializedOffer,
   tier: DiscountTier,
-  tierIndex: number,
 ): string {
-  return `BundleStack ${offerId} · ${tierIndex + 1} · Qty ${tier.minQty}+ · ${tier.discountValue}% off`;
+  const name = offer.title.trim() || "Volume discount";
+  return `Buy ${tier.minQty}+, save ${tier.discountValue}% · ${name}`;
 }
 
 function plannedDiscountTitles(offer: SerializedOffer): Set<string> {
   return new Set(
-    percentageTiers(offer).map((tier, index) =>
-      discountTitleForTier(offer.id, tier, index),
-    ),
+    percentageTiers(offer).map((tier) => discountTitleForTier(offer, tier)),
   );
 }
 
@@ -143,10 +141,9 @@ async function createAutomaticDiscountForTier(
   admin: AdminApiContext,
   offer: SerializedOffer,
   tier: DiscountTier,
-  tierIndex: number,
   startsAt: string,
 ): Promise<string> {
-  const discountTitle = discountTitleForTier(offer.id, tier, tierIndex);
+  const discountTitle = discountTitleForTier(offer, tier);
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const response = await admin.graphql(
@@ -242,12 +239,11 @@ export async function syncOfferDiscounts(
   const createdIds: string[] = [];
 
   try {
-    for (const [tierIndex, tier] of tiers.entries()) {
+    for (const tier of tiers) {
       const id = await createAutomaticDiscountForTier(
         admin,
         offer,
         tier,
-        tierIndex,
         startsAt,
       );
       createdIds.push(id);
@@ -292,7 +288,14 @@ export async function replaceOfferDiscounts(
   await deleteShopifyDiscounts(admin, existingDiscountIds);
 
   const offerNodes = await findOfferDiscountNodes(admin, offer);
-  if (offerNodes.length === expectedTierCount) {
+  const plannedTitles = plannedDiscountTitles(offer);
+  const titlesAreCurrent =
+    offerNodes.length === expectedTierCount &&
+    offerNodes.every(
+      (node) => Boolean(node.title) && plannedTitles.has(node.title as string),
+    );
+
+  if (titlesAreCurrent) {
     return offerNodes
       .slice()
       .sort((left, right) => (left.title ?? "").localeCompare(right.title ?? ""))

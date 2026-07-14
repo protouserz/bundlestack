@@ -5,7 +5,6 @@ import type {
   LoaderFunctionArgs,
 } from "react-router";
 import {
-  Link,
   redirect,
   useFetcher,
   useLoaderData,
@@ -14,6 +13,7 @@ import {
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { StatCard } from "../components/StatCard";
+import { toShopifyAdminProtocol } from "../components/AdminLink";
 import { SButton, SPage } from "../components/polaris";
 import styles from "../components/ui.module.css";
 import {
@@ -563,9 +563,13 @@ export default function BillingPage() {
                 <s-text>✓ Offer configuration is removed from our database</s-text>
                 <s-text>
                   ✓ Remove the theme block:{" "}
-                  <Link to={themeEditorUrl} target="_blank" rel="noreferrer">
+                  <a
+                    href={toShopifyAdminProtocol(themeEditorUrl)}
+                    target="_top"
+                    rel="noreferrer"
+                  >
                     Open theme editor
-                  </Link>
+                  </a>
                 </s-text>
               </s-stack>
             </s-box>

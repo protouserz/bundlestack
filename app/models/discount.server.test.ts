@@ -14,14 +14,24 @@ const offer = {
 
 describe("isOfferDiscountTitle", () => {
   const plannedTitles = new Set([
-    "BundleStack offer123 · 1 · Qty 2+ · 10% off",
-    "BundleStack offer123 · 2 · Qty 3+ · 15% off",
+    "Buy 2+, save 10% · Buy more save more",
+    "Buy 3+, save 15% · Buy more save more",
   ]);
 
   it("matches BundleStack titles for the offer", () => {
     expect(
       isOfferDiscountTitle(
         "BundleStack offer123 · Qty 2+ · 10% off",
+        offer,
+        plannedTitles,
+      ),
+    ).toBe(true);
+  });
+
+  it("matches customer-facing Buy N titles", () => {
+    expect(
+      isOfferDiscountTitle(
+        "Buy 3+, save 15% · Buy more save more",
         offer,
         plannedTitles,
       ),

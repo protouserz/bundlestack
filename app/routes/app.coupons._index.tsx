@@ -16,7 +16,11 @@ import {
   listCoupons,
   removeCouponRecord,
 } from "../models/coupon.server";
-import { deleteShopifyDiscountCodes } from "../models/discount-code.server";
+import {
+  cleanupCouponShopifyResources,
+  deleteShopifyCollections,
+  deleteShopifyDiscountCodes,
+} from "../models/discount-code.server";
 import { SButton, SPage } from "../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -60,10 +64,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const coupon = await deleteCoupon(session.shop, couponId);
-    if (coupon.discountId) {
-      await deleteShopifyDiscountCodes(admin, [coupon.discountId]);
-    }
-    await removeCouponRecord(couponId);
+    await cleanupCouponShopifyResources(admin, coupon);
+    await removeCouponRecord(couponId, session.shop);
     return redirect("/app/coupons");
   }
 
@@ -73,6 +75,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       .map((coupon) => coupon.discountId)
       .filter((id): id is string => Boolean(id));
     await deleteShopifyDiscountCodes(admin, discountIds);
+    const collectionIds = coupons
+      .map((coupon) => coupon.eligibleCollectionId)
+      .filter((id): id is string => Boolean(id));
+    await deleteShopifyCollections(admin, collectionIds);
     return redirect("/app/coupons");
   }
 

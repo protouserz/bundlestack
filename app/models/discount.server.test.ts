@@ -28,7 +28,7 @@ describe("isOfferDiscountTitle", () => {
     ).toBe(true);
   });
 
-  it("matches customer-facing Buy N titles", () => {
+  it("matches customer-facing Buy N titles via planned set", () => {
     expect(
       isOfferDiscountTitle(
         "Buy 3+, save 15% · Buy more save more",
@@ -38,20 +38,17 @@ describe("isOfferDiscountTitle", () => {
     ).toBe(true);
   });
 
-  it("matches legacy buy-more titles", () => {
+  it("does not match bare offer-title prefixes (avoids deleting merchant discounts)", () => {
+    expect(
+      isOfferDiscountTitle("Buy more save more · tier 2", offer, plannedTitles),
+    ).toBe(false);
     expect(
       isOfferDiscountTitle(
         "Buy more, save more · Buy 2+ (10% off)",
         offer,
         plannedTitles,
       ),
-    ).toBe(true);
-  });
-
-  it("matches titles based on the offer name", () => {
-    expect(
-      isOfferDiscountTitle("Buy more save more · tier 2", offer, plannedTitles),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("ignores unrelated discounts", () => {

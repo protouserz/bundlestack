@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs } from "react-router";
 import {
   clearPendingBillingPlan,
+  resolveBillingPlan,
   setShopBillingPlan,
 } from "../models/bundle.server";
 import { getTierForShopifyPlan } from "../billing.shopify";
@@ -41,6 +42,8 @@ export function resolvePlanFromSubscriptionWebhook(
     status === "EXPIRED" ||
     status === "FROZEN"
   ) {
+    // Payload alone is not enough when multiple subscriptions may be active;
+    // action re-queries Shopify when admin is available.
     return "free";
   }
 
@@ -52,15 +55,48 @@ export function resolvePlanFromSubscriptionWebhook(
  * expire App Subscriptions (BFS billing hygiene).
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { shop, topic, payload } = await authenticateWebhookRequest(request);
+  const context = await authenticateWebhookRequest(request);
+  const { shop, topic, payload } = context;
+  const admin = "admin" in context ? context.admin : undefined;
 
   if (process.env.NODE_ENV !== "production") {
     console.log(`Received ${topic} webhook for ${shop}`);
   }
 
-  const nextPlan = resolvePlanFromSubscriptionWebhook(
+  let nextPlan = resolvePlanFromSubscriptionWebhook(
     payload as SubscriptionPayload,
   );
+
+  // Prefer live ACTIVE subscriptions over a single cancelled event so
+  // upgrade flows that cancel then activate don't drop entitlement.
+  if (admin) {
+    try {
+      const response = await admin.graphql(
+        `#graphql
+          query activeAppSubscriptions {
+            currentAppInstallation {
+              activeSubscriptions {
+                name
+                status
+              }
+            }
+          }`,
+      );
+      const json = await response.json();
+      const subscriptions =
+        json.data?.currentAppInstallation?.activeSubscriptions ?? [];
+      const activeNames = subscriptions
+        .filter(
+          (subscription: { status?: string }) =>
+            (subscription.status || "").toUpperCase() === "ACTIVE",
+        )
+        .map((subscription: { name?: string }) => subscription.name || "")
+        .filter(Boolean);
+      nextPlan = resolveBillingPlan(activeNames);
+    } catch {
+      // Fall back to payload-derived plan.
+    }
+  }
 
   await setShopBillingPlan(shop, nextPlan);
   await clearPendingBillingPlan(shop);

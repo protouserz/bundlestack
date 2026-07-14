@@ -44,16 +44,11 @@ export function isOfferDiscountTitle(
   plannedTitles: Set<string>,
 ): boolean {
   const normalized = title.toLowerCase();
-  const offerTitle = offer.title.trim().toLowerCase();
   const marker = `bundlestack ${offer.id}`.toLowerCase();
 
-  return (
-    normalized.startsWith(marker) ||
-    normalized.startsWith("buy more, save more · buy") ||
-    normalized.startsWith(`${offerTitle} ·`) ||
-    normalized.startsWith(offerTitle) ||
-    plannedTitles.has(title)
-  );
+  // Only match discounts we own: BundleStack + offer id, or exact planned titles.
+  // Never match by bare offer title — that can delete merchant-created discounts.
+  return normalized.startsWith(marker) || plannedTitles.has(title);
 }
 
 function assertGraphqlOk(json: GraphqlResponse, context: string) {
@@ -61,6 +56,64 @@ function assertGraphqlOk(json: GraphqlResponse, context: string) {
     throw new Error(
       `${context}: ${json.errors.map((error) => error.message).join(", ")}`,
     );
+  }
+}
+
+/** Coupons are ORDER-class; QB automatics must opt into orderDiscounts. */
+export const OFFER_DISCOUNT_COMBINES_WITH = {
+  orderDiscounts: true,
+  productDiscounts: true,
+  shippingDiscounts: true,
+} as const;
+
+export async function ensureDiscountsCombineWithOrderCodes(
+  admin: AdminApiContext,
+  discountIds: string[],
+) {
+  for (const id of discountIds) {
+    if (!id) continue;
+
+    const response = await admin.graphql(
+      `#graphql
+        mutation discountAutomaticBasicCombineUpdate(
+          $id: ID!
+          $automaticBasicDiscount: DiscountAutomaticBasicInput!
+        ) {
+          discountAutomaticBasicUpdate(
+            id: $id
+            automaticBasicDiscount: $automaticBasicDiscount
+          ) {
+            userErrors {
+              field
+              message
+            }
+          }
+        }`,
+      {
+        variables: {
+          id,
+          automaticBasicDiscount: {
+            combinesWith: OFFER_DISCOUNT_COMBINES_WITH,
+          },
+        },
+      },
+    );
+
+    const json = (await response.json()) as GraphqlResponse;
+    assertGraphqlOk(json, "discountAutomaticBasicUpdate");
+
+    const payload = json.data?.discountAutomaticBasicUpdate as
+      | { userErrors?: Array<{ message: string }> }
+      | undefined;
+    const userErrors = payload?.userErrors ?? [];
+    if (userErrors.length > 0) {
+      const onlyMissing = userErrors.every((error) =>
+        /not found|does not exist|invalid id/i.test(error.message),
+      );
+      if (!onlyMissing) {
+        throw new Error(userErrors.map((error) => error.message).join(", "));
+      }
+    }
   }
 }
 
@@ -164,11 +217,7 @@ async function createAutomaticDiscountForTier(
           automaticBasicDiscount: {
             title: discountTitle,
             startsAt,
-            combinesWith: {
-              orderDiscounts: true,
-              productDiscounts: true,
-              shippingDiscounts: true,
-            },
+            combinesWith: OFFER_DISCOUNT_COMBINES_WITH,
             customerGets: {
               value: {
                 percentage: tier.discountValue / 100,
@@ -296,10 +345,13 @@ export async function replaceOfferDiscounts(
     );
 
   if (titlesAreCurrent) {
-    return offerNodes
+    const ids = offerNodes
       .slice()
       .sort((left, right) => (left.title ?? "").localeCompare(right.title ?? ""))
       .map((node) => normalizeDiscountNodeId(node.id));
+    // Existing nodes may predate coupon stacking; patch combinesWith in place.
+    await ensureDiscountsCombineWithOrderCodes(admin, ids);
+    return ids;
   }
 
   await deleteShopifyDiscounts(

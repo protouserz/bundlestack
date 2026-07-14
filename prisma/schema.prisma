@@ -70,6 +70,14 @@ model Coupon {
   discountType          String    @default("percentage")
   discountValue         Float
   appliesOncePerCustomer Boolean  @default(true)
+  /// "all" = entire store (optional exclusions); "products" = specific products.
+  appliesTo             String    @default("all")
+  /// JSON array of product GIDs when appliesTo = "products".
+  productIds            String    @default("[]")
+  /// JSON array of product GIDs excluded when appliesTo = "all".
+  excludedProductIds    String    @default("[]")
+  /// Managed Shopify collection of eligible products when storewide exclusions exist.
+  eligibleCollectionId  String?
   usageLimit            Int?
   startsAt              DateTime?
   endsAt                DateTime?

@@ -13,6 +13,8 @@ type ProductPickerFieldProps = {
   initialProducts?: SelectedProduct[];
   required?: boolean;
   browseLabel?: string;
+  emptyMessage?: string;
+  productSubtext?: string;
   onProductsChange?: (count: number) => void;
 };
 
@@ -21,6 +23,8 @@ export function ProductPickerField({
   initialProducts = [],
   required = true,
   browseLabel = "Browse products",
+  emptyMessage = "No products selected. Click browse to choose products for this offer.",
+  productSubtext = "Included in offer",
   onProductsChange,
 }: ProductPickerFieldProps) {
   const shopify = useAppBridge();
@@ -94,9 +98,7 @@ export function ProductPickerField({
       </div>
 
       {products.length === 0 ? (
-        <p className={styles.emptyProducts}>
-          No products selected. Click browse to choose products for this offer.
-        </p>
+        <p className={styles.emptyProducts}>{emptyMessage}</p>
       ) : (
         <ul className={styles.productList}>
           {products.map((product) => (
@@ -106,7 +108,7 @@ export function ProductPickerField({
               </div>
               <div className={styles.productMeta}>
                 <p className={styles.productName}>{product.title}</p>
-                <p className={styles.productSubtext}>Included in offer</p>
+                <p className={styles.productSubtext}>{productSubtext}</p>
               </div>
               <button
                 type="button"

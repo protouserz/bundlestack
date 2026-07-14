@@ -1,5 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { SButton } from "../polaris";
+import {
+  ProductPickerField,
+  type SelectedProduct,
+} from "../ProductPickerField";
+import { formatCouponScope } from "../../utils/coupon";
 import styles from "../offer-form/offer-form.module.css";
 
 const STATUS_OPTIONS = [
@@ -28,6 +33,9 @@ type CouponFormProps = {
   defaultDiscountType?: "percentage" | "fixed";
   defaultDiscountValue?: number;
   defaultAppliesOncePerCustomer?: boolean;
+  defaultAppliesTo?: "all" | "products";
+  defaultProducts?: SelectedProduct[];
+  defaultExcludedProducts?: SelectedProduct[];
   defaultUsageLimit?: number | null;
   defaultStartsAt?: string | null;
   defaultEndsAt?: string | null;
@@ -51,6 +59,9 @@ export function CouponForm({
   defaultDiscountType = "percentage",
   defaultDiscountValue = 10,
   defaultAppliesOncePerCustomer = true,
+  defaultAppliesTo = "all",
+  defaultProducts = [],
+  defaultExcludedProducts = [],
   defaultUsageLimit = null,
   defaultStartsAt = null,
   defaultEndsAt = null,
@@ -66,6 +77,13 @@ export function CouponForm({
   const [appliesOncePerCustomer, setAppliesOncePerCustomer] = useState(
     defaultAppliesOncePerCustomer,
   );
+  const [appliesTo, setAppliesTo] = useState<"all" | "products">(
+    defaultAppliesTo,
+  );
+  const [productCount, setProductCount] = useState(defaultProducts.length);
+  const [excludedCount, setExcludedCount] = useState(
+    defaultExcludedProducts.length,
+  );
   const [usageLimit, setUsageLimit] = useState(
     defaultUsageLimit != null ? String(defaultUsageLimit) : "",
   );
@@ -74,6 +92,15 @@ export function CouponForm({
 
   const statusHelp =
     STATUS_OPTIONS.find((option) => option.value === status)?.help ?? "";
+
+  const scopeLabel = formatCouponScope({
+    appliesTo,
+    productIds: Array.from({ length: productCount }, (_, i) => String(i)),
+    excludedProductIds: Array.from(
+      { length: excludedCount },
+      (_, i) => String(i),
+    ),
+  });
 
   return (
     <>
@@ -183,6 +210,60 @@ export function CouponForm({
           </section>
 
           <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Applies to</h2>
+            <p className={styles.cardDescription}>
+              Limit the code to specific products, or apply it storewide and
+              optionally exclude items.
+            </p>
+            <input type="hidden" name="appliesTo" value={appliesTo} />
+            <div className={styles.fieldGrid}>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Scope</span>
+                <select
+                  className={styles.select}
+                  value={appliesTo}
+                  onChange={(event) =>
+                    setAppliesTo(
+                      event.target.value === "products" ? "products" : "all",
+                    )
+                  }
+                >
+                  <option value="all">Entire store</option>
+                  <option value="products">Specific products</option>
+                </select>
+              </label>
+            </div>
+
+            {appliesTo === "products" ? (
+              <div className={styles.field} style={{ marginTop: "1rem" }}>
+                <span className={styles.fieldLabel}>Products</span>
+                <ProductPickerField
+                  name="productIds"
+                  initialProducts={defaultProducts}
+                  required
+                  browseLabel="Browse products"
+                  emptyMessage="No products selected. Browse to choose which items this coupon applies to."
+                  productSubtext="Coupon applies"
+                  onProductsChange={setProductCount}
+                />
+              </div>
+            ) : (
+              <div className={styles.field} style={{ marginTop: "1rem" }}>
+                <span className={styles.fieldLabel}>Excluded products</span>
+                <ProductPickerField
+                  name="excludedProductIds"
+                  initialProducts={defaultExcludedProducts}
+                  required={false}
+                  browseLabel="Browse products to exclude"
+                  emptyMessage="No exclusions. This coupon applies to every product in the store."
+                  productSubtext="Excluded from coupon"
+                  onProductsChange={setExcludedCount}
+                />
+              </div>
+            )}
+          </section>
+
+          <section className={styles.card}>
             <h2 className={styles.cardTitle}>Limits & schedule</h2>
             <div className={styles.fieldGrid}>
               <label className={styles.field}>
@@ -250,6 +331,10 @@ export function CouponForm({
                     ? `${discountValue}% off`
                     : `$${Number(discountValue).toFixed(2)} off`}
                 </span>
+              </li>
+              <li className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Applies to</span>
+                <span className={styles.summaryValue}>{scopeLabel}</span>
               </li>
               <li className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Usage</span>

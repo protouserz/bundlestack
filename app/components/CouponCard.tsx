@@ -1,6 +1,6 @@
 import { Link, useSubmit } from "react-router";
 import type { CouponRecord } from "../models/coupon.types";
-import { formatCouponValue } from "../utils/coupon";
+import { formatCouponScope, formatCouponValue } from "../utils/coupon";
 import { SButton } from "./polaris";
 
 type CouponCardProps = {
@@ -34,7 +34,8 @@ export function CouponCard({ coupon, showDelete = false }: CouponCardProps) {
         </s-stack>
 
         <s-text tone="neutral">
-          Code <strong>{coupon.code}</strong> · {formatCouponValue(coupon)}
+          Code <strong>{coupon.code}</strong> · {formatCouponValue(coupon)} ·{" "}
+          {formatCouponScope(coupon)}
           {coupon.discountId ? " · synced to Shopify" : " · not synced"}
         </s-text>
 

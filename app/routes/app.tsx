@@ -36,7 +36,10 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <NavMenu>
-        <Link to="/app">Dashboard</Link>
+        {/* rel="home" marks the landing route and keeps it out of the tab list */}
+        <Link to="/app" rel="home">
+          Dashboard
+        </Link>
         <Link to="/app/offers">Offers</Link>
         <Link to="/app/coupons">Coupons</Link>
         <Link to="/app/billing">Billing</Link>

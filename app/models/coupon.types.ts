@@ -1,5 +1,7 @@
 export type CouponDiscountType = "percentage" | "fixed";
 
+export type CouponAppliesTo = "all" | "products";
+
 export type CouponRecord = {
   id: string;
   shop: string;
@@ -9,6 +11,10 @@ export type CouponRecord = {
   discountType: CouponDiscountType;
   discountValue: number;
   appliesOncePerCustomer: boolean;
+  appliesTo: CouponAppliesTo;
+  productIds: string[];
+  excludedProductIds: string[];
+  eligibleCollectionId: string | null;
   usageLimit: number | null;
   startsAt: Date | string | null;
   endsAt: Date | string | null;

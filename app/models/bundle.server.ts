@@ -222,27 +222,32 @@ export function resolveCurrentBillingPlan({
   activeSubscriptionNames,
   planHandle,
   chargeId,
-  storedPlan,
 }: {
   activeSubscriptionNames: string[];
   planHandle: string | null;
   chargeId: string | null;
+  /** Kept for call-site compatibility; no longer used for sticky paid entitlements. */
   storedPlan: BillingPlan;
 }): BillingPlan {
+  const fromSubscriptions = resolveBillingPlan(activeSubscriptionNames);
+  if (fromSubscriptions !== "free") return fromSubscriptions;
+
+  // Only trust plan_handle during an explicit Shopify charge approval
+  // callback (charge_id + plan_handle). Never sticky-store a paid plan
+  // when Admin reports zero ACTIVE subscriptions.
   if (chargeId && planHandle) {
     const fromHandle = getTierForPlanHandle(planHandle);
     if (fromHandle) return fromHandle;
   }
 
-  const fromSubscriptions = resolveBillingPlan(activeSubscriptionNames);
-  if (fromSubscriptions !== "free") return fromSubscriptions;
+  return "free";
+}
 
-  if (planHandle) {
-    const fromHandle = getTierForPlanHandle(planHandle);
-    if (fromHandle) return fromHandle;
-  }
-
-  return storedPlan;
+/** Entitlement source of truth: live ACTIVE subscriptions only. */
+export function resolveEntitlementBillingPlan(
+  activeSubscriptionNames: string[],
+): BillingPlan {
+  return resolveBillingPlan(activeSubscriptionNames);
 }
 
 export function resolvePendingBillingPlan(

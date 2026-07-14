@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { DiscountTier } from "../../models/bundle.server";
+import { useLeaveWithSaveBar } from "../AdminLink";
 import { ProductPickerField, type SelectedProduct } from "../ProductPickerField";
 import { SButton } from "../polaris";
 import styles from "./offer-form.module.css";
@@ -113,14 +114,28 @@ export function OfferForm({
     setProductCount(count);
   }, []);
 
+  const leaveWithSaveBar = useLeaveWithSaveBar();
+
   return (
     <>
       <div className={styles.pageHeader}>
-        <SButton variant="tertiary" href="/app/offers">
+        <SButton
+          variant="tertiary"
+          type="button"
+          onClick={() => {
+            void leaveWithSaveBar("/app/offers");
+          }}
+        >
           ← Back to offers
         </SButton>
         <div className={styles.formActions}>
-          <SButton variant="secondary" href="/app/offers">
+          <SButton
+            variant="secondary"
+            type="button"
+            onClick={() => {
+              void leaveWithSaveBar("/app/offers");
+            }}
+          >
             Cancel
           </SButton>
           <button

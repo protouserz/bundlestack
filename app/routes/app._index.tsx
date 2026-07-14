@@ -12,9 +12,11 @@ import { getBillingSummary, isBillingPlan } from "../billing.server";
 import { DashboardMetrics } from "../components/dashboard/DashboardMetrics";
 import { OffersTable } from "../components/dashboard/OffersTable";
 import { RevenueChart } from "../components/dashboard/RevenueChart";
+import { SetupGuide } from "../components/dashboard/SetupGuide";
 import { ThemeWidgetStatus } from "../components/dashboard/ThemeWidgetStatus";
 import { TopOffersList } from "../components/dashboard/TopOffersList";
 import styles from "../components/dashboard/dashboard.module.css";
+import { toShopifyAdminProtocol } from "../components/AdminLink";
 import {
   ensureShopSettings,
   getShopSettings,
@@ -117,11 +119,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     getShopStats(shop, offers),
   ]);
 
-  if (stats.totalOffers > 0 && !settings.onboardingDone) {
-    await setOnboardingDone(shop, true);
-    settings.onboardingDone = true;
-  }
-
   const requestUrl = new URL(request.url);
   const hasBillingCallback =
     requestUrl.searchParams.has("plan_handle") ||
@@ -212,8 +209,11 @@ function HealthCheckFixButton({
   const isLoading = fetcher.state !== "idle";
 
   if (fix.href) {
+    const href = fix.external
+      ? toShopifyAdminProtocol(fix.href)
+      : fix.href;
     return (
-      <SButton href={fix.href} target={fix.external ? "_blank" : undefined}>
+      <SButton href={href} target={fix.external ? "_top" : undefined}>
         Try to fix
       </SButton>
     );
@@ -263,7 +263,7 @@ export default function Dashboard() {
   const shopify = useAppBridge();
   const lastToastKey = useRef<string | null>(null);
   const fixResult = syncFeedback;
-  const showWelcome = !onboardingDone && stats.totalOffers === 0;
+  const showSetupGuide = !onboardingDone;
 
   useEffect(() => {
     if (!fixResult) return;
@@ -308,28 +308,12 @@ export default function Dashboard() {
           Reporting period: {formatDateRange()}
         </s-text>
 
-        {showWelcome && (
-          <s-banner tone="info">
-            <s-stack direction="block" gap="base">
-              <s-heading>Welcome to BundleStack</s-heading>
-              <s-text tone="neutral">
-                Create your first quantity-break offer, add the theme widget, and
-                start turning single-item orders into bigger carts.
-              </s-text>
-              <s-stack direction="inline" gap="base">
-                <SButton href="/app/offers/new">Create your first offer</SButton>
-                <SButton href="/app/billing" variant="tertiary">
-                  View pricing
-                </SButton>
-                <onboardingFetcher.Form method="post">
-                  <input type="hidden" name="intent" value="dismiss-onboarding" />
-                  <SButton type="submit" variant="tertiary">
-                    Dismiss
-                  </SButton>
-                </onboardingFetcher.Form>
-              </s-stack>
-            </s-stack>
-          </s-banner>
+        {showSetupGuide && (
+          <SetupGuide
+            hasOffers={stats.totalOffers > 0}
+            themeEditorUrl={themeEditorUrl}
+            dismissFetcher={onboardingFetcher}
+          />
         )}
 
         <ThemeWidgetStatus themeEditorUrl={themeEditorUrl} />

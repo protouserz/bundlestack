@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { SButton } from "../polaris";
+import { AdminDeepLinkButton } from "../AdminLink";
 
 type BlockStatus = "loading" | "active" | "available" | "unavailable" | "unknown";
 
@@ -73,36 +73,42 @@ export function ThemeWidgetStatus({
 
   if (status === "loading") {
     return (
-      <s-banner tone="info">
-        <s-text>Checking theme widget status…</s-text>
-      </s-banner>
+      <div className="bundlestack-theme-status">
+        <s-banner tone="info">
+          <s-text>Checking theme widget status…</s-text>
+        </s-banner>
+      </div>
     );
   }
 
   if (status === "active") {
     return (
-      <s-banner tone="success">
-        <s-stack direction="block" gap="base">
-          <s-text>
-            <strong>{blockName}</strong> is active on your published theme.
-          </s-text>
-        </s-stack>
-      </s-banner>
+      <div className="bundlestack-theme-status">
+        <s-banner tone="success">
+          <s-stack direction="block" gap="base">
+            <s-text>
+              <strong>{blockName}</strong> is active on your published theme.
+            </s-text>
+          </s-stack>
+        </s-banner>
+      </div>
     );
   }
 
   return (
-    <s-banner tone="warning">
-      <s-stack direction="block" gap="base">
-        <s-text>
-          {status === "available"
-            ? `${blockName} is available but not placed on your product template yet.`
-            : `${blockName} is not active on your published theme.`}
-        </s-text>
-        <SButton href={themeEditorUrl} target="_blank">
-          Open theme editor
-        </SButton>
-      </s-stack>
-    </s-banner>
+    <div className="bundlestack-theme-status">
+      <s-banner tone="warning">
+        <s-stack direction="block" gap="base">
+          <s-text>
+            {status === "available"
+              ? `${blockName} is available but not placed on your product template yet.`
+              : `${blockName} is not active on your published theme.`}
+          </s-text>
+          <AdminDeepLinkButton href={themeEditorUrl}>
+            Open theme editor
+          </AdminDeepLinkButton>
+        </s-stack>
+      </s-banner>
+    </div>
   );
 }

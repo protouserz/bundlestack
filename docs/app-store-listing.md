@@ -44,12 +44,57 @@ quantity breaks, volume discount, bundle discounts, buy more save more, tiered p
 
 ## Pricing plans (App Store form)
 
-| Plan | Price | Description |
-|------|-------|-------------|
-| Free | $0/mo | Unlimited offers, theme widget, automatic discount sync |
-| Starter | $7.99/mo | Paid support tier for growing stores |
-| Growth | $14.99/mo | Priority support for scaling stores |
-| Pro | $29.99/mo | High-volume stores, no redemption tracking limits |
+Edit in **Partners → Apps → BundleStack → Distribution → App Store listing → Pricing**.
+Each plan has a short description plus a **Features** list (one feature per line). Those lines are what fill the empty middle of the store cards.
+
+### Free — $0 / month
+
+**Short description:** Perfect for getting started
+
+**Features:**
+```
+Unlimited quantity-break offers
+Product-page theme widget
+Automatic Shopify discount sync
+Product picker — no manual IDs
+Store health monitor
+```
+
+### Starter — $7.99 / month (30-day free trial)
+
+**Short description:** For stores with steady bundle sales
+
+**Features:**
+```
+Everything in Free
+Email support
+Suggested for ~500 discount redemptions / month
+Clean uninstall removes discounts & data
+```
+
+### Growth — $14.99 / month (30-day free trial)
+
+**Short description:** For stores with growing bundle volume
+
+**Features:**
+```
+Everything in Starter
+Priority email support
+Suggested for ~2,000 discount redemptions / month
+Faster help when offers need tuning
+```
+
+### Pro — $29.99 / month (30-day free trial)
+
+**Short description:** For high-volume stores with no cap
+
+**Features:**
+```
+Everything in Growth
+No redemption tracking limits
+Suggested for 5,000+ discount redemptions / month
+Best value at scale
+```
 
 ## Screenshot captions (suggested)
 

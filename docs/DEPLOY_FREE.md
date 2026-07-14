@@ -92,9 +92,9 @@ Then:
 npm run deploy
 ```
 
-### Keep Render awake (optional)
+### Keep Render awake
 
-Use a free cron ping (e.g. cron-job.org) every 14 minutes on your app URL so it doesn’t sleep during review.
+Not needed on **Starter** (always-on). The GitHub `keep-render-warm` workflow was removed after upgrading off free tier. On free tier only, a cron ping every ~14 minutes can reduce cold starts.
 
 ---
 

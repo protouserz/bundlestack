@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolvePlanFromSubscriptionWebhook } from "./webhooks.app.subscriptions_update";
+import { resolvePlanFromSubscriptionWebhook } from "../routes/webhooks.app.subscriptions_update";
 
 describe("resolvePlanFromSubscriptionWebhook", () => {
   it("maps active Growth subscriptions to scale", () => {

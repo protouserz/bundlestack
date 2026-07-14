@@ -365,3 +365,91 @@
   border-radius: 14px;
   background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 60%);
 }
+
+.setupGuide {
+  border: 1px solid var(--dash-border);
+  border-radius: 12px;
+  background: var(--dash-card);
+  padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.setupGuideHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.setupGuideTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+  color: var(--dash-text);
+}
+
+.setupGuideSubtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--dash-muted);
+}
+
+.setupSteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.setupStep,
+.setupStepDone {
+  display: flex;
+  gap: 0.875rem;
+  padding: 0.875rem 0;
+  border-top: 1px solid var(--dash-border);
+}
+
+.setupStepIndex {
+  flex: 0 0 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--dash-green-soft);
+  color: var(--dash-green-dark);
+}
+
+.setupStepDone .setupStepIndex {
+  background: var(--dash-green);
+  color: #fff;
+}
+
+.setupStepBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.setupStepTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--dash-text);
+}
+
+.setupStepText {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--dash-muted);
+  line-height: 1.45;
+}
+
+/* Reserve space so theme-status banner swaps do not shift CLS (BFS 2.1.2). */
+:global(.bundlestack-theme-status) {
+  min-height: 5.5rem;
+}

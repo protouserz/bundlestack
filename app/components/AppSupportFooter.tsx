@@ -1,3 +1,4 @@
+import { ExternalLinkButton } from "./AdminLink";
 import { SButton } from "./polaris";
 import styles from "./support-footer.module.css";
 
@@ -14,9 +15,9 @@ export function AppSupportFooter({ privacyUrl }: AppSupportFooterProps) {
           <SButton variant="secondary" href="/app/support">
             Support
           </SButton>
-          <SButton variant="secondary" href={privacyUrl} target="_blank">
+          <ExternalLinkButton href={privacyUrl}>
             Privacy policy
-          </SButton>
+          </ExternalLinkButton>
         </div>
       </div>
     </footer>

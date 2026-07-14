@@ -10,7 +10,7 @@ services:
       - key: DATABASE_URL
         value: file:./prisma/production.sqlite
       - key: SCOPES
-        value: read_products,write_products,write_discounts,read_discounts
+        value: read_products,write_discounts,read_discounts
       - key: SUPPORT_EMAIL
         value: protouserz@proton.me
       - key: SHOPIFY_BILLING_TEST

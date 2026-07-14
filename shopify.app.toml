@@ -10,7 +10,7 @@ handle = "bundlestack"
 automatically_update_urls_on_dev = true
 
 [webhooks]
-api_version = "2025-10"
+api_version = "2026-07"
 
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
@@ -24,9 +24,13 @@ api_version = "2025-10"
   uri = "/webhooks/app/uninstalled"
   topics = [ "app/uninstalled" ]
 
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/subscriptions_update"
+  topics = [ "app_subscriptions/update" ]
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_discounts,read_products,write_discounts,write_products"
+scopes = "read_discounts,read_products,write_discounts"
 
 [auth]
 redirect_urls = [

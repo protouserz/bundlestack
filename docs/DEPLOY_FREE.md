@@ -65,7 +65,7 @@ git add prisma && git commit -m "Switch to Postgres for cloud deploy"
    |-----|-------|
    | `SHOPIFY_API_KEY` | From Partners Dashboard |
    | `SHOPIFY_API_SECRET` | From Partners Dashboard |
-   | `SCOPES` | `read_products,write_products,write_discounts,read_discounts` |
+   | `SCOPES` | `read_products,write_discounts,read_discounts` |
    | `SHOPIFY_APP_URL` | `https://YOUR-SERVICE.onrender.com` |
    | `DATABASE_URL` | Neon connection string |
    | `NODE_ENV` | `production` |

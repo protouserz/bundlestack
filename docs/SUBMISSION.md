@@ -119,12 +119,14 @@ Copy for tagline, description, keywords: [`app-store-listing.md`](./app-store-li
 
 ### Pricing plans (App Store form)
 
+Paste feature bullets from [`app-store-listing.md`](./app-store-listing.md) into each plan’s **Features** field so store cards are not empty.
+
 | Plan | Price | Notes |
 |------|-------|-------|
-| Free | $0/mo | Unlimited offers, theme widget, discount sync |
-| Starter | $7.99/mo | Paid support for growing stores |
-| Growth | $14.99/mo | Priority support for scaling stores |
-| Pro | $29.99/mo | High-volume stores |
+| Free | $0/mo | Full core product (offers, widget, sync) |
+| Starter | $7.99/mo | Email support; ~500 redemptions/mo guidance |
+| Growth | $14.99/mo | Priority support; ~2,000 redemptions/mo |
+| Pro | $29.99/mo | No redemption tracking limits; 5,000+/mo |
 
 Merchants choose a paid plan on the in-app Billing page and approve the charge in Shopify. Plans do not upgrade automatically.
 

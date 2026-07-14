@@ -96,6 +96,8 @@ export default function EditOffer() {
         key={formKey}
         method="post"
         className={styles.offerPage}
+        data-save-bar
+        data-discard-confirmation
         onReset={() => setFormKey((current) => current + 1)}
       >
         <OfferForm

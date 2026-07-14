@@ -32,22 +32,27 @@ export const PLAN_REVENUE_CAPS: Record<BillingPlan, string> = {
 export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   free: [
     "Unlimited quantity-break offers",
-    "Theme widget & app proxy",
-    "Automatic Shopify discounts",
+    "Product-page theme widget",
+    "Automatic Shopify discount sync",
+    "Product picker — no manual IDs",
+    "Store health monitor",
   ],
   starter: [
     "Everything in Free",
-    "For stores ready for paid support",
     "Email support",
+    "Suggested for ~500 discount redemptions / month",
+    "Clean uninstall removes discounts & data",
   ],
   scale: [
     "Everything in Starter",
-    "For higher bundle volume",
-    "Priority support",
+    "Priority email support",
+    "Suggested for ~2,000 discount redemptions / month",
+    "Faster help when offers need tuning",
   ],
   pro: [
     "Everything in Growth",
     "No redemption tracking limits",
+    "Suggested for 5,000+ discount redemptions / month",
     "Best value at scale",
   ],
 };

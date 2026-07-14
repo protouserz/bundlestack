@@ -40,7 +40,7 @@ fly volumes create bundlestack_data --size 1 -a bundlestack -y
 fly secrets set \
   SHOPIFY_API_KEY=your_key \
   SHOPIFY_API_SECRET=your_secret \
-  SCOPES=read_products,write_products,write_discounts,read_discounts \
+  SCOPES=read_products,write_discounts,read_discounts \
   SHOPIFY_APP_URL=https://bundlestack.fly.dev \
   DATABASE_URL=file:/data/production.sqlite \
   -a bundlestack

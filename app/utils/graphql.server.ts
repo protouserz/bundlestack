@@ -21,6 +21,13 @@ export function normalizeDiscountNodeId(gid: string): string {
   return `gid://shopify/DiscountNode/${numericId}`;
 }
 
+/** Mutations like discountAutomaticDelete require DiscountAutomaticNode GIDs. */
+export function toDiscountAutomaticNodeId(gid: string): string {
+  const numericId = discountNodeNumericId(gid);
+  if (!numericId) return gid;
+  return `gid://shopify/DiscountAutomaticNode/${numericId}`;
+}
+
 export function discountNodeIdsMatch(left: string, right: string): boolean {
   const leftNumeric = discountNodeNumericId(left);
   const rightNumeric = discountNodeNumericId(right);
@@ -58,6 +65,9 @@ export async function listAllAutomaticDiscountNodes(
             nodes {
               id
               discount {
+                ... on DiscountAutomaticApp {
+                  title
+                }
                 ... on DiscountAutomaticBasic {
                   title
                 }
@@ -148,6 +158,9 @@ export async function fetchDiscountNodesByIds(
             ... on DiscountNode {
               id
               discount {
+                ... on DiscountAutomaticApp {
+                  asyncUsageCount
+                }
                 ... on DiscountAutomaticBasic {
                   asyncUsageCount
                 }

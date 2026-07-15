@@ -4,6 +4,7 @@ import {
   discountNodeIdsMatch,
   discountNodeNumericId,
   normalizeDiscountNodeId,
+  toDiscountAutomaticNodeId,
 } from "./graphql.server";
 
 describe("chunkArray", () => {
@@ -25,6 +26,12 @@ describe("discount node id helpers", () => {
     expect(
       normalizeDiscountNodeId("gid://shopify/DiscountAutomaticNode/123"),
     ).toBe("gid://shopify/DiscountNode/123");
+  });
+
+  it("converts discount node ids to automatic node ids for mutations", () => {
+    expect(toDiscountAutomaticNodeId("gid://shopify/DiscountNode/123")).toBe(
+      "gid://shopify/DiscountAutomaticNode/123",
+    );
   });
 
   it("matches ids with different shopify node type prefixes", () => {

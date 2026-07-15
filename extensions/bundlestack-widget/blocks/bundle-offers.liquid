@@ -24,14 +24,13 @@
   </p>
 </div>
 
-<script src="{{ 'bundlestack-widget.js' | asset_url }}" defer></script>
-<link rel="stylesheet" href="{{ 'bundlestack-widget.css' | asset_url }}">
-
 {% schema %}
 {
   "name": "BundleStack offers",
   "target": "section",
   "templates": ["product"],
+  "javascript": "bundlestack-widget.js",
+  "stylesheet": "bundlestack-widget.css",
   "settings": [
     {
       "type": "text",

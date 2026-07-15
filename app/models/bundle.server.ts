@@ -140,7 +140,12 @@ export async function removeOfferRecord(id: string) {
 
 export async function getActiveOffersForProduct(shop: string, productId: string) {
   const offers = await prisma.bundleOffer.findMany({
-    where: { shop, status: "active" },
+    where: {
+      shop,
+      status: "active",
+      // productIds is stored as a JSON string array; contain the GID.
+      productIds: { contains: productId },
+    },
     orderBy: { updatedAt: "desc" },
   });
 

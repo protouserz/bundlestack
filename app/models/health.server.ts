@@ -33,8 +33,12 @@ type SerializedOffer = {
   discountIds: string[];
 };
 
+/** One Automatic App Function discount per active quantity-break offer. */
 function expectedDiscountCount(offer: SerializedOffer): number {
-  return offer.tiers.filter((tier) => tier.discountType === "percentage").length;
+  const hasPercentage = offer.tiers.some(
+    (tier) => tier.discountType === "percentage",
+  );
+  return hasPercentage ? 1 : 0;
 }
 
 export async function getShopHealth(

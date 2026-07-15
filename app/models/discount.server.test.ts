@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isOfferDiscountTitle } from "./discount.server";
+import { appDiscountTitle, isOfferDiscountTitle } from "./discount.server";
 
 const offer = {
   id: "offer123",
@@ -12,28 +12,26 @@ const offer = {
   ],
 };
 
-describe("isOfferDiscountTitle", () => {
-  const plannedTitles = new Set([
-    "Buy 2+, save 10% · Buy more save more",
-    "Buy 3+, save 15% · Buy more save more",
-  ]);
+describe("appDiscountTitle", () => {
+  it("uses a stable BundleStack offer marker", () => {
+    expect(appDiscountTitle(offer)).toBe(
+      "BundleStack offer123 · Buy more save more",
+    );
+  });
+});
 
-  it("matches BundleStack titles for the offer", () => {
+describe("isOfferDiscountTitle", () => {
+  it("matches App Function discount titles", () => {
     expect(
-      isOfferDiscountTitle(
-        "BundleStack offer123 · Qty 2+ · 10% off",
-        offer,
-        plannedTitles,
-      ),
+      isOfferDiscountTitle("BundleStack offer123 · Buy more save more", offer),
     ).toBe(true);
   });
 
-  it("matches customer-facing Buy N titles", () => {
+  it("matches legacy Buy N Basic titles", () => {
     expect(
       isOfferDiscountTitle(
         "Buy 3+, save 15% · Buy more save more",
         offer,
-        plannedTitles,
       ),
     ).toBe(true);
   });
@@ -43,20 +41,11 @@ describe("isOfferDiscountTitle", () => {
       isOfferDiscountTitle(
         "Buy more, save more · Buy 2+ (10% off)",
         offer,
-        plannedTitles,
       ),
     ).toBe(true);
   });
 
-  it("matches titles based on the offer name", () => {
-    expect(
-      isOfferDiscountTitle("Buy more save more · tier 2", offer, plannedTitles),
-    ).toBe(true);
-  });
-
   it("ignores unrelated discounts", () => {
-    expect(
-      isOfferDiscountTitle("Summer sale 20% off", offer, plannedTitles),
-    ).toBe(false);
+    expect(isOfferDiscountTitle("Summer sale 20% off", offer)).toBe(false);
   });
 });

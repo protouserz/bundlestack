@@ -84,6 +84,17 @@ direct_api_mode = "offline"
 
 After deploy: open production app in admin → Dashboard → Offers → Billing for a few minutes → recheck Distribution → apply for Built for Shopify when embedded items are green.
 
+### Discounts category-specific criteria
+
+| Criterion | Code evidence |
+|---|---|
+| Uses discount APIs | Shopify Function `extensions/bundlestack-qb-discount` + `discountAutomaticAppCreate` (one automatic app discount per offer) |
+| Doesn't create draft orders | No `draftOrder*` APIs |
+| Single redeem code / bulk add | Automatic discounts only (no redeem codes on quantity breaks) |
+| Links to discount creation | `extensions/bundlestack-discount-link` → `/app/offers/new` |
+
+Ship with `npm run deploy`, create an active offer, then wait for Partner’s daily check (~17:00 UTC).
+
 ### Direct links (use after logging in via partners.shopify.com)
 
 | Page | URL |

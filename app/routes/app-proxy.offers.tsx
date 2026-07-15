@@ -44,7 +44,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return new Response(JSON.stringify({ offers }), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "public, max-age=60, stale-while-revalidate=120",
+      "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
     },
   });
 };

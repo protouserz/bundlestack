@@ -18,11 +18,6 @@ export function OfferCard({
   const submit = useSubmit();
 
   const handleDelete = () => {
-    const confirmed = window.confirm(
-      `Delete "${offer.title}"? Synced Shopify discounts for this offer will be removed.`,
-    );
-    if (!confirmed) return;
-
     void submit(
       { intent: "delete", offerId: offer.id },
       { method: "post" },
@@ -53,8 +48,8 @@ export function OfferCard({
           </s-paragraph>
         ) : (
           <s-text tone="neutral">
-            {offer.tiers.length} tier(s) · {offer.discountUses ?? 0} redemptions ·{" "}
-            {offer.discountIds.length} discount(s) synced
+            {offer.tiers.length} tier(s) · {offer.discountUses ?? 0} redemptions
+            {offer.discountIds.length > 0 ? " · synced to Shopify" : ""}
           </s-text>
         )}
 

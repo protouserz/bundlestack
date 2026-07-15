@@ -1,6 +1,14 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import type { DiscountTier } from "./bundle.server";
-import { listAllAutomaticDiscountNodes, normalizeDiscountNodeId } from "../utils/graphql.server";
+import {
+  listAllAutomaticDiscountNodes,
+  normalizeDiscountNodeId,
+  toDiscountAutomaticNodeId,
+} from "../utils/graphql.server";
+
+const FUNCTION_HANDLE = "bundlestack-qb-discount";
+const METAFIELD_NAMESPACE = "$app:bundlestack-qb-discount";
+const METAFIELD_KEY = "function-configuration";
 
 type SerializedOffer = {
   id: string;
@@ -20,28 +28,25 @@ function percentageTiers(offer: SerializedOffer): DiscountTier[] {
   return offer.tiers.filter((tier) => tier.discountType === "percentage");
 }
 
-function discountTitleForTier(
-  offer: SerializedOffer,
-  tier: DiscountTier,
-): string {
+export function appDiscountTitle(offer: SerializedOffer): string {
   const name = offer.title.trim() || "Volume discount";
-  return `Buy ${tier.minQty}+, save ${tier.discountValue}% · ${name}`;
+  return `BundleStack ${offer.id} · ${name}`;
 }
 
-function plannedDiscountTitles(offer: SerializedOffer): Set<string> {
+/** Titles we used before migrating to a single App Function discount per offer. */
+function plannedLegacyBasicTitles(offer: SerializedOffer): Set<string> {
+  const name = offer.title.trim() || "Volume discount";
   return new Set(
-    percentageTiers(offer).map((tier) => discountTitleForTier(offer, tier)),
+    percentageTiers(offer).map(
+      (tier) => `Buy ${tier.minQty}+, save ${tier.discountValue}% · ${name}`,
+    ),
   );
-}
-
-function percentageTierCount(offer: SerializedOffer): number {
-  return percentageTiers(offer).length;
 }
 
 export function isOfferDiscountTitle(
   title: string,
   offer: SerializedOffer,
-  plannedTitles: Set<string>,
+  plannedTitles: Set<string> = plannedLegacyBasicTitles(offer),
 ): boolean {
   const normalized = title.toLowerCase();
   const offerTitle = offer.title.trim().toLowerCase();
@@ -64,6 +69,18 @@ function assertGraphqlOk(json: GraphqlResponse, context: string) {
   }
 }
 
+function functionConfigurationValue(offer: SerializedOffer) {
+  const tiers = percentageTiers(offer).map((tier) => ({
+    minQty: tier.minQty,
+    discountValue: tier.discountValue,
+  }));
+
+  return JSON.stringify({
+    productIds: offer.productIds,
+    tiers,
+  });
+}
+
 export async function deleteShopifyDiscounts(
   admin: AdminApiContext,
   discountIds: string[],
@@ -82,7 +99,7 @@ export async function deleteShopifyDiscounts(
             }
           }
         }`,
-      { variables: { id } },
+      { variables: { id: toDiscountAutomaticNodeId(id) } },
     );
 
     const json = (await response.json()) as GraphqlResponse;
@@ -97,32 +114,22 @@ export async function deleteShopifyDiscounts(
         /not found|does not exist/i.test(error.message),
       );
       if (!onlyMissing) {
-        throw new Error(
-          userErrors.map((error) => error.message).join(", "),
-        );
+        throw new Error(userErrors.map((error) => error.message).join(", "));
       }
     }
   }
 }
 
-async function deleteDiscountsWithTitle(
+async function findOfferDiscountNodes(
   admin: AdminApiContext,
-  title: string,
+  offer: SerializedOffer,
 ) {
-  const nodes = await listAllAutomaticDiscountNodes(admin);
-  const ids = nodes
-    .filter((node) => node.title === title)
-    .map((node) => node.id);
-
-  await deleteShopifyDiscounts(admin, ids);
-}
-
-async function findOfferDiscountNodes(admin: AdminApiContext, offer: SerializedOffer) {
-  const plannedTitles = plannedDiscountTitles(offer);
+  const plannedTitles = plannedLegacyBasicTitles(offer);
   const nodes = await listAllAutomaticDiscountNodes(admin);
 
   return nodes.filter(
-    (node) => node.title && isOfferDiscountTitle(node.title, offer, plannedTitles),
+    (node) =>
+      node.title && isOfferDiscountTitle(node.title, offer, plannedTitles),
   );
 }
 
@@ -137,88 +144,196 @@ async function deleteOrphanedOfferDiscounts(
   );
 }
 
-async function createAutomaticDiscountForTier(
+async function ensureQuantityBreakFunctionAvailable(
   admin: AdminApiContext,
-  offer: SerializedOffer,
-  tier: DiscountTier,
-  startsAt: string,
-): Promise<string> {
-  const discountTitle = discountTitleForTier(offer, tier);
-
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const response = await admin.graphql(
-      `#graphql
-        mutation discountAutomaticBasicCreate($automaticBasicDiscount: DiscountAutomaticBasicInput!) {
-          discountAutomaticBasicCreate(automaticBasicDiscount: $automaticBasicDiscount) {
-            automaticDiscountNode {
-              id
-            }
-            userErrors {
-              field
-              message
-            }
+): Promise<void> {
+  const response = await admin.graphql(
+    `#graphql
+      query quantityBreakFunctions($first: Int!) {
+        shopifyFunctions(first: $first, apiType: "discount") {
+          nodes {
+            id
+            handle
+            title
+            apiType
           }
-        }`,
-      {
-        variables: {
-          automaticBasicDiscount: {
-            title: discountTitle,
-            startsAt,
-            combinesWith: {
-              orderDiscounts: false,
-              productDiscounts: false,
-              shippingDiscounts: true,
-            },
-            customerGets: {
-              value: {
-                percentage: tier.discountValue / 100,
-              },
-              items: {
-                products: {
-                  productsToAdd: offer.productIds,
-                },
-              },
-            },
-            minimumRequirement: {
-              quantity: {
-                greaterThanOrEqualToQuantity: String(tier.minQty),
-              },
-            },
-          },
-        },
-      },
+        }
+      }`,
+    { variables: { first: 50 } },
+  );
+
+  const json = (await response.json()) as GraphqlResponse;
+  assertGraphqlOk(json, "shopifyFunctions");
+
+  const nodes =
+    (
+      json.data?.shopifyFunctions as
+        | {
+            nodes?: Array<{
+              id?: string;
+              handle?: string;
+              title?: string;
+            }>;
+          }
+        | undefined
+    )?.nodes ?? [];
+
+  const match =
+    nodes.find((node) => node.handle === FUNCTION_HANDLE) ??
+    nodes.find((node) =>
+      (node.title ?? "").toLowerCase().includes("quantity break"),
     );
 
-    const json = (await response.json()) as GraphqlResponse;
-    assertGraphqlOk(json, "discountAutomaticBasicCreate");
+  if (!match?.handle && !match?.id) {
+    const available = nodes
+      .map((node) => node.handle || node.title || node.id)
+      .filter(Boolean)
+      .join(", ");
+    throw new Error(
+      `Quantity-break Function "${FUNCTION_HANDLE}" is not available on this shop` +
+        (available ? ` (found: ${available})` : "") +
+        ". If you see a \"dev previews\" badge, restart `npm run dev` so the Function is included, or exit the preview and use the released app version.",
+    );
+  }
+}
 
-    const payload = json.data?.discountAutomaticBasicCreate as
-      | {
-          userErrors?: Array<{ message: string }>;
-          automaticDiscountNode?: { id?: string };
+async function createAppAutomaticDiscount(
+  admin: AdminApiContext,
+  offer: SerializedOffer,
+): Promise<string> {
+  const title = appDiscountTitle(offer);
+  const startsAt = new Date().toISOString();
+  await ensureQuantityBreakFunctionAvailable(admin);
+
+  const response = await admin.graphql(
+    `#graphql
+      mutation discountAutomaticAppCreate(
+        $automaticAppDiscount: DiscountAutomaticAppInput!
+      ) {
+        discountAutomaticAppCreate(automaticAppDiscount: $automaticAppDiscount) {
+          automaticAppDiscount {
+            discountId
+          }
+          userErrors {
+            field
+            message
+          }
         }
-      | undefined;
-    const userErrors = payload?.userErrors ?? [];
-    if (userErrors.length > 0) {
-      const message = userErrors.map((error) => error.message).join(", ");
-      if (attempt === 0 && /unique/i.test(message)) {
-        await deleteDiscountsWithTitle(admin, discountTitle);
-        continue;
+      }`,
+    {
+      variables: {
+        automaticAppDiscount: {
+          title,
+          functionHandle: FUNCTION_HANDLE,
+          discountClasses: ["PRODUCT"],
+          startsAt,
+          combinesWith: {
+            orderDiscounts: true,
+            productDiscounts: true,
+            shippingDiscounts: true,
+          },
+          metafields: [
+            {
+              namespace: METAFIELD_NAMESPACE,
+              key: METAFIELD_KEY,
+              type: "json",
+              value: functionConfigurationValue(offer),
+            },
+          ],
+        },
+      },
+    },
+  );
+
+  const json = (await response.json()) as GraphqlResponse;
+  assertGraphqlOk(json, "discountAutomaticAppCreate");
+
+  const payload = json.data?.discountAutomaticAppCreate as
+    | {
+        userErrors?: Array<{ message: string }>;
+        automaticAppDiscount?: { discountId?: string };
       }
-      throw new Error(message);
-    }
-
-    const id = payload?.automaticDiscountNode?.id;
-    if (!id) {
-      throw new Error(
-        `Shopify did not return a discount ID for tier Qty ${tier.minQty}+.`,
-      );
-    }
-
-    return normalizeDiscountNodeId(id);
+    | undefined;
+  const userErrors = payload?.userErrors ?? [];
+  if (userErrors.length > 0) {
+    throw new Error(userErrors.map((error) => error.message).join(", "));
   }
 
-  throw new Error(`Could not create discount "${discountTitle}".`);
+  const id = payload?.automaticAppDiscount?.discountId;
+  if (!id) {
+    throw new Error("Shopify did not return an app discount ID.");
+  }
+
+  return normalizeDiscountNodeId(id);
+}
+
+async function updateAppAutomaticDiscount(
+  admin: AdminApiContext,
+  discountId: string,
+  offer: SerializedOffer,
+): Promise<string> {
+  const title = appDiscountTitle(offer);
+
+  const response = await admin.graphql(
+    `#graphql
+      mutation discountAutomaticAppUpdate(
+        $id: ID!
+        $automaticAppDiscount: DiscountAutomaticAppInput!
+      ) {
+        discountAutomaticAppUpdate(
+          id: $id
+          automaticAppDiscount: $automaticAppDiscount
+        ) {
+          automaticAppDiscount {
+            discountId
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`,
+    {
+      variables: {
+        id: toDiscountAutomaticNodeId(discountId),
+        automaticAppDiscount: {
+          title,
+          discountClasses: ["PRODUCT"],
+          combinesWith: {
+            orderDiscounts: true,
+            productDiscounts: true,
+            shippingDiscounts: true,
+          },
+          metafields: [
+            {
+              namespace: METAFIELD_NAMESPACE,
+              key: METAFIELD_KEY,
+              type: "json",
+              value: functionConfigurationValue(offer),
+            },
+          ],
+        },
+      },
+    },
+  );
+
+  const json = (await response.json()) as GraphqlResponse;
+  assertGraphqlOk(json, "discountAutomaticAppUpdate");
+
+  const payload = json.data?.discountAutomaticAppUpdate as
+    | {
+        userErrors?: Array<{ message: string }>;
+        automaticAppDiscount?: { discountId?: string };
+      }
+    | undefined;
+  const userErrors = payload?.userErrors ?? [];
+  if (userErrors.length > 0) {
+    throw new Error(userErrors.map((error) => error.message).join(", "));
+  }
+
+  return normalizeDiscountNodeId(
+    payload?.automaticAppDiscount?.discountId ?? discountId,
+  );
 }
 
 export async function syncOfferDiscounts(
@@ -229,38 +344,14 @@ export async function syncOfferDiscounts(
     return [];
   }
 
-  const tiers = percentageTiers(offer);
-  const expectedTierCount = tiers.length;
-  if (expectedTierCount === 0) {
-    throw new Error("Add at least one percentage discount tier before activating.");
-  }
-
-  const startsAt = new Date().toISOString();
-  const createdIds: string[] = [];
-
-  try {
-    for (const tier of tiers) {
-      const id = await createAutomaticDiscountForTier(
-        admin,
-        offer,
-        tier,
-        startsAt,
-      );
-      createdIds.push(id);
-    }
-  } catch (error) {
-    await deleteShopifyDiscounts(admin, createdIds);
-    throw error;
-  }
-
-  if (createdIds.length !== expectedTierCount) {
-    await deleteShopifyDiscounts(admin, createdIds);
+  if (percentageTiers(offer).length === 0) {
     throw new Error(
-      `Expected ${expectedTierCount} Shopify discounts but created ${createdIds.length}.`,
+      "Add at least one percentage discount tier before activating.",
     );
   }
 
-  return createdIds;
+  const id = await createAppAutomaticDiscount(admin, offer);
+  return [id];
 }
 
 export async function forceRecreateOfferDiscounts(
@@ -280,33 +371,34 @@ export async function replaceOfferDiscounts(
   offer: SerializedOffer,
   existingDiscountIds: string[],
 ): Promise<string[]> {
-  const expectedTierCount = percentageTierCount(offer);
-  if (expectedTierCount === 0) {
+  if (percentageTiers(offer).length === 0) {
     return [];
   }
 
-  await deleteShopifyDiscounts(admin, existingDiscountIds);
-
-  const offerNodes = await findOfferDiscountNodes(admin, offer);
-  const plannedTitles = plannedDiscountTitles(offer);
-  const titlesAreCurrent =
-    offerNodes.length === expectedTierCount &&
-    offerNodes.every(
-      (node) => Boolean(node.title) && plannedTitles.has(node.title as string),
-    );
-
-  if (titlesAreCurrent) {
-    return offerNodes
-      .slice()
-      .sort((left, right) => (left.title ?? "").localeCompare(right.title ?? ""))
-      .map((node) => normalizeDiscountNodeId(node.id));
+  // Prefer in-place update of the single App Function discount.
+  if (existingDiscountIds.length === 1) {
+    try {
+      const updatedId = await updateAppAutomaticDiscount(
+        admin,
+        existingDiscountIds[0],
+        offer,
+      );
+      // Clean any leftover legacy Basic per-tier discounts for this offer.
+      const orphans = await findOfferDiscountNodes(admin, offer);
+      const orphanIds = orphans
+        .map((node) => normalizeDiscountNodeId(node.id))
+        .filter((id) => id !== updatedId);
+      if (orphanIds.length > 0) {
+        await deleteShopifyDiscounts(admin, orphanIds);
+      }
+      return [updatedId];
+    } catch {
+      // Fall through to recreate.
+    }
   }
 
-  await deleteShopifyDiscounts(
-    admin,
-    offerNodes.map((node) => node.id),
-  );
-
+  await deleteShopifyDiscounts(admin, existingDiscountIds);
+  await deleteOrphanedOfferDiscounts(admin, offer);
   return syncOfferDiscounts(admin, offer);
 }
 

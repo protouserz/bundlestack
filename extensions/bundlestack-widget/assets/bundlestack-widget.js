@@ -518,7 +518,49 @@
     root.classList.remove("bundlestack-widget--pending");
   }
 
-  function initWidget(root) {
+  function whenIdle(callback) {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => callback(), { timeout: 1200 });
+      return;
+    }
+    setTimeout(callback, 1);
+  }
+
+  function findVisibilityTarget(element) {
+    let el = element.parentElement;
+    while (el && el !== document.body) {
+      const style = window.getComputedStyle(el);
+      if (style.display !== "none" && style.visibility !== "hidden") {
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 || rect.height > 0) return el;
+      }
+      el = el.parentElement;
+    }
+    return document.body;
+  }
+
+  function whenNearViewport(element, callback) {
+    if (typeof IntersectionObserver !== "function") {
+      whenIdle(callback);
+      return;
+    }
+
+    // Pending widgets use display:none (no box). Observe a visible ancestor
+    // so we still defer until the product section is near the viewport.
+    const target = findVisibilityTarget(element);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        whenIdle(callback);
+      },
+      { rootMargin: "200px 0px", threshold: 0 }
+    );
+
+    observer.observe(target);
+  }
+
+  function loadOffers(root) {
     const productId = root.dataset.productId;
     const proxyPath = root.dataset.proxyPath;
     const priceCents = parseInt(root.dataset.priceCents, 10) || 0;
@@ -533,8 +575,6 @@
       hideWidget(root);
       return;
     }
-
-    installCheckoutGuards(root);
 
     fetch(`${proxyPath}?product_id=${encodeURIComponent(productId)}`)
       .then((res) => {
@@ -589,6 +629,7 @@
 
         ensureClearButton(root, tiersEl);
         updateClearButton(root);
+        installCheckoutGuards(root);
 
         const qtyInput = findQuantityInput(root);
         if (qtyInput) {
@@ -602,10 +643,16 @@
         }
       })
       .catch(() => {
-        tiersEl.innerHTML =
-          '<p class="bundlestack-widget__empty">Unable to load offers right now. Please refresh the page.</p>';
+        hideWidget(root);
       });
   }
 
-  document.querySelectorAll(".bundlestack-widget").forEach(initWidget);
+  function initWidget(root) {
+    whenNearViewport(root, () => loadOffers(root));
+  }
+
+  if (!window.__bundlestackWidgetInit) {
+    window.__bundlestackWidgetInit = true;
+    document.querySelectorAll(".bundlestack-widget").forEach(initWidget);
+  }
 })();

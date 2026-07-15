@@ -101,9 +101,7 @@ export function ProductPickerField({
         <ul className={styles.productList}>
           {products.map((product) => (
             <li key={product.id} className={styles.productRow}>
-              <div className={styles.productThumb} aria-hidden="true">
-                📦
-              </div>
+              <div className={styles.productThumb} aria-hidden="true" />
               <div className={styles.productMeta}>
                 <p className={styles.productName}>{product.title}</p>
                 <p className={styles.productSubtext}>Included in offer</p>

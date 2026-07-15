@@ -1,7 +1,7 @@
 .dashboard {
-  --dash-green: #22c55e;
-  --dash-green-dark: #16a34a;
-  --dash-green-soft: #ecfdf5;
+  --dash-accent: #2c6ecb;
+  --dash-accent-dark: #1f5199;
+  --dash-accent-soft: #ebf3ff;
   --dash-text: #0f172a;
   --dash-muted: #64748b;
   --dash-border: #e2e8f0;
@@ -99,7 +99,7 @@
   gap: 0.25rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--dash-green-dark);
+  color: var(--dash-accent-dark);
 }
 
 .sparkline {
@@ -171,7 +171,7 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--dash-green-soft), #d1fae5);
+  background: linear-gradient(135deg, var(--dash-accent-soft), #d6e4ff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,7 +214,7 @@
 .panelLink {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--dash-green-dark);
+  color: var(--dash-accent-dark);
   text-decoration: none;
 }
 
@@ -269,8 +269,8 @@
 }
 
 .statusActive {
-  background: var(--dash-green-soft);
-  color: var(--dash-green-dark);
+  background: var(--dash-accent-soft);
+  color: var(--dash-accent-dark);
 }
 
 .statusDraft {
@@ -290,7 +290,7 @@
   width: var(--health-score, 0%);
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--dash-green), var(--dash-green-dark));
+  background: linear-gradient(90deg, var(--dash-accent), var(--dash-accent-dark));
   transition: width 0.3s ease;
 }
 
@@ -418,12 +418,12 @@
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
-  background: var(--dash-green-soft);
-  color: var(--dash-green-dark);
+  background: var(--dash-accent-soft);
+  color: var(--dash-accent-dark);
 }
 
 .setupStepDone .setupStepIndex {
-  background: var(--dash-green);
+  background: var(--dash-accent);
   color: #fff;
 }
 

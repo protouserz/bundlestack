@@ -5,8 +5,15 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useRouteError,
 } from "react-router";
+
+export const loader = async () => {
+  return {
+    apiKey: process.env.SHOPIFY_API_KEY || "",
+  };
+};
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -50,7 +57,7 @@ export function ErrorBoundary() {
           h1 { font-size: 1.5rem; margin: 0 0 0.75rem; }
           p { color: #475569; line-height: 1.6; margin: 0 0 1.5rem; }
           a {
-            color: #059669;
+            color: #2c6ecb;
             font-weight: 600;
             text-decoration: none;
           }
@@ -69,6 +76,8 @@ export function ErrorBoundary() {
 }
 
 export default function App() {
+  const { apiKey } = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
@@ -79,6 +88,12 @@ export default function App() {
           rel="stylesheet"
           href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
         />
+        {apiKey ? (
+          <>
+            <meta name="shopify-api-key" content={apiKey} />
+            <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" />
+          </>
+        ) : null}
         <Meta />
         <Links />
       </head>

@@ -15,11 +15,19 @@ import { AppSupportFooter } from "../components/AppSupportFooter";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
 
+  const apiKey = process.env.SHOPIFY_API_KEY || "";
+  if (process.env.NODE_ENV === "production" && !apiKey) {
+    throw new Response(
+      "SHOPIFY_API_KEY is required for the embedded admin app.",
+      { status: 500 },
+    );
+  }
+
   const appUrl = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
 
   // eslint-disable-next-line no-undef
   return {
-    apiKey: process.env.SHOPIFY_API_KEY || "",
+    apiKey,
     privacyUrl: appUrl ? `${appUrl}/privacy` : "/privacy",
   };
 };
@@ -36,7 +44,10 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <NavMenu>
-        <Link to="/app">Dashboard</Link>
+        {/* rel="home" marks the landing route (BFS 4.1.4) */}
+        <Link to="/app" rel="home">
+          Dashboard
+        </Link>
         <Link to="/app/offers">Offers</Link>
         <Link to="/app/billing">Billing</Link>
         <Link to="/app/support">Support</Link>

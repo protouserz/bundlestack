@@ -61,9 +61,7 @@ export function OffersTable({ offers }: OffersTableProps) {
                   <tr key={offer.id}>
                     <td>
                       <div className={styles.offerCell}>
-                        <div className={styles.topThumb} aria-hidden="true">
-                          📦
-                        </div>
+                        <div className={styles.topThumb} aria-hidden="true" />
                         <span>{offer.title}</span>
                       </div>
                     </td>

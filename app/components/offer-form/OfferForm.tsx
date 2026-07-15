@@ -138,17 +138,13 @@ export function OfferForm({
           >
             Cancel
           </SButton>
-          <button
-            type="submit"
-            className={styles.saveButton}
-            disabled={isSaving}
-          >
+          <SButton variant="primary" type="submit" disabled={isSaving}>
             {isSaving
               ? "Saving…"
               : mode === "create"
                 ? "Create offer"
                 : "Save"}
-          </button>
+          </SButton>
         </div>
       </div>
 
@@ -262,14 +258,15 @@ export function OfferForm({
                     </td>
                     <td>
                       {tiers.length > 1 && (
-                        <button
+                        <SButton
                           type="button"
-                          className={styles.tierDelete}
+                          variant="tertiary"
+                          tone="critical"
                           onClick={() => removeTier(index)}
-                          aria-label={`Remove tier ${index + 1}`}
+                          accessibilityLabel={`Remove tier ${index + 1}`}
                         >
-                          🗑
-                        </button>
+                          Remove
+                        </SButton>
                       )}
                     </td>
                   </tr>

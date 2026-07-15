@@ -62,6 +62,28 @@ These are **not** instant code scans. Shopify collects **telemetry** when a merc
 
 **Blank / error page in the iframe?** That means the app never loaded — embedded checks **cannot pass** until you see the real BundleStack dashboard. Confirm `/health` returns OK, then reload the app in admin. Production runs on Render **Starter** (always-on); the old GitHub keep-warm cron was removed.
 
+### Built for Shopify (Distribution checklist)
+
+| Partner checklist item | Status in repo | What you need to do |
+|---|---|---|
+| Enable app embedding | Done (`embedded = true` in `shopify.app.toml`) | — |
+| Session token authentication | Done (`authenticate.admin` + App Bridge session tokens) | Use the app in the admin iframe so Shopify telemetry can confirm (same steps as above) |
+| Latest App Bridge on every page | Done — CDN `app-bridge.js` + `shopify-api-key` meta in [`app/root.tsx`](../app/root.tsx) `<head>`, plus `AppProvider` on `/app` | Confirm Network shows `cdn.shopify.com/shopifycloud/app-bridge.js`, then wait 2–48h |
+| Theme app extensions | Done (`extensions/bundlestack-widget`) | — |
+| Well-integrated app | Done — primary flows under `/app/*`; OAuth-only login at `/auth/login` (no separate BundleStack account) | Remains available for Shopify evaluation when you apply |
+| Shopify design guidelines | Polaris App Home shell, `rel="home"` nav, no custom green primary chrome / admin emojis | Remains available for Shopify evaluation when you apply |
+| Doesn't use Asset API | Done — theme extension only; scopes exclude `write_themes`; no Asset REST usage | Remains available for Shopify evaluation when you apply |
+
+Also enabled in config (deploy with `shopify app deploy`):
+
+```toml
+[access.admin]
+embedded_app_direct_api_access = true
+direct_api_mode = "offline"
+```
+
+After deploy: open production app in admin → Dashboard → Offers → Billing for a few minutes → recheck Distribution → apply for Built for Shopify when embedded items are green.
+
 ### Direct links (use after logging in via partners.shopify.com)
 
 | Page | URL |

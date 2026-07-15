@@ -1,4 +1,5 @@
 import { useAppBridge } from "@shopify/app-bridge-react";
+import { useNavigate } from "react-router";
 import { SButton } from "./polaris";
 
 /** Opens a Shopify admin page in the top-level admin chrome (not the app iframe). */
@@ -63,6 +64,7 @@ export function ExternalLinkButton({
 
 export function useLeaveWithSaveBar() {
   const shopify = useAppBridge();
+  const navigate = useNavigate();
 
   return async (href: string) => {
     const confirmLeave = shopify.saveBar?.leaveConfirmation;
@@ -74,6 +76,7 @@ export function useLeaveWithSaveBar() {
         return;
       }
     }
-    window.location.assign(href);
+    // SPA navigate keeps App Bridge session-token auth on subsequent requests.
+    navigate(href);
   };
 }

@@ -93,8 +93,8 @@ export function RevenueChart({ offers }: RevenueChartProps) {
           >
             <defs>
               <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                <stop offset="0%" stopColor="#2c6ecb" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#2c6ecb" stopOpacity="0" />
               </linearGradient>
             </defs>
 
@@ -124,7 +124,7 @@ export function RevenueChart({ offers }: RevenueChartProps) {
             <path
               d={linePath}
               fill="none"
-              stroke="#22c55e"
+              stroke="#2c6ecb"
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -132,7 +132,7 @@ export function RevenueChart({ offers }: RevenueChartProps) {
 
             {points.filter((_, index) => index % 5 === 0 || index === points.length - 1).map((point) => (
               <g key={point.label}>
-                <circle cx={point.x} cy={point.y} r="4" fill="#ffffff" stroke="#22c55e" strokeWidth="2" />
+                <circle cx={point.x} cy={point.y} r="4" fill="#ffffff" stroke="#2c6ecb" strokeWidth="2" />
                 <text
                   x={point.x}
                   y={height - 4}

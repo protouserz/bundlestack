@@ -32,6 +32,10 @@ api_version = "2026-07"
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_discounts,read_products,write_discounts"
 
+[access.admin]
+embedded_app_direct_api_access = true
+direct_api_mode = "offline"
+
 [auth]
 redirect_urls = [
   "https://bundlestack-pfee.onrender.com/auth/callback",

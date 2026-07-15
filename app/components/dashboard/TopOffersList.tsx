@@ -33,9 +33,7 @@ export function TopOffersList({ offers }: TopOffersListProps) {
         <ul className={styles.topList}>
           {topOffers.map((offer) => (
             <li key={offer.id} className={styles.topItem}>
-              <div className={styles.topThumb} aria-hidden="true">
-                📦
-              </div>
+              <div className={styles.topThumb} aria-hidden="true" />
               <div className={styles.topMeta}>
                 <p className={styles.topName}>{offer.title}</p>
                 <p className={styles.topDetail}>

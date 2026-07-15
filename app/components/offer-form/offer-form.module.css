@@ -1,5 +1,5 @@
 .offerPage {
-  --offer-green: #22c55e;
+  --offer-accent: #2c6ecb;
   --offer-text: #0f172a;
   --offer-muted: #64748b;
   --offer-border: #e2e8f0;
@@ -25,32 +25,6 @@
   align-items: center;
   gap: 0.5rem;
   margin-left: auto;
-}
-
-.saveButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  padding: 0.4375rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  background: var(--p-color-bg-fill-brand, #303030);
-  color: var(--p-color-text-brand-on-bg-fill, #ffffff);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.saveButton:hover:not(:disabled) {
-  background: var(--p-color-bg-fill-brand-hover, #1a1a1a);
-}
-
-.saveButton:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 .backLink {
@@ -157,7 +131,7 @@
 .input:focus,
 .select:focus {
   outline: none;
-  border-color: var(--offer-green);
+  border-color: var(--offer-accent);
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
@@ -201,11 +175,8 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 8px;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
+  background: var(--p-color-bg-surface-secondary, #f1f1f1);
+  border: 1px solid var(--offer-border);
 }
 
 .productMeta {
@@ -284,23 +255,6 @@
   border-radius: 10px;
   font-size: 0.9375rem;
   box-sizing: border-box;
-}
-
-.tierDelete {
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--offer-border);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--offer-muted);
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.tierDelete:hover {
-  border-color: #fecaca;
-  color: #b91c1c;
-  background: #fef2f2;
 }
 
 .addTierButton {

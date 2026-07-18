@@ -158,6 +158,8 @@ export type OfferBadge = {
   handle: string;
   productId: string;
   minQty: number;
+  startingDiscountType: "percentage" | "fixed";
+  startingDiscountValue: number;
   discountType: "percentage" | "fixed";
   discountValue: number;
 };
@@ -182,18 +184,29 @@ export async function getActiveOfferBadges(
 
   const bestByProduct = new Map<
     string,
-    { minQty: number; discountType: "percentage" | "fixed"; discountValue: number }
+    {
+      minQty: number;
+      startingDiscountType: "percentage" | "fixed";
+      startingDiscountValue: number;
+      discountType: "percentage" | "fixed";
+      discountValue: number;
+    }
   >();
 
   for (const offer of offers.map(serializeOffer)) {
-    const tiers = offer.tiers.filter((tier) => tier.discountValue > 0);
+    const tiers = offer.tiers
+      .filter((tier) => tier.discountValue > 0)
+      .sort((a, b) => a.minQty - b.minQty);
     if (tiers.length === 0) continue;
 
+    const startingTier = tiers[0];
     const best = tiers.reduce((max, tier) =>
       tier.discountValue > max.discountValue ? tier : max,
     );
     const entry = {
-      minQty: Math.min(...tiers.map((tier) => tier.minQty)),
+      minQty: startingTier.minQty,
+      startingDiscountType: startingTier.discountType,
+      startingDiscountValue: startingTier.discountValue,
       discountType: best.discountType,
       discountValue: best.discountValue,
     };

@@ -1,20 +1,28 @@
 (function () {
   function badgeText(tiers) {
     const sorted = [...tiers].sort((a, b) => a.minQty - b.minQty);
-    const lowestQty = sorted[0]?.minQty;
-    if (!lowestQty) return null;
+    const startingTier = sorted[0];
+    if (!startingTier?.minQty || startingTier.discountValue <= 0) return null;
 
     const best = tiers.reduce((max, tier) =>
       tier.discountValue > max.discountValue ? tier : max
     );
     if (!best.discountValue || best.discountValue <= 0) return null;
 
-    const saving =
+    const startingSaving =
+      startingTier.discountType === "percentage"
+        ? `${startingTier.discountValue}%`
+        : `$${startingTier.discountValue}`;
+    const maximumSaving =
       best.discountType === "percentage"
         ? `${best.discountValue}%`
         : `$${best.discountValue}`;
 
-    return `Buy ${lowestQty}+ & save up to ${saving}`;
+    if (startingSaving === maximumSaving) {
+      return `Buy ${startingTier.minQty}, save ${startingSaving}`;
+    }
+
+    return `Buy ${startingTier.minQty}, save ${startingSaving} · Buy more, save up to ${maximumSaving}`;
   }
 
   function findWidget() {

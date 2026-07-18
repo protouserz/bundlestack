@@ -3,10 +3,12 @@
   top: 12px !important;
   left: 12px !important;
   z-index: 5 !important;
-  display: inline-block !important;
+  display: inline-flex !important;
+  flex-direction: column;
+  gap: 2px;
   max-width: calc(100% - 24px);
   padding: 10px 18px !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   background: #059669 !important;
   color: #ffffff !important;
   font-family: inherit !important;
@@ -21,9 +23,23 @@
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.3);
 }
 
+.bundlestack-overlay-pill__primary,
+.bundlestack-overlay-pill__secondary {
+  display: block;
+}
+
+.bundlestack-overlay-pill__secondary {
+  font-size: 14px;
+  font-weight: 600;
+}
+
 @media (max-width: 749px) {
   .bundlestack-overlay-pill {
     font-size: 14px !important;
     padding: 7px 12px !important;
+  }
+
+  .bundlestack-overlay-pill__secondary {
+    font-size: 12px;
   }
 }

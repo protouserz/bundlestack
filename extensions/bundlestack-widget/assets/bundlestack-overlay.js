@@ -3,12 +3,27 @@
   const CARD_SELECTOR =
     ".product-card, .card-wrapper, .card, product-card, .product-grid__item, .grid__item, li, article";
 
-  function badgeText(badge) {
-    const saving =
-      badge.discountType === "percentage"
-        ? `${badge.discountValue}%`
-        : `$${badge.discountValue}`;
-    return `Buy ${badge.minQty}+ · Save ${saving}`;
+  function formatSaving(type, value) {
+    return type === "percentage" ? `${value}%` : `$${value}`;
+  }
+
+  function badgeLines(badge) {
+    const startingSaving = formatSaving(
+      badge.startingDiscountType,
+      badge.startingDiscountValue,
+    );
+    const maximumSaving = formatSaving(
+      badge.discountType,
+      badge.discountValue,
+    );
+
+    return {
+      primary: `Buy ${badge.minQty}, save ${startingSaving}`,
+      secondary:
+        startingSaving === maximumSaving
+          ? null
+          : `Buy more, save up to ${maximumSaving}`,
+    };
   }
 
   function handleFromHref(href) {
@@ -55,7 +70,20 @@
 
     const pill = document.createElement("span");
     pill.className = "bundlestack-overlay-pill";
-    pill.textContent = badgeText(badge);
+    const lines = badgeLines(badge);
+
+    const primary = document.createElement("span");
+    primary.className = "bundlestack-overlay-pill__primary";
+    primary.textContent = lines.primary;
+    pill.appendChild(primary);
+
+    if (lines.secondary) {
+      const secondary = document.createElement("span");
+      secondary.className = "bundlestack-overlay-pill__secondary";
+      secondary.textContent = lines.secondary;
+      pill.appendChild(secondary);
+    }
+
     container.appendChild(pill);
     return true;
   }
@@ -101,7 +129,7 @@
     const proxyPath =
       config?.dataset.proxyPath || "/apps/bundlestack/offers";
 
-    fetch(`${proxyPath}?badges=1`, {
+    fetch(`${proxyPath}?badges=1&format=2`, {
       credentials: "same-origin",
       headers: { Accept: "application/json" },
     })

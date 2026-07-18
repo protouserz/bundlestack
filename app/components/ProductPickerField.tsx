@@ -6,6 +6,8 @@ import styles from "./offer-form/offer-form.module.css";
 export type SelectedProduct = {
   id: string;
   title: string;
+  imageUrl?: string;
+  imageAlt?: string;
 };
 
 type ProductPickerFieldProps = {
@@ -58,10 +60,29 @@ export function ProductPickerField({
     if (!selected || selected.length === 0) return;
 
     setProducts(
-      selected.map((item) => ({
-        id: item.id,
-        title: "title" in item && item.title ? String(item.title) : item.id,
-      })),
+      selected.map((item) => {
+        const title =
+          "title" in item && item.title ? String(item.title) : item.id;
+        const images =
+          "images" in item && Array.isArray(item.images) ? item.images : [];
+        const firstImage = images[0] as
+          | { originalSrc?: string; altText?: string }
+          | undefined;
+        const imageUrl = firstImage?.originalSrc;
+
+        return {
+          id: item.id,
+          title,
+          ...(imageUrl
+            ? {
+                imageUrl,
+                ...(firstImage?.altText
+                  ? { imageAlt: firstImage.altText }
+                  : {}),
+              }
+            : {}),
+        };
+      }),
     );
   }, [shopify, products]);
 
@@ -101,7 +122,18 @@ export function ProductPickerField({
         <ul className={styles.productList}>
           {products.map((product) => (
             <li key={product.id} className={styles.productRow}>
-              <div className={styles.productThumb} aria-hidden="true" />
+              <div className={styles.productThumb} aria-hidden="true">
+                {product.imageUrl ? (
+                  <img
+                    className={styles.productThumbImage}
+                    src={product.imageUrl}
+                    alt={product.imageAlt || ""}
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                  />
+                ) : null}
+              </div>
               <div className={styles.productMeta}>
                 <p className={styles.productName}>{product.title}</p>
                 <p className={styles.productSubtext}>Included in offer</p>

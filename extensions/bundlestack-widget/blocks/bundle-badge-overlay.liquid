@@ -1,0 +1,21 @@
+{% comment %}
+  BundleStack badge overlay — app embed that pins a savings pill on product
+  images anywhere the product appears (collections, home page, search).
+  Enable via Theme Editor → Theme settings → App embeds.
+{% endcomment %}
+
+<div
+  class="bundlestack-overlay-config"
+  data-proxy-path="/apps/bundlestack/offers"
+  hidden
+></div>
+
+{% schema %}
+{
+  "name": "BundleStack badge overlay",
+  "target": "body",
+  "javascript": "bundlestack-overlay.js",
+  "stylesheet": "bundlestack-overlay.css",
+  "settings": []
+}
+{% endschema %}

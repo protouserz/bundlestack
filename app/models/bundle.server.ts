@@ -154,6 +154,97 @@ export async function getActiveOffersForProduct(shop: string, productId: string)
     .filter((offer) => offer.productIds.includes(productId));
 }
 
+export type OfferBadge = {
+  handle: string;
+  productId: string;
+  minQty: number;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+};
+
+function numericProductId(gid: string): string | null {
+  const match = /Product\/(\d+)/.exec(gid);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Badge data for every product covered by an active offer, keyed by product
+ * handle so the storefront overlay can match product-card links.
+ */
+export async function getActiveOfferBadges(
+  shop: string,
+  admin: { graphql: (query: string, options?: { variables?: Record<string, unknown> }) => Promise<Response> },
+): Promise<OfferBadge[]> {
+  const offers = await prisma.bundleOffer.findMany({
+    where: { shop, status: "active" },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  const bestByProduct = new Map<
+    string,
+    { minQty: number; discountType: "percentage" | "fixed"; discountValue: number }
+  >();
+
+  for (const offer of offers.map(serializeOffer)) {
+    const tiers = offer.tiers.filter((tier) => tier.discountValue > 0);
+    if (tiers.length === 0) continue;
+
+    const best = tiers.reduce((max, tier) =>
+      tier.discountValue > max.discountValue ? tier : max,
+    );
+    const entry = {
+      minQty: Math.min(...tiers.map((tier) => tier.minQty)),
+      discountType: best.discountType,
+      discountValue: best.discountValue,
+    };
+
+    for (const productId of offer.productIds) {
+      const existing = bestByProduct.get(productId);
+      if (!existing || entry.discountValue > existing.discountValue) {
+        bestByProduct.set(productId, entry);
+      }
+    }
+  }
+
+  const productIds = [...bestByProduct.keys()];
+  if (productIds.length === 0) return [];
+
+  const response = await admin.graphql(
+    `#graphql
+      query productHandles($ids: [ID!]!) {
+        nodes(ids: $ids) {
+          ... on Product {
+            id
+            handle
+          }
+        }
+      }`,
+    { variables: { ids: productIds } },
+  );
+
+  const json = await response.json();
+  if (json.errors?.length) {
+    throw new Error(json.errors.map((e: { message: string }) => e.message).join("; "));
+  }
+
+  const nodes: Array<{ id?: string; handle?: string } | null> =
+    json.data?.nodes ?? [];
+
+  const badges: OfferBadge[] = [];
+  for (const node of nodes) {
+    if (!node?.id || !node.handle) continue;
+    const entry = bestByProduct.get(node.id);
+    if (!entry) continue;
+    badges.push({
+      handle: node.handle,
+      productId: numericProductId(node.id) ?? node.id,
+      ...entry,
+    });
+  }
+
+  return badges;
+}
+
 export async function getShopStats(
   shop: string,
   offersInput?: Awaited<ReturnType<typeof listOffers>>,
@@ -347,6 +438,14 @@ export async function fetchProductTitles(
           ... on Product {
             id
             title
+            featuredMedia {
+              ... on MediaImage {
+                image {
+                  url
+                  altText
+                }
+              }
+            }
           }
         }
       }`,
@@ -356,10 +455,37 @@ export async function fetchProductTitles(
   const json = await response.json();
   const nodes = json.data?.nodes ?? [];
 
-  return nodes
-    .filter((node: { id?: string; title?: string } | null) => node?.id)
-    .map((node: { id: string; title: string }) => ({
+  type ProductNode = {
+    id?: string;
+    title?: string;
+    featuredMedia?: {
+      image?: { url?: string; altText?: string | null } | null;
+    } | null;
+  } | null;
+
+  const byId = new Map<
+    string,
+    { id: string; title: string; imageUrl?: string; imageAlt?: string }
+  >();
+
+  for (const node of nodes as ProductNode[]) {
+    if (!node?.id) continue;
+    const image = node.featuredMedia?.image;
+    byId.set(node.id, {
       id: node.id,
-      title: node.title,
-    }));
+      title: node.title || node.id,
+      ...(image?.url
+        ? {
+            imageUrl: image.url,
+            ...(image.altText ? { imageAlt: image.altText } : {}),
+          }
+        : {}),
+    });
+  }
+
+  // Preserve the offer's product order; fall back to the GID if a product
+  // was deleted in Shopify but is still referenced on the offer.
+  return productIds.map(
+    (id) => byId.get(id) ?? { id, title: id },
+  );
 }

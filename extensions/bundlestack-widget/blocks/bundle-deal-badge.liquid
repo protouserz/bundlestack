@@ -1,0 +1,27 @@
+{% comment %}
+  BundleStack deal badge — compact pill placed near the product price.
+  Add via Theme Editor → Apps → BundleStack deal badge.
+{% endcomment %}
+
+<div
+  id="bundlestack-badge-{{ block.id }}"
+  class="bundlestack-badge bundlestack-badge--pending"
+  {% if product %}
+    data-product-id="gid://shopify/Product/{{ product.id }}"
+  {% endif %}
+  data-proxy-path="/apps/bundlestack/offers"
+>
+  <span class="bundlestack-badge__icon" aria-hidden="true">&#127991;</span>
+  <span class="bundlestack-badge__text"></span>
+</div>
+
+{% schema %}
+{
+  "name": "BundleStack deal badge",
+  "target": "section",
+  "templates": ["product"],
+  "javascript": "bundlestack-badge.js",
+  "stylesheet": "bundlestack-badge.css",
+  "settings": []
+}
+{% endschema %}

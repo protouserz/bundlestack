@@ -1,14 +1,36 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { authenticate } from "../shopify.server";
-import { getActiveOffersForProduct } from "../models/bundle.server";
+import { authenticate, unauthenticated } from "../shopify.server";
+import {
+  getActiveOfferBadges,
+  getActiveOffersForProduct,
+} from "../models/bundle.server";
+
+type AdminClient = {
+  graphql: (
+    query: string,
+    options?: { variables?: Record<string, unknown> },
+  ) => Promise<Response>;
+};
+
+async function resolveAdmin(shop: string, proxyAdmin?: AdminClient | null) {
+  if (proxyAdmin) return proxyAdmin;
+  try {
+    const { admin } = await unauthenticated.admin(shop);
+    return admin as AdminClient;
+  } catch {
+    return null;
+  }
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   let shop: string | null = null;
+  let proxyAdmin: AdminClient | null = null;
 
   try {
-    const { session } = await authenticate.public.appProxy(request);
-    shop = session?.shop ?? null;
+    const proxy = await authenticate.public.appProxy(request);
+    shop = proxy.session?.shop ?? url.searchParams.get("shop");
+    proxyAdmin = (proxy as { admin?: AdminClient }).admin ?? null;
   } catch {
     if (process.env.NODE_ENV === "production") {
       return new Response(JSON.stringify({ offers: [], error: "unauthorized" }), {
@@ -28,6 +50,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  if (url.searchParams.get("badges") === "1") {
+    try {
+      const admin = await resolveAdmin(shop, proxyAdmin);
+      const badges = admin ? await getActiveOfferBadges(shop, admin) : [];
+      return new Response(JSON.stringify({ badges }), {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+        },
+      });
+    } catch {
+      return new Response(JSON.stringify({ badges: [], error: "badge_lookup_failed" }), {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        },
+      });
+    }
   }
 
   const productId = url.searchParams.get("product_id");

@@ -21,9 +21,15 @@ describe("getTierForShopifyPlan", () => {
     expect(getTierForShopifyPlan(SHOPIFY_BILLING_PLANS.PRO)).toBe("pro");
   });
 
-  it("maps managed pricing style short names", () => {
+  it("maps managed pricing style short names exactly", () => {
     expect(getTierForShopifyPlan("Starter")).toBe("starter");
     expect(getTierForShopifyPlan("Growth")).toBe("scale");
     expect(getTierForShopifyPlan("Pro")).toBe("pro");
+  });
+
+  it("does not substring-match unrelated plan names", () => {
+    expect(getTierForShopifyPlan("Summer Promo")).toBeNull();
+    expect(getTierForShopifyPlan("Professional Services")).toBeNull();
+    expect(getTierForShopifyPlan("Growth Spurt Add-on")).toBeNull();
   });
 });

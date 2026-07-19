@@ -1,6 +1,6 @@
 import prisma from "../db.server";
 import { isBillingPlan, type BillingPlan } from "../billing.server";
-import { getTierForPlanHandle, getTierForShopifyPlan } from "../billing.shopify";
+import { getTierForShopifyPlan } from "../billing.shopify";
 import { PLAN_ORDER } from "../billing.plans";
 import { safeJsonParse } from "../utils/json.server";
 
@@ -329,28 +329,25 @@ export function resolveBillingPlan(
 
 export function resolveCurrentBillingPlan({
   activeSubscriptionNames,
-  planHandle,
-  chargeId,
   storedPlan,
 }: {
   activeSubscriptionNames: string[];
-  planHandle: string | null;
-  chargeId: string | null;
+  /** @deprecated Ignored — never trust query params to set plan. */
+  planHandle?: string | null;
+  /** @deprecated Ignored — never trust query params to set plan. */
+  chargeId?: string | null;
   storedPlan: BillingPlan;
 }): BillingPlan {
-  if (chargeId && planHandle) {
-    const fromHandle = getTierForPlanHandle(planHandle);
-    if (fromHandle) return fromHandle;
-  }
-
   const fromSubscriptions = resolveBillingPlan(activeSubscriptionNames);
-  if (fromSubscriptions !== "free") return fromSubscriptions;
-
-  if (planHandle) {
-    const fromHandle = getTierForPlanHandle(planHandle);
-    if (fromHandle) return fromHandle;
+  if (fromSubscriptions !== "free") {
+    return fromSubscriptions;
   }
 
+  // No verified paid subscription from Shopify. Do not upgrade from
+  // plan_handle / charge_id — those are attacker-controlled. Keep the
+  // stored plan so a transient empty billing.check() does not wipe a
+  // legitimate paid tier; cancellations are applied via the subscriptions
+  // webhook which writes an authoritative plan.
   return storedPlan;
 }
 
@@ -501,4 +498,50 @@ export async function fetchProductTitles(
   return productIds.map(
     (id) => byId.get(id) ?? { id, title: id },
   );
+}
+
+export type OfferThumbnail = {
+  imageUrl: string;
+  imageAlt: string;
+};
+
+/**
+ * Returns a thumbnail for each offer using the first assigned product's
+ * featured image. Missing/deleted products leave that offer without a thumb.
+ */
+export async function fetchOfferThumbnails(
+  admin: {
+    graphql: (
+      query: string,
+      options?: { variables?: Record<string, unknown> },
+    ) => Promise<Response>;
+  },
+  offers: Array<{ id: string; productIds: string[] }>,
+): Promise<Record<string, OfferThumbnail>> {
+  const firstProductIds = [
+    ...new Set(
+      offers
+        .map((offer) => offer.productIds[0])
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  if (firstProductIds.length === 0) return {};
+
+  const products = await fetchProductTitles(admin, firstProductIds);
+  const byProductId = new Map(products.map((product) => [product.id, product]));
+
+  const thumbnails: Record<string, OfferThumbnail> = {};
+  for (const offer of offers) {
+    const product = offer.productIds[0]
+      ? byProductId.get(offer.productIds[0])
+      : undefined;
+    if (!product?.imageUrl) continue;
+    thumbnails[offer.id] = {
+      imageUrl: product.imageUrl,
+      imageAlt: product.imageAlt || product.title,
+    };
+  }
+
+  return thumbnails;
 }

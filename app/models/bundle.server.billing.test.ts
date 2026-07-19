@@ -24,13 +24,44 @@ describe("resolveBillingPlan", () => {
 });
 
 describe("resolveCurrentBillingPlan", () => {
-  it("uses plan_handle after Shopify App Pricing approval", () => {
+  it("uses verified active subscriptions over query params", () => {
     expect(
       resolveCurrentBillingPlan({
-        activeSubscriptionNames: ["Starter"],
-        planHandle: "growth",
+        activeSubscriptionNames: [SHOPIFY_BILLING_PLANS.STARTER],
+        planHandle: "pro",
         chargeId: "123",
-        storedPlan: "starter",
+        storedPlan: "free",
+      }),
+    ).toBe("starter");
+  });
+
+  it("does not upgrade from plan_handle or charge_id alone", () => {
+    expect(
+      resolveCurrentBillingPlan({
+        activeSubscriptionNames: [],
+        planHandle: "pro",
+        chargeId: "attacker-charge",
+        storedPlan: "free",
+      }),
+    ).toBe("free");
+
+    expect(
+      resolveCurrentBillingPlan({
+        activeSubscriptionNames: [],
+        planHandle: "growth",
+        chargeId: null,
+        storedPlan: "free",
+      }),
+    ).toBe("free");
+  });
+
+  it("keeps the stored plan when Shopify reports no paid subscription", () => {
+    expect(
+      resolveCurrentBillingPlan({
+        activeSubscriptionNames: [],
+        planHandle: "pro",
+        chargeId: "123",
+        storedPlan: "scale",
       }),
     ).toBe("scale");
   });

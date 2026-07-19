@@ -87,14 +87,16 @@ export function getTierForShopifyPlan(
     return entry[0] as Exclude<BillingPlan, "free">;
   }
 
-  const normalized = planName.toLowerCase();
-  if (normalized.includes("pro")) return "pro";
-  if (normalized.includes("growth") || normalized.includes("scale")) {
-    return "scale";
-  }
-  if (normalized.includes("starter")) return "starter";
+  // Exact aliases only — never substring match (e.g. "Promo" must not map to Pro).
+  const normalized = planName.toLowerCase().trim();
+  const aliases: Record<string, Exclude<BillingPlan, "free">> = {
+    starter: "starter",
+    growth: "scale",
+    scale: "scale",
+    pro: "pro",
+  };
 
-  return null;
+  return aliases[normalized] ?? null;
 }
 
 /** Map Shopify App Pricing plan_handle values to app billing tiers. */

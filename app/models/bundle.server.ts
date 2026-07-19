@@ -389,15 +389,23 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     .map((id) => id.trim())
     .filter(Boolean);
 
-  let tiers: DiscountTier[];
+  let rawTiers: unknown;
   try {
-    tiers = JSON.parse(tiersRaw) as DiscountTier[];
+    rawTiers = JSON.parse(tiersRaw);
   } catch {
     throw new Response("Invalid tier data", { status: 400 });
   }
 
   if (!title) {
     throw new Response("Title is required", { status: 400 });
+  }
+
+  if (!["draft", "active", "paused"].includes(status)) {
+    throw new Response("Invalid offer status", { status: 400 });
+  }
+
+  if (offerType !== "quantity_break") {
+    throw new Response("Invalid offer type", { status: 400 });
   }
 
   if (productIds.length === 0) {
@@ -413,9 +421,64 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     }
   }
 
-  if (tiers.length === 0) {
+  if (!Array.isArray(rawTiers) || rawTiers.length === 0) {
     throw new Response("At least one quantity tier is required", { status: 400 });
   }
+
+  const tiers: DiscountTier[] = rawTiers.map((tier, index) => {
+    if (!tier || typeof tier !== "object") {
+      throw new Response(`Invalid tier at position ${index + 1}`, { status: 400 });
+    }
+
+    const record = tier as Record<string, unknown>;
+    const minQty = Number(record.minQty);
+    const discountValue = Number(record.discountValue);
+    const discountType = String(record.discountType ?? "");
+    const label =
+      typeof record.label === "string" ? record.label.trim() : undefined;
+
+    if (!Number.isInteger(minQty) || minQty < 2) {
+      throw new Response(
+        `Tier ${index + 1}: minimum quantity must be an integer of 2 or more`,
+        { status: 400 },
+      );
+    }
+
+    if (discountType !== "percentage" && discountType !== "fixed") {
+      throw new Response(
+        `Tier ${index + 1}: discount type must be percentage or fixed`,
+        { status: 400 },
+      );
+    }
+
+    if (!Number.isFinite(discountValue) || discountValue <= 0) {
+      throw new Response(
+        `Tier ${index + 1}: discount value must be a positive number`,
+        { status: 400 },
+      );
+    }
+
+    if (discountType === "percentage" && discountValue > 50) {
+      throw new Response(
+        `Tier ${index + 1}: percentage discount cannot exceed 50%`,
+        { status: 400 },
+      );
+    }
+
+    if (discountType === "fixed" && discountValue > 100_000) {
+      throw new Response(
+        `Tier ${index + 1}: fixed discount is unreasonably large`,
+        { status: 400 },
+      );
+    }
+
+    return {
+      minQty,
+      discountType,
+      discountValue,
+      ...(label ? { label } : {}),
+    };
+  });
 
   return { title, status, offerType, productIds, tiers };
 }

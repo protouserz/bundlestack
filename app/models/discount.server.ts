@@ -49,14 +49,15 @@ export function isOfferDiscountTitle(
   plannedTitles: Set<string> = plannedLegacyBasicTitles(offer),
 ): boolean {
   const normalized = title.toLowerCase();
-  const offerTitle = offer.title.trim().toLowerCase();
   const marker = `bundlestack ${offer.id}`.toLowerCase();
 
+  // Only match titles this app owns: the stable BundleStack marker, the
+  // exact legacy Basic titles we planned for this offer, or the known
+  // pre-marker "Buy more, save more · Buy …" pattern. Never match bare
+  // offer.title prefixes (e.g. "Sale" would delete unrelated discounts).
   return (
     normalized.startsWith(marker) ||
     normalized.startsWith("buy more, save more · buy") ||
-    normalized.startsWith(`${offerTitle} ·`) ||
-    normalized.startsWith(offerTitle) ||
     plannedTitles.has(title)
   );
 }
@@ -72,7 +73,7 @@ function assertGraphqlOk(json: GraphqlResponse, context: string) {
 function functionConfigurationValue(offer: SerializedOffer) {
   const tiers = percentageTiers(offer).map((tier) => ({
     minQty: tier.minQty,
-    discountValue: tier.discountValue,
+    discountValue: Math.min(50, Math.max(0, tier.discountValue)),
   }));
 
   return JSON.stringify({

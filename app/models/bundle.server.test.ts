@@ -66,4 +66,32 @@ describe("parseOfferForm", () => {
       ),
     ).toThrow(Response);
   });
+
+  it("rejects percentage discounts over 50%", () => {
+    expect(() =>
+      parseOfferForm(
+        form({
+          title: "Test",
+          status: "active",
+          productIds: validProductId,
+          tiers: JSON.stringify([
+            { minQty: 2, discountType: "percentage", discountValue: 100 },
+          ]),
+        }),
+      ),
+    ).toThrow(Response);
+  });
+
+  it("rejects invalid status values", () => {
+    expect(() =>
+      parseOfferForm(
+        form({
+          title: "Test",
+          status: "live",
+          productIds: validProductId,
+          tiers: validTiers,
+        }),
+      ),
+    ).toThrow(Response);
+  });
 });

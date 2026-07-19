@@ -595,9 +595,10 @@
         const offer = offers[0];
         tiersEl.innerHTML = offer.tiers
           .map((tier) => {
-            const label = tierLabel(tier);
-            const badge = formatBadge(tier);
-            const price = renderPrice(priceCents, tier, currency);
+            const minQty = Math.max(1, Math.floor(Number(tier.minQty)) || 1);
+            const label = tierLabel({ ...tier, minQty });
+            const badge = formatBadge({ ...tier, minQty });
+            const price = renderPrice(priceCents, { ...tier, minQty }, currency);
             const showBadge =
               tier.discountType === "percentage"
                 ? tier.discountValue > 0
@@ -607,7 +608,7 @@
               <button
                 type="button"
                 class="bundlestack-widget__tier"
-                data-min-qty="${tier.minQty}"
+                data-min-qty="${minQty}"
                 aria-pressed="false"
               >
                 <span class="bundlestack-widget__tier-radio" aria-hidden="true"></span>

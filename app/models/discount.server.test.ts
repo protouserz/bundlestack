@@ -48,4 +48,12 @@ describe("isOfferDiscountTitle", () => {
   it("ignores unrelated discounts", () => {
     expect(isOfferDiscountTitle("Summer sale 20% off", offer)).toBe(false);
   });
+
+  it("does not match bare offer title prefixes", () => {
+    const saleOffer = { ...offer, title: "Sale" };
+    expect(isOfferDiscountTitle("Sale 20% off everything", saleOffer)).toBe(
+      false,
+    );
+    expect(isOfferDiscountTitle("Sale · storewide", saleOffer)).toBe(false);
+  });
 });

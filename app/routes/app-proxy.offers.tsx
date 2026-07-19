@@ -59,7 +59,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       return new Response(JSON.stringify({ badges }), {
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+          // Shop-scoped config — avoid shared public caches that key poorly.
+          "Cache-Control": "private, max-age=60",
+          Vary: "Cookie",
         },
       });
     } catch {
@@ -86,7 +88,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return new Response(JSON.stringify({ offers }), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
+      "Cache-Control": "private, max-age=120",
+      Vary: "Cookie",
     },
   });
 };

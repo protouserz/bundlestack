@@ -21,6 +21,7 @@ function parseConfig(value: unknown): FunctionConfig | null {
 }
 
 function bestTier(tiers: QuantityTier[], quantity: number): QuantityTier | null {
+  const MAX_PERCENT = 50;
   const eligible = tiers
     .filter(
       (tier) =>
@@ -28,6 +29,7 @@ function bestTier(tiers: QuantityTier[], quantity: number): QuantityTier | null 
         Number.isFinite(tier.discountValue) &&
         tier.minQty > 0 &&
         tier.discountValue > 0 &&
+        tier.discountValue <= MAX_PERCENT &&
         quantity >= tier.minQty,
     )
     .sort((a, b) => b.minQty - a.minQty || b.discountValue - a.discountValue);

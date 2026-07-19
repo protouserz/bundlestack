@@ -1,11 +1,15 @@
 import { Link } from "react-router";
-import type { listOffers } from "../../models/bundle.server";
+import type {
+  listOffers,
+  OfferThumbnail,
+} from "../../models/bundle.server";
 import styles from "./dashboard.module.css";
 
 type Offer = Awaited<ReturnType<typeof listOffers>>[number];
 
 type OffersTableProps = {
   offers: Offer[];
+  thumbnails?: Record<string, OfferThumbnail>;
 };
 
 function discountTypeLabel(offer: Offer) {
@@ -22,7 +26,10 @@ function formatDate(value: string | Date) {
   });
 }
 
-export function OffersTable({ offers }: OffersTableProps) {
+export function OffersTable({
+  offers,
+  thumbnails = {},
+}: OffersTableProps) {
   const recentOffers = [...offers]
     .sort(
       (a, b) =>
@@ -57,36 +64,53 @@ export function OffersTable({ offers }: OffersTableProps) {
                 </tr>
               </thead>
               <tbody>
-                {recentOffers.map((offer) => (
-                  <tr key={offer.id}>
-                    <td>
-                      <div className={styles.offerCell}>
-                        <div className={styles.topThumb} aria-hidden="true" />
-                        <span>{offer.title}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.statusBadge} ${
-                          offer.status === "active"
-                            ? styles.statusActive
-                            : styles.statusDraft
-                        }`}
-                      >
-                        {offer.status}
-                      </span>
-                    </td>
-                    <td>{offer.productIds.length}</td>
-                    <td>{discountTypeLabel(offer)}</td>
-                    <td>{formatDate(offer.createdAt)}</td>
-                    <td>{offer.discountUses ?? 0}</td>
-                    <td>
-                      <Link className={styles.panelLink} to={`/app/offers/${offer.id}`}>
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {recentOffers.map((offer) => {
+                  const thumb = thumbnails[offer.id];
+                  return (
+                    <tr key={offer.id}>
+                      <td>
+                        <div className={styles.offerCell}>
+                          <div className={styles.topThumb} aria-hidden="true">
+                            {thumb ? (
+                              <img
+                                className={styles.topThumbImage}
+                                src={thumb.imageUrl}
+                                alt=""
+                                width={40}
+                                height={40}
+                                loading="lazy"
+                              />
+                            ) : null}
+                          </div>
+                          <span>{offer.title}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          className={`${styles.statusBadge} ${
+                            offer.status === "active"
+                              ? styles.statusActive
+                              : styles.statusDraft
+                          }`}
+                        >
+                          {offer.status}
+                        </span>
+                      </td>
+                      <td>{offer.productIds.length}</td>
+                      <td>{discountTypeLabel(offer)}</td>
+                      <td>{formatDate(offer.createdAt)}</td>
+                      <td>{offer.discountUses ?? 0}</td>
+                      <td>
+                        <Link
+                          className={styles.panelLink}
+                          to={`/app/offers/${offer.id}`}
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

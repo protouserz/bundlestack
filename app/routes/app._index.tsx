@@ -19,6 +19,7 @@ import styles from "../components/dashboard/dashboard.module.css";
 import { toShopifyAdminProtocol } from "../components/AdminLink";
 import {
   ensureShopSettings,
+  fetchOfferThumbnails,
   getShopSettings,
   getShopStats,
   listOffers,
@@ -113,10 +114,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const offers = await listOffers(shop);
 
-  const [settings, health, stats] = await Promise.all([
+  const [settings, health, stats, offerThumbnails] = await Promise.all([
     getShopSettings(shop),
     getShopHealth(admin, shop, offers),
     getShopStats(shop, offers),
+    fetchOfferThumbnails(admin, offers),
   ]);
 
   const requestUrl = new URL(request.url);
@@ -161,6 +163,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     billing: billingSummary,
     health,
     offers,
+    offerThumbnails,
     onboardingDone: settings.onboardingDone,
     themeEditorUrl: health.themeEditorUrl,
     syncFeedback: readSyncFeedback(request),
@@ -253,6 +256,7 @@ export default function Dashboard() {
     billing,
     health,
     offers,
+    offerThumbnails,
     onboardingDone,
     themeEditorUrl,
     syncFeedback,
@@ -338,10 +342,10 @@ export default function Dashboard() {
 
         <div className={styles.midRow}>
           <RevenueChart offers={offers} />
-          <TopOffersList offers={offers} />
+          <TopOffersList offers={offers} thumbnails={offerThumbnails} />
         </div>
 
-        <OffersTable offers={offers} />
+        <OffersTable offers={offers} thumbnails={offerThumbnails} />
 
         <div className={styles.panel}>
           <h2 className={styles.panelTitle}>System checks</h2>

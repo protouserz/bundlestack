@@ -3,8 +3,14 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { useEffect, useRef } from "react";
-import { Link, redirect, useFetcher, useLoaderData } from "react-router";
+import { Suspense, useEffect, useRef } from "react";
+import {
+  Await,
+  Link,
+  redirect,
+  useFetcher,
+  useLoaderData,
+} from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -26,14 +32,21 @@ import {
   resolveCurrentBillingPlan,
   setOnboardingDone,
   setShopBillingPlan,
+  type OfferThumbnail,
 } from "../models/bundle.server";
 import {
   getShopHealth,
   syncAllActiveOfferDiscounts,
   type HealthFixAction,
+  type ShopHealth,
 } from "../models/health.server";
 import { syncDiscountUsesForShop } from "../models/usage.server";
 import { SButton, SPage } from "../components/polaris";
+
+function themeEditorUrlForShop(shop: string) {
+  const shopHandle = shop.replace(".myshopify.com", "");
+  return `https://admin.shopify.com/store/${shopHandle}/themes/current/editor?context=apps`;
+}
 
 type FixResult = {
   success: boolean;
@@ -114,11 +127,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const offers = await listOffers(shop);
 
-  const [settings, health, stats, offerThumbnails] = await Promise.all([
+  // Critical path: settings + stats. Health (Admin GraphQL) and product
+  // thumbnails stream in after first paint via <Await>.
+  const [settings, stats] = await Promise.all([
     getShopSettings(shop),
-    getShopHealth(admin, shop, offers),
     getShopStats(shop, offers),
-    fetchOfferThumbnails(admin, offers),
   ]);
 
   const requestUrl = new URL(request.url);
@@ -161,11 +174,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return {
     stats,
     billing: billingSummary,
-    health,
+    health: getShopHealth(admin, shop, offers),
     offers,
-    offerThumbnails,
+    offerThumbnails: fetchOfferThumbnails(admin, offers),
     onboardingDone: settings.onboardingDone,
-    themeEditorUrl: health.themeEditorUrl,
+    themeEditorUrl: themeEditorUrlForShop(shop),
     syncFeedback: readSyncFeedback(request),
   };
 };
@@ -250,6 +263,47 @@ function formatDateRange() {
   return `${formatter.format(start)} – ${formatter.format(end)}`;
 }
 
+function HealthChecksPanel({
+  health,
+  fixFetcher,
+}: {
+  health: ShopHealth;
+  fixFetcher: ReturnType<typeof useFetcher<typeof action>>;
+}) {
+  return (
+    <div className={styles.panel}>
+      <h2 className={styles.panelTitle}>System checks</h2>
+
+      <div className={styles.healthChecks}>
+        {health.checks.map((check) => (
+          <div key={check.id} className={styles.healthCheckRow}>
+            <div className={styles.healthCheckMeta}>
+              <p className={styles.healthCheckLabel}>{check.label}</p>
+              <p className={styles.healthCheckMessage}>{check.message}</p>
+            </div>
+            <s-stack direction="inline" gap="base">
+              <s-badge
+                tone={
+                  check.status === "ok"
+                    ? "success"
+                    : check.status === "warning"
+                      ? "warning"
+                      : "critical"
+                }
+              >
+                {check.status}
+              </s-badge>
+              {check.fix ? (
+                <HealthCheckFixButton fix={check.fix} fetcher={fixFetcher} />
+              ) : null}
+            </s-stack>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const {
     stats,
@@ -322,12 +376,31 @@ export default function Dashboard() {
 
         <ThemeWidgetStatus themeEditorUrl={themeEditorUrl} />
 
-        <DashboardMetrics
-          activeOffers={stats.activeOffers}
-          totalOffers={stats.totalOffers}
-          discountUses={stats.totalDiscountUses}
-          health={health}
-        />
+        <Suspense
+          fallback={
+            <DashboardMetrics
+              activeOffers={stats.activeOffers}
+              totalOffers={stats.totalOffers}
+              discountUses={stats.totalDiscountUses}
+              health={{
+                checks: [],
+                overall: "attention",
+                themeEditorUrl,
+              }}
+            />
+          }
+        >
+          <Await resolve={health}>
+            {(resolvedHealth: ShopHealth) => (
+              <DashboardMetrics
+                activeOffers={stats.activeOffers}
+                totalOffers={stats.totalOffers}
+                discountUses={stats.totalDiscountUses}
+                health={resolvedHealth}
+              />
+            )}
+          </Await>
+        </Suspense>
 
         <statsFetcher.Form method="post">
           <input type="hidden" name="intent" value="refresh-stats" />
@@ -342,44 +415,42 @@ export default function Dashboard() {
 
         <div className={styles.midRow}>
           <RevenueChart offers={offers} />
-          <TopOffersList offers={offers} thumbnails={offerThumbnails} />
+          <Suspense
+            fallback={<TopOffersList offers={offers} thumbnails={{}} />}
+          >
+            <Await resolve={offerThumbnails}>
+              {(thumbs: Record<string, OfferThumbnail>) => (
+                <TopOffersList offers={offers} thumbnails={thumbs} />
+              )}
+            </Await>
+          </Suspense>
         </div>
 
-        <OffersTable offers={offers} thumbnails={offerThumbnails} />
+        <Suspense fallback={<OffersTable offers={offers} thumbnails={{}} />}>
+          <Await resolve={offerThumbnails}>
+            {(thumbs: Record<string, OfferThumbnail>) => (
+              <OffersTable offers={offers} thumbnails={thumbs} />
+            )}
+          </Await>
+        </Suspense>
 
-        <div className={styles.panel}>
-          <h2 className={styles.panelTitle}>System checks</h2>
-
-          <div className={styles.healthChecks}>
-            {health.checks.map((check) => (
-              <div key={check.id} className={styles.healthCheckRow}>
-                <div className={styles.healthCheckMeta}>
-                  <p className={styles.healthCheckLabel}>{check.label}</p>
-                  <p className={styles.healthCheckMessage}>{check.message}</p>
-                </div>
-                <s-stack direction="inline" gap="base">
-                  <s-badge
-                    tone={
-                      check.status === "ok"
-                        ? "success"
-                        : check.status === "warning"
-                          ? "warning"
-                          : "critical"
-                    }
-                  >
-                    {check.status}
-                  </s-badge>
-                  {check.fix ? (
-                    <HealthCheckFixButton
-                      fix={check.fix}
-                      fetcher={fixFetcher}
-                    />
-                  ) : null}
-                </s-stack>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Suspense
+          fallback={
+            <div className={styles.panel}>
+              <h2 className={styles.panelTitle}>System checks</h2>
+              <p className={styles.metricSubtext}>Running health checks…</p>
+            </div>
+          }
+        >
+          <Await resolve={health}>
+            {(resolvedHealth: ShopHealth) => (
+              <HealthChecksPanel
+                health={resolvedHealth}
+                fixFetcher={fixFetcher}
+              />
+            )}
+          </Await>
+        </Suspense>
 
         <p className={styles.metricSubtext}>
           Current plan: <strong>{billing.planLabel}</strong>

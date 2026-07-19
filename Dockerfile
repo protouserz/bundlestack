@@ -11,8 +11,8 @@ COPY . .
 
 ENV NODE_ENV=production
 ENV PORT=3000
-# Render free tier has no persistent volume — DB file lives in container (resets on redeploy)
-ENV DATABASE_URL=file:./prisma/production.sqlite
+# DATABASE_URL is injected by the host (Render Postgres / Fly secrets). Do not
+# bake a SQLite path into the image — ephemeral container disks lose sessions.
 
 RUN npx prisma generate && npm run build && npm prune --omit=dev
 

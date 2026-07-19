@@ -2,13 +2,16 @@ services:
   - type: web
     name: bundlestack
     runtime: docker
-    plan: free
+    # Starter keeps the instance warm so app-proxy (storefront) is not cold-started.
+    plan: starter
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:./prisma/production.sqlite
+        fromDatabase:
+          name: bundlestack-db
+          property: connectionString
       - key: SCOPES
         value: read_products,write_discounts,read_discounts
       - key: SUPPORT_EMAIL
@@ -21,3 +24,8 @@ services:
         sync: false
       - key: SHOPIFY_API_SECRET
         sync: false
+
+databases:
+  - name: bundlestack-db
+    plan: basic-256mb
+    postgresMajorVersion: "16"

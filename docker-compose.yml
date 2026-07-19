@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: bundlestack
+      POSTGRES_PASSWORD: bundlestack
+      POSTGRES_DB: bundlestack
+    volumes:
+      - bundlestack_pg:/var/lib/postgresql/data
+
+volumes:
+  bundlestack_pg:

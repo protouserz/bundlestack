@@ -42,7 +42,7 @@ fly secrets set \
   SHOPIFY_API_SECRET=your_secret \
   SCOPES=read_products,write_discounts,read_discounts \
   SHOPIFY_APP_URL=https://bundlestack.fly.dev \
-  DATABASE_URL=file:/data/production.sqlite \
+  DATABASE_URL=postgresql://USER:PASS@HOST/bundlestack \
   -a bundlestack
 
 fly deploy -a bundlestack
@@ -54,8 +54,8 @@ Your app will be at **https://bundlestack.fly.dev** (or your chosen app name).
 
 1. Build: `npm run build`
 2. Start: `npm run docker-start` (runs migrations + server)
-3. Set env vars from `.env.example`
-4. Mount persistent storage for SQLite at `DATABASE_URL`
+3. Set env vars from `.env.example` (Postgres `DATABASE_URL` required)
+4. Prefer Render Blueprint (`render.yaml`: Starter web + Postgres) or Neon + always-on host
 
 ## Step 2 — Update app URLs
 

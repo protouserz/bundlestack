@@ -23,17 +23,19 @@ Shopify app for **quantity breaks and bundle discounts** — the Kaching playboo
 ```bash
 cd ~/Projects/bundlestack
 npm install
-npx prisma migrate dev --name init
+docker compose up -d   # local Postgres
+cp .env.example .env   # then fill Shopify credentials
+npx prisma migrate deploy
 ```
 
-Create a `.env` file (Shopify CLI generates this when you link the app):
+Create a `.env` file (Shopify CLI generates most values when you link the app):
 
 ```env
 SHOPIFY_API_KEY=
 SHOPIFY_API_SECRET=
 SCOPES=read_products,write_discounts,read_discounts
 SHOPIFY_APP_URL=
-DATABASE_URL=file:./prisma/dev.sqlite
+DATABASE_URL=postgresql://bundlestack:bundlestack@localhost:5432/bundlestack
 ```
 
 Copy from `.env.example`. Shopify CLI generates most values when you link the app.

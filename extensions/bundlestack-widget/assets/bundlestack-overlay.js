@@ -129,14 +129,20 @@
     const proxyPath =
       config?.dataset.proxyPath || "/apps/bundlestack/offers";
 
-    fetch(`${proxyPath}?badges=1&format=2`, {
+    const url = `${proxyPath}?badges=1&format=2`;
+    const fetchOpts = {
       credentials: "same-origin",
       headers: { Accept: "application/json" },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
+    };
+    const fetchJson =
+      window.__bundlestackFetchJson ||
+      ((path, options) =>
+        fetch(path, options).then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        }));
+
+    fetchJson(url, fetchOpts)
       .then((data) => {
         const badges = data.badges || [];
         if (badges.length === 0) return;
@@ -153,14 +159,43 @@
         scan(byHandle, byProductId);
 
         let timer = null;
-        const observer = new MutationObserver(() => {
+        let quietTimer = null;
+        const QUIET_MS = 45000;
+
+        function scheduleDisconnect(observer) {
+          if (quietTimer) clearTimeout(quietTimer);
+          quietTimer = setTimeout(() => observer.disconnect(), QUIET_MS);
+        }
+
+        function mutationsAddProductLinks(mutations) {
+          for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+              if (node.nodeType !== 1) continue;
+              if (node.classList?.contains("bundlestack-overlay-pill")) {
+                continue;
+              }
+              if (
+                node.matches?.('a[href*="/products/"]') ||
+                node.querySelector?.('a[href*="/products/"]')
+              ) {
+                return true;
+              }
+            }
+          }
+          return false;
+        }
+
+        const observer = new MutationObserver((mutations) => {
+          if (!mutationsAddProductLinks(mutations)) return;
+          scheduleDisconnect(observer);
           if (timer) return;
           timer = setTimeout(() => {
             timer = null;
             scan(byHandle, byProductId);
-          }, 300);
+          }, 500);
         });
         observer.observe(document.body, { childList: true, subtree: true });
+        scheduleDisconnect(observer);
       })
       .catch(() => {});
   }

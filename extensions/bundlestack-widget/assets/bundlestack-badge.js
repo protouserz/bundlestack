@@ -63,12 +63,16 @@
       return;
     }
 
-    fetch(`${proxyPath}?product_id=${encodeURIComponent(productId)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
+    const url = `${proxyPath}?product_id=${encodeURIComponent(productId)}`;
+    const fetchJson =
+      window.__bundlestackFetchJson ||
+      ((path) =>
+        fetch(path).then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        }));
+
+    fetchJson(url).then((data) => {
         const tiers = data.offers?.[0]?.tiers || [];
         const text = badgeText(tiers);
 

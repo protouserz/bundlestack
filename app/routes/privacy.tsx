@@ -38,8 +38,9 @@ export default function PrivacyPolicy() {
         <h2>Data retention & deletion</h2>
         <p>
           When you uninstall BundleStack, we delete Shopify discounts created by
-          the app and remove your offer data. A <code>shop/redact</code> compliance
-          webhook erases remaining shop records and OAuth sessions within 48 hours
+          the app and remove OAuth sessions. Offer configuration is retained briefly
+          so a reinstall can restore it, then a <code>shop/redact</code> compliance
+          webhook erases remaining shop records (including offers) within 48 hours
           of uninstall.
         </p>
       </section>

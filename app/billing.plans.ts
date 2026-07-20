@@ -41,7 +41,7 @@ export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
     "Everything in Free",
     "Email support",
     "Suggested for ~500 discount redemptions / month",
-    "Clean uninstall removes discounts & data",
+    "Clean uninstall removes discounts; offers erased on shop/redact",
   ],
   scale: [
     "Everything in Starter",

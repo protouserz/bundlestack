@@ -18,7 +18,17 @@ Production needs **always-on hosting** and **Postgres**. Ephemeral SQLite on fre
 
 `DATABASE_URL` is wired automatically from `bundlestack-db`.
 
-**Migration note:** Switching from SQLite wipes previous local/prod SQLite data. Reinstall the app on each store so Shopify creates a fresh offline session.
+## Data durability (offers must survive deploys)
+
+- Production uses **one persistent Postgres** (`bundlestack-db`). Deploys run
+  `prisma migrate deploy`, which applies **additive** schema changes only — it
+  does **not** wipe tables or offers.
+- Never replace `DATABASE_URL` with a new empty database, never run
+  `prisma migrate reset` in production, and never switch back to ephemeral SQLite.
+- Schema changes go in a **new** migration folder under `prisma/migrations/` —
+  do not delete or rewrite applied migrations.
+- Uninstall removes discounts + sessions immediately; offer rows stay until
+  Shopify's `shop/redact` (~48h) so a quick reinstall can restore them.
 
 ## Local development
 

@@ -488,10 +488,20 @@ export async function cleanupShopData(shop: string) {
   await prisma.shopSettings.deleteMany({ where: { shop } });
 }
 
-/** GDPR shop/redact and full shop data removal (offers, settings, OAuth sessions). */
+/** Drop OAuth sessions only — keep offers/settings for a possible reinstall. */
+export async function clearShopSessions(shop: string) {
+  await prisma.session.deleteMany({ where: { shop } });
+}
+
+/**
+ * Full shop erasure for GDPR `shop/redact` (and similar).
+ * Offers/settings are intentionally NOT deleted on `app/uninstalled` so a
+ * quick reinstall after a deploy or accidental uninstall can restore them.
+ * Shopify still requires complete deletion when `shop/redact` arrives (~48h).
+ */
 export async function redactShopRecords(shop: string) {
   await cleanupShopData(shop);
-  await prisma.session.deleteMany({ where: { shop } });
+  await clearShopSessions(shop);
 }
 
 export async function listOffersRaw(shop: string) {

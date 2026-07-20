@@ -69,7 +69,7 @@ Store health monitor
 Everything in Free
 Email support
 Suggested for ~500 discount redemptions / month
-Clean uninstall removes discounts & data
+Clean uninstall removes discounts; offer data erased on shop/redact
 ```
 
 ### Growth — $14.99 / month (30-day free trial)

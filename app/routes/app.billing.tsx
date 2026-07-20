@@ -553,14 +553,17 @@ export default function BillingPage() {
           <s-stack direction="block" gap="large">
             <s-paragraph>
               When you uninstall BundleStack, we automatically remove all
-              discount rules created by the app and delete your offer data. No
-              ghost code, no hidden blocks.
+              discount rules created by the app. Offer configuration is kept
+              briefly for a possible reinstall, then deleted when Shopify sends
+              the shop data erasure request (within 48 hours).
             </s-paragraph>
 
             <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
               <s-stack direction="block" gap="base">
                 <s-text>✓ All BundleStack automatic discounts are deleted</s-text>
-                <s-text>✓ Offer configuration is removed from our database</s-text>
+                <s-text>
+                  ✓ Offer data is erased on Shopify&apos;s shop/redact webhook
+                </s-text>
                 <s-text>
                   ✓ Remove the theme block:{" "}
                   <a

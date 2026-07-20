@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs } from "react-router";
-import { redactShopRecords } from "../models/bundle.server";
+import { clearShopSessions } from "../models/bundle.server";
 import { cleanupAllShopDiscounts } from "../models/discount.server";
 import {
   authenticateWebhookRequest,
@@ -17,6 +17,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     console.log(`Received ${topic} webhook for ${shop}`);
   }
 
+  // Remove storefront discounts and OAuth sessions immediately. Keep offer
+  // configuration until Shopify's shop/redact (~48h) so deploys / accidental
+  // reinstalls do not wipe merchant work.
   if (admin) {
     try {
       await cleanupAllShopDiscounts(admin, shop);
@@ -29,7 +32,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  await redactShopRecords(shop);
+  await clearShopSessions(shop);
 
   return webhookOk();
 };

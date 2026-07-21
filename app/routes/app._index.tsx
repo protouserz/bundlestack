@@ -3,9 +3,8 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Suspense, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
-  Await,
   Link,
   redirect,
   useFetcher,
@@ -32,7 +31,6 @@ import {
   resolveCurrentBillingPlan,
   setOnboardingDone,
   setShopBillingPlan,
-  type OfferThumbnail,
 } from "../models/bundle.server";
 import {
   getShopHealth,
@@ -127,11 +125,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const offers = await listOffers(shop);
 
-  // Critical path: settings + stats. Health (Admin GraphQL) and product
-  // thumbnails stream in after first paint via <Await>.
-  const [settings, stats] = await Promise.all([
+  // Resolve all dashboard data together. Streaming these Admin API requests
+  // left embedded-app Suspense fallbacks pending indefinitely in production.
+  const [settings, stats, health, offerThumbnails] = await Promise.all([
     getShopSettings(shop),
     getShopStats(shop, offers),
+    getShopHealth(admin, shop, offers),
+    fetchOfferThumbnails(admin, offers),
   ]);
 
   const requestUrl = new URL(request.url);
@@ -174,9 +174,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return {
     stats,
     billing: billingSummary,
-    health: getShopHealth(admin, shop, offers),
+    health,
     offers,
-    offerThumbnails: fetchOfferThumbnails(admin, offers),
+    offerThumbnails,
     onboardingDone: settings.onboardingDone,
     themeEditorUrl: themeEditorUrlForShop(shop),
     syncFeedback: readSyncFeedback(request),
@@ -376,31 +376,12 @@ export default function Dashboard() {
 
         <ThemeWidgetStatus themeEditorUrl={themeEditorUrl} />
 
-        <Suspense
-          fallback={
-            <DashboardMetrics
-              activeOffers={stats.activeOffers}
-              totalOffers={stats.totalOffers}
-              discountUses={stats.totalDiscountUses}
-              health={{
-                checks: [],
-                overall: "attention",
-                themeEditorUrl,
-              }}
-            />
-          }
-        >
-          <Await resolve={health}>
-            {(resolvedHealth: ShopHealth) => (
-              <DashboardMetrics
-                activeOffers={stats.activeOffers}
-                totalOffers={stats.totalOffers}
-                discountUses={stats.totalDiscountUses}
-                health={resolvedHealth}
-              />
-            )}
-          </Await>
-        </Suspense>
+        <DashboardMetrics
+          activeOffers={stats.activeOffers}
+          totalOffers={stats.totalOffers}
+          discountUses={stats.totalDiscountUses}
+          health={health}
+        />
 
         <statsFetcher.Form method="post">
           <input type="hidden" name="intent" value="refresh-stats" />
@@ -415,42 +396,12 @@ export default function Dashboard() {
 
         <div className={styles.midRow}>
           <RevenueChart offers={offers} />
-          <Suspense
-            fallback={<TopOffersList offers={offers} thumbnails={{}} />}
-          >
-            <Await resolve={offerThumbnails}>
-              {(thumbs: Record<string, OfferThumbnail>) => (
-                <TopOffersList offers={offers} thumbnails={thumbs} />
-              )}
-            </Await>
-          </Suspense>
+          <TopOffersList offers={offers} thumbnails={offerThumbnails} />
         </div>
 
-        <Suspense fallback={<OffersTable offers={offers} thumbnails={{}} />}>
-          <Await resolve={offerThumbnails}>
-            {(thumbs: Record<string, OfferThumbnail>) => (
-              <OffersTable offers={offers} thumbnails={thumbs} />
-            )}
-          </Await>
-        </Suspense>
+        <OffersTable offers={offers} thumbnails={offerThumbnails} />
 
-        <Suspense
-          fallback={
-            <div className={styles.panel}>
-              <h2 className={styles.panelTitle}>System checks</h2>
-              <p className={styles.metricSubtext}>Running health checks…</p>
-            </div>
-          }
-        >
-          <Await resolve={health}>
-            {(resolvedHealth: ShopHealth) => (
-              <HealthChecksPanel
-                health={resolvedHealth}
-                fixFetcher={fixFetcher}
-              />
-            )}
-          </Await>
-        </Suspense>
+        <HealthChecksPanel health={health} fixFetcher={fixFetcher} />
 
         <p className={styles.metricSubtext}>
           Current plan: <strong>{billing.planLabel}</strong>

@@ -1,7 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { redirect, Form, useLoaderData } from "react-router";
-
-import { login } from "../../shopify.server";
+import { redirect } from "react-router";
 
 import styles from "./styles.module.css";
 
@@ -12,7 +10,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
-  return { showForm: Boolean(login) };
+  return null;
 };
 
 const FEATURES = [
@@ -49,8 +47,6 @@ const STEPS = [
 ];
 
 export default function App() {
-  const { showForm } = useLoaderData<typeof loader>();
-
   return (
     <div className={styles.index}>
       <section className={styles.hero}>
@@ -77,8 +73,8 @@ export default function App() {
               <span className={styles.statLabel}>to get started</span>
             </div>
             <div className={styles.stat}>
-              <span className={styles.statValue}>2 min</span>
-              <span className={styles.statLabel}>average setup</span>
+              <span className={styles.statValue}>3 steps</span>
+              <span className={styles.statLabel}>guided setup</span>
             </div>
             <div className={styles.stat}>
               <span className={styles.statValue}>Unlimited</span>
@@ -87,32 +83,14 @@ export default function App() {
           </div>
         </div>
 
-        {showForm && (
-          <div className={styles.loginCard}>
-            <h2 className={styles.loginTitle}>Open your dashboard</h2>
-            <p className={styles.loginSubtitle}>
-              Enter your Shopify store domain to log in or install BundleStack.
-            </p>
-            <Form className={styles.form} method="post" action="/auth/login">
-              <label className={styles.label}>
-                Shop domain
-                <input
-                  className={styles.input}
-                  type="text"
-                  name="shop"
-                  placeholder="your-store.myshopify.com"
-                  autoComplete="url"
-                />
-                <span className={styles.hint}>
-                  e.g. my-shop.myshopify.com
-                </span>
-              </label>
-              <button className={styles.button} type="submit">
-                Log in to BundleStack
-              </button>
-            </Form>
-          </div>
-        )}
+        <div className={styles.loginCard}>
+          <h2 className={styles.loginTitle}>Install through Shopify</h2>
+          <p className={styles.loginSubtitle}>
+            Install BundleStack from its Shopify App Store listing, then open it
+            from Apps in your Shopify admin. Installation and authentication
+            always stay on Shopify-owned surfaces.
+          </p>
+        </div>
       </section>
 
       <section className={styles.features}>

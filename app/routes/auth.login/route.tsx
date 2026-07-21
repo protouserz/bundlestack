@@ -1,49 +1,20 @@
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
-import { useState } from "react";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Form, useActionData, useLoaderData } from "react-router";
-
-import { login } from "../../shopify.server";
-import { loginErrorMessage } from "./error.server";
 import { SButton, SPage } from "../../components/polaris";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const errors = loginErrorMessage(await login(request));
-
-  return { errors };
-};
-
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const errors = loginErrorMessage(await login(request));
-
-  return {
-    errors,
-  };
-};
-
 export default function Auth() {
-  const loaderData = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
-  const [shop, setShop] = useState("");
-  const { errors } = actionData || loaderData;
-
   return (
     <AppProvider embedded={false}>
       <SPage>
-        <Form method="post">
-        <s-section heading="Log in">
-          <s-text-field
-            name="shop"
-            label="Shop domain"
-            details="example.myshopify.com"
-            value={shop}
-            onChange={(e) => setShop(e.currentTarget.value)}
-            autocomplete="on"
-            error={errors.shop}
-          ></s-text-field>
-          <SButton type="submit">Log in</SButton>
+        <s-section heading="Open BundleStack from Shopify">
+          <s-stack direction="block" gap="base">
+            <s-paragraph>
+              For your security, BundleStack installation and authentication
+              begin inside Shopify. Open Shopify Admin, select Apps, and choose
+              BundleStack.
+            </s-paragraph>
+            <SButton href="/">Back to BundleStack</SButton>
+          </s-stack>
         </s-section>
-        </Form>
       </SPage>
     </AppProvider>
   );

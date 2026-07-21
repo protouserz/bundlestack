@@ -1,5 +1,5 @@
-# Shared storefront fetch cache — loaded before badge/widget/overlay scripts.
-# Dedupes identical app-proxy GETs when multiple BundleStack assets run on one page.
+// Shared storefront fetch cache — loaded before badge/widget/overlay scripts.
+// Dedupes identical app-proxy GETs when multiple BundleStack assets run on one page.
 (function (global) {
   if (global.__bundlestackFetchJson) return;
 

@@ -7,4 +7,4 @@ handle = "bundlestack-widget"
 uid = "e0f75b12-5e3d-9f54-3850-4cc2a74bd4880f3caa18"
 
 [extensions.build]
-command = "npm exec -- terser src/bundlestack-widget.js --compress passes=3 --mangle --output assets/bundlestack-widget.js"
+command = "npm exec -- terser ../../scripts/theme/bundlestack-widget.js --compress passes=3 --mangle --output assets/bundlestack-widget.js"

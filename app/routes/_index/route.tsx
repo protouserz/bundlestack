@@ -34,7 +34,7 @@ const FEATURES = [
 const STEPS = [
   {
     title: "Install & connect",
-    text: "Add BundleStack from the Shopify App Store and authorize your store in seconds.",
+    text: "Add BundleStack from the Shopify App Store and authorize access through Shopify.",
   },
   {
     title: "Create an offer",
@@ -63,8 +63,8 @@ export default function App() {
 
           <p className={styles.text}>
             The quantity-break app built for Shopify merchants who want more AOV
-            without the complexity. Set up tiered bundle discounts in minutes —
-            no code required.
+            without the complexity. Set up tiered bundle discounts with a guided
+            workflow — no code required.
           </p>
 
           <div className={styles.stats}>

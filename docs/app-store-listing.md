@@ -1,9 +1,12 @@
 # App Store listing copy
 
-Paste these into the Shopify Partners listing form.
+Paste these into **Partners → Apps → BundleStack → Distribution → App Store listing**. Save after each field. Listing edits usually go live without a full re-review.
+
+Keep the **app name** as `BundleStack` so it matches `shopify.app.toml` (name-mismatch check). Put keywords in the tagline and intro instead.
 
 **Production URLs (Render):**
 
+- App Store listing: https://apps.shopify.com/bundlestack
 - App URL: https://bundlestack-pfee.onrender.com
 - Privacy: https://bundlestack-pfee.onrender.com/privacy
 - Support: https://bundlestack-pfee.onrender.com/support
@@ -12,29 +15,23 @@ Paste these into the Shopify Partners listing form.
 
 BundleStack
 
-## Tagline (max ~70 chars)
+## Tagline (Basic app information — not on the listing-content page; keep under 60 chars)
 
-Quantity breaks & bundle discounts that boost AOV
+Quantity breaks & volume discounts that boost AOV
 
-## App introduction (short)
+## App introduction (max 100 characters)
 
-Turn single-item orders into bigger carts with tiered quantity-break offers — Buy 2 save 10%, Buy 3 save 15%, and more. Automatic Shopify discount sync and a product-page widget included.
+Quantity breaks and volume discounts that grow order value. Buy 2 save 10%, Buy 3 save 15%, and more
 
-## App details (long description) — use paragraphs only, NO bullet lists
+## App details (max 500 characters) — paragraphs only, NO bullet lists
 
-BundleStack helps merchants grow order value with quantity-break offers that are fast to set up and easy for shoppers to understand.
+Quantity breaks and volume discounts that grow order value. Shoppers see Buy 2 save 10% or Buy 3 save 15% on the product page, then the discount applies at checkout.
 
-Merchants get unlimited tiered offers with a clean dashboard, a product picker with no manual ID copying, automatic Shopify discount sync when offers go active, a theme widget for product pages, a store health monitor with one-click fixes, and a clean uninstall that removes discounts and data.
-
-Create an offer, select products, define quantity tiers, set the offer to Active, and add the BundleStack block in the theme editor. Discounts apply automatically at checkout.
-
-Built for consumables, supplements, coffee, skincare, apparel, and any catalog where buying more should save more.
-
-Free to install. Paid plans are selected on the in-app Billing page and approved through Shopify on a 30-day cycle.
+Create an offer, pick products, set quantity tiers, and activate. BundleStack syncs Shopify discounts automatically, includes a product-page widget, a product picker with no manual IDs, store health checks, and a clean uninstall. Unlimited offers. Free to install.
 
 ## Search keywords
 
-quantity breaks, volume discount, bundle discounts, buy more save more, tiered pricing, AOV, upsell, bulk discount
+quantity breaks, volume discount, volume discounts, bundle discounts, buy more save more, tiered pricing, AOV, upsell, bulk discount, quantity break
 
 ## Support
 

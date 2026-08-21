@@ -159,6 +159,7 @@
 }
 
 .button {
+  display: inline-block;
   padding: 0.875rem 1.5rem;
   border: none;
   border-radius: 8px;
@@ -166,6 +167,8 @@
   color: #fff;
   font-size: 1rem;
   font-weight: 600;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
   margin-top: 0.5rem;
@@ -174,6 +177,11 @@
 .button:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(52, 211, 153, 0.35);
+}
+
+.button:focus-visible {
+  outline: 2px solid #6ee7b7;
+  outline-offset: 3px;
 }
 
 .features {

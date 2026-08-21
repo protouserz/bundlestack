@@ -31,6 +31,12 @@ export function PublicPageLayout({
             <span className={styles.brandName}>BundleStack</span>
           </Link>
           <nav className={styles.nav} aria-label="Public pages">
+            <a
+              href="https://apps.shopify.com/bundlestack"
+              className={styles.navLink}
+            >
+              App Store
+            </a>
             <Link to="/privacy" className={navClass("/privacy")}>
               Privacy
             </Link>
@@ -52,6 +58,13 @@ export function PublicPageLayout({
           <strong>BundleStack</strong> · Quantity breaks for Shopify
         </p>
         <p>
+          <a
+            href="https://apps.shopify.com/bundlestack"
+            className={styles.footerLink}
+          >
+            App Store
+          </a>
+          {" · "}
           <Link to="/" className={styles.footerLink}>
             Home
           </Link>

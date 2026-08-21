@@ -1,40 +1,48 @@
-# App Store listing — fix automated issues
+# App Store listing — overwrite live copy
 
-## 1. Name mismatch
+The public listing at https://apps.shopify.com/bundlestack still has truncated and broken copy. Paste the fields below into **Partners → Apps → BundleStack → Distribution → App Store listing**, then **Save**.
 
-**Problem:** Listing name is `Simple Bundle` but app config name is `BundleStack`.
+Canonical copy lives in [`docs/app-store-listing.md`](../app-store-listing.md).
 
-**Fix in Partners → Edit listing → Basic app information:**
+## Fields to replace now
 
-| Field | Must be |
-|-------|---------|
-| App name | **BundleStack** |
+| Field | Live today (wrong) | Paste this |
+|-------|--------------------|------------|
+| App name | BundleStack | **BundleStack** (keep — must match `shopify.app.toml`) |
+| Tagline | Tiered quantity-break offers with a product-page widget includ | **Quantity breaks & volume discounts that boost AOV** |
+| App introduction (max 100) | Cut off or over limit | See 100-character intro below |
+| App details (max 500) | Cut off mid-sentence | See 500-character details below |
+| Search keywords | (check Partners) | `quantity breaks, volume discount, volume discounts, bundle discounts, buy more save more, tiered pricing, AOV, upsell, bulk discount, quantity break` |
 
-The listing name and Dev Dashboard app name must match so merchants recognize the app.
-
----
-
-## 2. App details — no bullet lists
-
-**Problem:** Bulleted lists in App details do not render well on the App Store.
-
-**Replace the entire App details field with this (paragraphs only):**
-
-```
-BundleStack helps merchants grow order value with quantity-break offers that are fast to set up and easy for shoppers to understand.
-
-Merchants get unlimited tiered offers with a clean dashboard, a product picker with no manual ID copying, automatic Shopify discount sync when offers go active, a theme widget for product pages, a store health monitor with one-click fixes, and a clean uninstall that removes discounts and data.
-
-Create an offer, select products, define quantity tiers, set the offer to Active, and add the BundleStack block in the theme editor. Discounts apply automatically at checkout.
-
-Built for consumables, supplements, coffee, skincare, apparel, and any catalog where buying more should save more.
-
-Free to install. Merchants choose paid plans on the in-app Billing page and approve charges through Shopify on a 30-day cycle.
-```
+Do **not** rename the app to include “Quantity Breaks” unless you also change `name` in `shopify.app.toml` and deploy — Shopify fails a name-mismatch check otherwise.
 
 ---
 
-## 3. Screenshots — no ratings or testimonials
+## Limits (easy to miss)
+
+| Field | Max |
+|-------|-----|
+| App introduction | **100** characters |
+| App details | **500** characters |
+| Tagline | Not on this page — **Basic app information** (or App discovery) |
+
+Do not paste the long docs draft into App details. It will hit 500/500 and cut off mid-word.
+
+**App introduction (100 chars):**
+```
+Quantity breaks and volume discounts that grow order value. Buy 2 save 10%, Buy 3 save 15%, and more
+```
+
+**App details (under 500 chars):**
+```
+Quantity breaks and volume discounts that grow order value. Shoppers see Buy 2 save 10% or Buy 3 save 15% on the product page, then the discount applies at checkout.
+
+Create an offer, pick products, set quantity tiers, and activate. BundleStack syncs Shopify discounts automatically, includes a product-page widget, a product picker with no manual IDs, store health checks, and a clean uninstall. Unlimited offers. Free to install.
+```
+
+---
+
+## Screenshots — no ratings or testimonials
 
 **Problem:** Screenshots must not show star ratings, review scores, or testimonial-style content.
 
@@ -53,5 +61,5 @@ Free to install. Merchants choose paid plans on the in-app Billing page and appr
 ## After fixes
 
 1. **Save** listing
-2. Return to **App Store review** → re-run automated checks
-3. Submit when all green
+2. Hard-refresh https://apps.shopify.com/bundlestack and confirm the tagline is not truncated and “order value” is gone
+3. Search the App Store for **quantity breaks** after 24–48 hours (index lag is normal)

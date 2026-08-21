@@ -3,6 +3,8 @@ import { redirect } from "react-router";
 
 import styles from "./styles.module.css";
 
+const APP_STORE_URL = "https://apps.shopify.com/bundlestack";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
 
@@ -62,9 +64,9 @@ export default function App() {
           </h1>
 
           <p className={styles.text}>
-            The quantity-break app built for Shopify merchants who want more AOV
-            without the complexity. Set up tiered bundle discounts with a guided
-            workflow — no code required.
+            Quantity breaks and volume discounts that grow order value — Buy 2
+            save 10%, Buy 3 save 15% — with a product-page widget and automatic
+            Shopify discount sync. No code required.
           </p>
 
           <div className={styles.stats}>
@@ -84,12 +86,14 @@ export default function App() {
         </div>
 
         <div className={styles.loginCard}>
-          <h2 className={styles.loginTitle}>Install through Shopify</h2>
+          <h2 className={styles.loginTitle}>Install on Shopify</h2>
           <p className={styles.loginSubtitle}>
-            Install BundleStack from its Shopify App Store listing, then open it
-            from Apps in your Shopify admin. Installation and authentication
-            always stay on Shopify-owned surfaces.
+            Add BundleStack from the Shopify App Store, then open it from Apps
+            in your admin. Installation and authentication stay on Shopify.
           </p>
+          <a className={styles.button} href={APP_STORE_URL}>
+            Install on Shopify App Store
+          </a>
         </div>
       </section>
 
@@ -135,6 +139,10 @@ export default function App() {
           merchants who want results, not bloat
         </p>
         <p>
+          <a href={APP_STORE_URL} className={styles.footerLink}>
+            Shopify App Store
+          </a>
+          {" · "}
           <a href="/privacy" className={styles.footerLink}>
             Privacy Policy
           </a>

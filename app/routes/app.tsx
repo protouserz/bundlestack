@@ -3,14 +3,14 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from "react-router";
-import { Link, Outlet, useLoaderData, useRouteError } from "react-router";
+import { Outlet, useLoaderData, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
-import { NavMenu } from "@shopify/app-bridge-react";
 
 import { authenticate } from "../shopify.server";
 import { AppLoadingIndicator } from "../components/AppLoadingIndicator";
 import { AppSupportFooter } from "../components/AppSupportFooter";
+import { SAppNav, SNavLink } from "../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -43,15 +43,16 @@ export default function App() {
 
   return (
     <AppProvider embedded apiKey={apiKey}>
-      <NavMenu>
-        {/* rel="home" marks the landing route (BFS 4.1.4) */}
-        <Link to="/app" rel="home">
+      {/* BFS 4.1.4: admin nav via s-app-nav. rel="home" is hidden; the app
+          name in the sidebar already opens Dashboard. */}
+      <SAppNav>
+        <SNavLink href="/app" rel="home">
           Dashboard
-        </Link>
-        <Link to="/app/offers">Offers</Link>
-        <Link to="/app/billing">Billing</Link>
-        <Link to="/app/support">Support</Link>
-      </NavMenu>
+        </SNavLink>
+        <SNavLink href="/app/offers">Offers</SNavLink>
+        <SNavLink href="/app/billing">Billing</SNavLink>
+        <SNavLink href="/app/support">Support</SNavLink>
+      </SAppNav>
       <AppLoadingIndicator />
       <Outlet />
       <AppSupportFooter privacyUrl={privacyUrl} />

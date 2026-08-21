@@ -58,8 +58,23 @@
     const proxyPath = root.dataset.proxyPath;
     const textEl = root.querySelector(".bundlestack-badge__text");
 
-    if (!productId || !proxyPath || !textEl) {
+    const hideBadge = () => {
       root.classList.add("bundlestack-badge--hidden");
+      root.classList.remove("bundlestack-badge--pending");
+      root.hidden = true;
+      root.setAttribute("hidden", "");
+      root.style.setProperty("display", "none", "important");
+    };
+
+    const showBadge = () => {
+      root.classList.remove("bundlestack-badge--pending", "bundlestack-badge--hidden");
+      root.hidden = false;
+      root.removeAttribute("hidden");
+      root.style.removeProperty("display");
+    };
+
+    if (!productId || !proxyPath || !textEl) {
+      hideBadge();
       return;
     }
 
@@ -77,12 +92,12 @@
         const text = badgeText(tiers);
 
         if (!text) {
-          root.classList.add("bundlestack-badge--hidden");
+          hideBadge();
           return;
         }
 
         textEl.textContent = text;
-        root.classList.remove("bundlestack-badge--pending");
+        showBadge();
 
         // Widget may still be fetching; retry briefly so the badge can
         // become a scroll-to-offer shortcut once tiers are rendered.
@@ -98,7 +113,7 @@
         }, 500);
       })
       .catch(() => {
-        root.classList.add("bundlestack-badge--hidden");
+        hideBadge();
       });
   }
 

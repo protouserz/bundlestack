@@ -485,11 +485,17 @@
 
   function showWidget(root) {
     root.classList.remove("bundlestack-widget--pending", "bundlestack-widget--hidden");
+    root.hidden = false;
+    root.removeAttribute("hidden");
+    root.style.removeProperty("display");
   }
 
   function hideWidget(root) {
     root.classList.add("bundlestack-widget--hidden");
     root.classList.remove("bundlestack-widget--pending");
+    root.hidden = true;
+    root.setAttribute("hidden", "");
+    root.style.setProperty("display", "none", "important");
   }
 
   function whenIdle(callback) {

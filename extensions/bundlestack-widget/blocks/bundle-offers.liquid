@@ -1,13 +1,17 @@
 {% comment %}
   BundleStack quantity break widget.
   Add to product page via Theme Editor → Apps → BundleStack widget.
+  Starts fully hidden (inline + class) so empty "Loading offers" never flashes
+  when a product has no active offers.
 {% endcomment %}
 
 <script src="{{ 'bundlestack-shared.js' | asset_url }}" defer></script>
 
 <div
   id="bundlestack-widget-{{ block.id }}"
-  class="bundlestack-widget bundlestack-widget--pending"
+  class="bundlestack-widget bundlestack-widget--pending bundlestack-widget--hidden"
+  style="display:none!important"
+  hidden
   {% if product %}
     data-product-id="gid://shopify/Product/{{ product.id }}"
     data-price-cents="{{ product.selected_or_first_available_variant.price }}"
@@ -18,12 +22,7 @@
   <div class="bundlestack-widget__header">
     <p class="bundlestack-widget__title">{{ block.settings.heading }}</p>
   </div>
-  <div class="bundlestack-widget__tiers" role="group" aria-label="{{ block.settings.heading }}" aria-live="polite">
-    <p class="bundlestack-widget__loading">{{ 'bundlestack.widget.loading' | t }}</p>
-  </div>
-  <p class="bundlestack-widget__attribution">
-    {{ 'bundlestack.widget.powered_by' | t }}
-  </p>
+  <div class="bundlestack-widget__tiers" role="group" aria-label="{{ block.settings.heading }}" aria-live="polite"></div>
 </div>
 
 {% schema %}

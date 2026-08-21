@@ -1,11 +1,10 @@
 import type { ShopHealth } from "../../models/health.server";
-import type { CSSProperties } from "react";
-import styles from "./dashboard.module.css";
 import {
   Sparkline,
   buildSparklineFromCount,
   buildSparklineFromRevenue,
 } from "./Sparkline";
+import styles from "./dashboard.module.css";
 
 type DashboardMetricsProps = {
   activeOffers: number;
@@ -20,65 +19,52 @@ function healthLabel(overall: ShopHealth["overall"]) {
   return "Action required";
 }
 
-function healthScore(checks: ShopHealth["checks"]) {
-  if (checks.length === 0) return 0;
-  const okCount = checks.filter((check) => check.status === "ok").length;
-  return Math.round((okCount / checks.length) * 100);
-}
-
 export function DashboardMetrics({
   activeOffers,
   totalOffers,
   discountUses,
   health,
 }: DashboardMetricsProps) {
-  const score = healthScore(health.checks);
-
   return (
-    <div className={styles.metricsRow}>
-      <div className={styles.metricCard}>
-        <p className={styles.metricLabel}>Active offers</p>
-        <p className={styles.metricValue}>{activeOffers}</p>
-        <p className={styles.trendUp}>
-          <span aria-hidden="true">↗</span>
-          {totalOffers} total configured
-        </p>
-        <Sparkline
-          className={styles.sparkline}
-          values={buildSparklineFromCount(activeOffers)}
-        />
-      </div>
+    <s-grid gridTemplateColumns="repeat(3, minmax(0, 1fr))" gap="base">
+      <s-section heading="Active offers">
+        <s-stack direction="block" gap="small-200">
+          <s-heading>{activeOffers}</s-heading>
+          <s-paragraph>
+            {totalOffers} total configured
+          </s-paragraph>
+          <Sparkline
+            className={styles.sparkline}
+            values={buildSparklineFromCount(activeOffers)}
+          />
+        </s-stack>
+      </s-section>
 
-      <div className={styles.metricCard}>
-        <p className={styles.metricLabel}>Discount redemptions</p>
-        <p className={styles.metricValue}>{discountUses}</p>
-        <p className={styles.metricSubtext}>
-          {discountUses > 0
-            ? "Synced from Shopify automatic discounts"
-            : "Updates when shoppers use your bundle tiers"}
-        </p>
-        <Sparkline
-          className={styles.sparkline}
-          values={buildSparklineFromRevenue(discountUses)}
-        />
-      </div>
+      <s-section heading="Discount redemptions">
+        <s-stack direction="block" gap="small-200">
+          <s-heading>{discountUses}</s-heading>
+          <s-paragraph>
+            {discountUses > 0
+              ? "Synced from Shopify automatic discounts"
+              : "Updates when shoppers use your bundle tiers"}
+          </s-paragraph>
+          <Sparkline
+            className={styles.sparkline}
+            values={buildSparklineFromRevenue(discountUses)}
+          />
+        </s-stack>
+      </s-section>
 
-      <div className={styles.metricCard}>
-        <p className={styles.metricLabel}>Store health</p>
-        <p className={styles.metricValue}>{healthLabel(health.overall)}</p>
-        <p className={styles.metricSubtext}>
-          {health.overall === "healthy"
-            ? "All systems operational"
-            : "Review system checks below"}
-        </p>
-        <div
-          className={styles.healthBar}
-          style={{ "--health-score": `${score}%` } as CSSProperties}
-          aria-hidden="true"
-        >
-          <div className={styles.healthBarFill} />
-        </div>
-      </div>
-    </div>
+      <s-section heading="Store health">
+        <s-stack direction="block" gap="small-200">
+          <s-heading>{healthLabel(health.overall)}</s-heading>
+          <s-paragraph>
+            {health.overall === "healthy"
+              ? "All systems operational"
+              : "Review system checks below"}
+          </s-paragraph>
+        </s-stack>
+      </s-section>
+    </s-grid>
   );
 }

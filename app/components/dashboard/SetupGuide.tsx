@@ -54,14 +54,11 @@ export function SetupGuide({
   ];
 
   return (
-    <section className={styles.setupGuide} aria-label="Setup guide">
+    <s-section heading="Set up BundleStack">
       <div className={styles.setupGuideHeader}>
-        <div>
-          <h2 className={styles.setupGuideTitle}>Set up BundleStack</h2>
-          <p className={styles.setupGuideSubtitle}>
-            Three quick steps to launch quantity breaks on your store.
-          </p>
-        </div>
+        <p className={styles.setupGuideSubtitle}>
+          Three quick steps to launch quantity breaks on your store.
+        </p>
         <dismissFetcher.Form method="post">
           <input type="hidden" name="intent" value="dismiss-onboarding" />
           <SButton
@@ -93,6 +90,6 @@ export function SetupGuide({
           </li>
         ))}
       </ol>
-    </section>
+    </s-section>
   );
 }

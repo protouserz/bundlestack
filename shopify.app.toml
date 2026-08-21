@@ -29,12 +29,18 @@ api_version = "2026-07"
   topics = [ "app_subscriptions/update" ]
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+# Least privilege for Built for Shopify / App Store distribution.
+# Quantity breaks only need product reads and discount Function writes.
+# Do not add order or customer-account scopes unless that surface is shipped
+# (those scopes also filter install eligibility).
 scopes = "read_discounts,read_products,write_discounts"
 
 [access.admin]
 embedded_app_direct_api_access = true
 direct_api_mode = "offline"
+
+[pos]
+embedded = false
 
 [auth]
 redirect_urls = [

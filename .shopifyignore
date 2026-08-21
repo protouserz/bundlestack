@@ -1,0 +1,5 @@
+# Do not ship the customer-account order-tracking experiment.
+# It requires order scopes and marks the listing as Customer accounts,
+# which filters installs and fails least-privilege Built for Shopify checks.
+extensions/bundlestack-order-tracking
+extensions/bundlestack-order-tracking/**

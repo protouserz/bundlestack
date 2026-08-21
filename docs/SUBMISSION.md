@@ -69,9 +69,11 @@ These are **not** instant code scans. Shopify collects **telemetry** when a merc
 | Enable app embedding | Done (`embedded = true` in `shopify.app.toml`) | — |
 | Session token authentication | Done (`authenticate.admin` + App Bridge session tokens) | Use the app in the admin iframe so Shopify telemetry can confirm (same steps as above) |
 | Latest App Bridge on every page | Done — CDN `app-bridge.js` + `shopify-api-key` meta in [`app/root.tsx`](../app/root.tsx) `<head>`, plus `AppProvider` on `/app` | Confirm Network shows `cdn.shopify.com/shopifycloud/app-bridge.js`, then wait 2–48h |
+| Admin nav menu | Done — `s-app-nav` with `rel="home"` on `/app` | Open the app in admin and confirm Offers / Billing / Support appear in the Shopify sidebar |
 | Theme app extensions | Done (`extensions/bundlestack-widget`) | — |
+| Least-privilege scopes | Done — `read_products,read_discounts,write_discounts` | Deploy config so Partners matches toml (do not add `read_orders`) |
 | Well-integrated app | Done — primary flows under `/app/*`; OAuth-only login at `/auth/login` (no separate BundleStack account) | Remains available for Shopify evaluation when you apply |
-| Shopify design guidelines | Polaris App Home shell, `rel="home"` nav, no custom green primary chrome / admin emojis | Remains available for Shopify evaluation when you apply |
+| Shopify design guidelines | Polaris App Home `s-page` / `s-section` / `s-app-nav`, no custom green primary chrome | Remains available for Shopify evaluation when you apply |
 | Doesn't use Asset API | Done — theme extension only; scopes exclude `write_themes`; no Asset REST usage | Remains available for Shopify evaluation when you apply |
 
 Also enabled in config (deploy with `shopify app deploy`):
@@ -80,6 +82,9 @@ Also enabled in config (deploy with `shopify app deploy`):
 [access.admin]
 embedded_app_direct_api_access = true
 direct_api_mode = "offline"
+
+[pos]
+embedded = false
 ```
 
 After deploy: open production app in admin → Dashboard → Offers → Billing for a few minutes → recheck Distribution → apply for Built for Shopify when embedded items are green.

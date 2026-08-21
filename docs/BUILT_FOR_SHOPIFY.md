@@ -7,19 +7,22 @@ Track BundleStack against [Built for Shopify requirements](https://shopify.dev/d
 | Area | Status | Notes |
 |------|--------|-------|
 | Embedded admin + session tokens | Pass (code) | App Bridge in `app/root.tsx` `<head>` + `AppProvider` |
+| Admin nav (`s-app-nav`) | Pass (code) | `app/routes/app.tsx` — Offers / Billing / Support; Dashboard is `rel="home"` |
 | Theme app extension / clean uninstall | Pass (code) | `extensions/bundlestack-widget`; uninstall removes discounts + DB |
+| Theme block status (`app.extensions()`) | Pass (code) | Homepage reports published-theme activation for BundleStack blocks |
 | GraphQL Admin API (no REST) | Pass (code) | Admin GraphQL only |
 | Discount Functions / APIs (5.5.1) | Pass (code) | `extensions/bundlestack-qb-discount` + `discountAutomaticAppCreate` |
 | No draft-order discounts (5.5.2) | Pass (code) | No `draftOrder*` usage |
 | Single redeem code / bulk add (5.5.3) | Pass (N/A) | Automatic Function discounts only (no redeem codes) |
 | Create-discount deep link (5.5.4) | Pass (code) | `bundlestack-discount-link` → `/app/offers/new` |
-| Least-privilege scopes | Pass (code) | `read_products,read_discounts,write_discounts` |
+| Least-privilege scopes | Pass (code) | `read_products,read_discounts,write_discounts` — no order/customer scopes |
+| POS embedding | Pass (code) | `[pos] embedded = false` so the listing stays Online Store only |
 | Current API version | Pass (code) | `2026-07` / `ApiVersion.July26` |
 | Contextual Save Bar | Pass (code) | Offer create/edit forms use `data-save-bar` |
 | Admin deep links (`_top` / `shopify://`) | Pass (code) | Theme editor CTAs |
 | Setup guide (dismissible) | Pass (code) | Dashboard checklist |
 | `app_subscriptions/update` webhook | Pass (code) | Syncs local billing plan |
-| Storefront performance | Pass (code hygiene) | Theme app block; schema CDN assets; product-only; deferred fetch |
+| Storefront performance | Pass (code hygiene) | Theme app block; schema CDN assets; product-only; deferred fetch; widget JS under 10 KB |
 | Admin Web Vitals (LCP/CLS/INP) | Partner / traffic | Needs ≥100 samples / 28 days |
 | ≥50 net paid installs | Partner | Distribution checklist |
 | ≥5 reviews + rating floor | Partner | Ask after first successful checkout discount |

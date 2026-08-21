@@ -271,9 +271,7 @@ function HealthChecksPanel({
   fixFetcher: ReturnType<typeof useFetcher<typeof action>>;
 }) {
   return (
-    <div className={styles.panel}>
-      <h2 className={styles.panelTitle}>System checks</h2>
-
+    <s-section heading="System checks">
       <div className={styles.healthChecks}>
         {health.checks.map((check) => (
           <div key={check.id} className={styles.healthCheckRow}>
@@ -300,7 +298,7 @@ function HealthChecksPanel({
           </div>
         ))}
       </div>
-    </div>
+    </s-section>
   );
 }
 

@@ -15,7 +15,47 @@ type AppExtension = {
   activations?: ThemeExtensionActivation[];
 };
 
-const BLOCK_HANDLE = "bundle-offers";
+type AppExtensionsHost = {
+  app?: {
+    extensions?: () => Promise<AppExtension[]>;
+  };
+};
+
+/** Theme app block handles in `extensions/bundlestack-widget/blocks`. */
+const THEME_BLOCK_HANDLES = [
+  "bundle-offers",
+  "bundle-deal-badge",
+  "bundle-badge-overlay",
+];
+
+async function loadThemeExtensions(
+  shopify: ReturnType<typeof useAppBridge>,
+): Promise<AppExtension[]> {
+  const fromBridge = (shopify as unknown as AppExtensionsHost).app;
+  if (fromBridge?.extensions) {
+    return fromBridge.extensions();
+  }
+
+  const fromWindow = (window as Window & { shopify?: AppExtensionsHost }).shopify
+    ?.app;
+  if (fromWindow?.extensions) {
+    return fromWindow.extensions();
+  }
+
+  return [];
+}
+
+function pickPrimaryBlock(activations: ThemeExtensionActivation[]) {
+  const matching = activations.filter((activation) =>
+    THEME_BLOCK_HANDLES.includes(activation.handle ?? ""),
+  );
+  return (
+    matching.find((activation) => activation.status === "active") ??
+    matching.find((activation) => activation.status === "available") ??
+    matching[0] ??
+    null
+  );
+}
 
 export function ThemeWidgetStatus({
   themeEditorUrl,
@@ -31,24 +71,13 @@ export function ThemeWidgetStatus({
 
     async function loadExtensionStatus() {
       try {
-        const appApi = (
-          shopify as unknown as {
-            app?: { extensions?: () => Promise<AppExtension[]> };
-          }
-        ).app;
-
-        if (!appApi?.extensions) {
-          if (!cancelled) setStatus("unknown");
-          return;
-        }
-
-        const extensions = await appApi.extensions();
+        const extensions = await loadThemeExtensions(shopify);
         const themeExtension = extensions.find(
-          (extension) => extension.type === "theme_app_extension",
+          (extension) =>
+            extension.type === "theme_app_extension" ||
+            extension.type === "theme",
         );
-        const block = themeExtension?.activations?.find(
-          (activation) => activation.handle === BLOCK_HANDLE,
-        );
+        const block = pickPrimaryBlock(themeExtension?.activations ?? []);
 
         if (cancelled) return;
 
@@ -73,30 +102,28 @@ export function ThemeWidgetStatus({
 
   if (status === "loading") {
     return (
-      <div className="bundlestack-theme-status">
+      <s-section heading="Theme widget">
         <s-banner tone="info">
           <s-text>Checking theme widget status…</s-text>
         </s-banner>
-      </div>
+      </s-section>
     );
   }
 
   if (status === "active") {
     return (
-      <div className="bundlestack-theme-status">
+      <s-section heading="Theme widget">
         <s-banner tone="success">
-          <s-stack direction="block" gap="base">
-            <s-text>
-              <strong>{blockName}</strong> is active on your published theme.
-            </s-text>
-          </s-stack>
+          <s-text>
+            <strong>{blockName}</strong> is active on your published theme.
+          </s-text>
         </s-banner>
-      </div>
+      </s-section>
     );
   }
 
   return (
-    <div className="bundlestack-theme-status">
+    <s-section heading="Theme widget">
       <s-banner tone="warning">
         <s-stack direction="block" gap="base">
           <s-text>
@@ -109,6 +136,6 @@ export function ThemeWidgetStatus({
           </AdminDeepLinkButton>
         </s-stack>
       </s-banner>
-    </div>
+    </s-section>
   );
 }

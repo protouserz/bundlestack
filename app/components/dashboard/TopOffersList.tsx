@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import type {
-  listOffers,
-  OfferThumbnail,
+import {
+  isCatalogOffer,
+  type listOffers,
+  type OfferThumbnail,
 } from "../../models/bundle.server";
 import styles from "./dashboard.module.css";
 
@@ -59,9 +60,12 @@ export function TopOffersList({
                 <div className={styles.topMeta}>
                   <p className={styles.topName}>{offer.title}</p>
                   <p className={styles.topDetail}>
-                    {offer.productIds.length} product
-                    {offer.productIds.length === 1 ? "" : "s"} ·{" "}
-                    {tierSummary(offer)}
+                    {isCatalogOffer(offer.productIds)
+                      ? "All products"
+                      : `${offer.productIds.length} product${
+                          offer.productIds.length === 1 ? "" : "s"
+                        }`}{" "}
+                    · {tierSummary(offer)}
                   </p>
                 </div>
                 <span className={styles.topRevenue}>

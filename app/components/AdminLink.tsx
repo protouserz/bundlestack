@@ -45,6 +45,18 @@ export function toShopifyAdminProtocol(url: string): string {
   return url;
 }
 
+export const THEME_WIDGET_EMBED_HANDLE = "bundle-widget-embed";
+
+export function themeEmbedActivateUrl(shop: string, apiKey: string) {
+  const storeHandle = shop.replace(/\.myshopify\.com$/i, "");
+  return `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&template=product&activateAppId=${apiKey}/${THEME_WIDGET_EMBED_HANDLE}`;
+}
+
+export function themeProductBlockAddUrl(shop: string, apiKey: string) {
+  const storeHandle = shop.replace(/\.myshopify\.com$/i, "");
+  return `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?template=product&addAppBlockId=${apiKey}/bundle-offers&target=mainSection`;
+}
+
 export function ExternalLinkButton({
   href,
   children,

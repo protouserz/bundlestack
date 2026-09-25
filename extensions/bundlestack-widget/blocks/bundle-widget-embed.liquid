@@ -1,0 +1,67 @@
+{% comment %}
+  App embed: quantity-break widget on product pages without placing a
+  section block. Inactive until the merchant saves it in Theme settings.
+  Deep-linked from the admin dashboard after install.
+{% endcomment %}
+
+{% if request.page_type == 'product' and product %}
+  <script src="{{ 'bundlestack-shared.js' | asset_url }}" defer></script>
+
+  <div
+    id="bundlestack-widget-embed"
+    class="bundlestack-widget bundlestack-widget--embed bundlestack-widget--pending bundlestack-widget--hidden"
+    style="display:none!important"
+    hidden
+    data-product-id="gid://shopify/Product/{{ product.id }}"
+    data-price-cents="{{ product.selected_or_first_available_variant.price }}"
+    data-currency="{{ cart.currency.iso_code }}"
+    data-proxy-path="/apps/bundlestack/offers"
+  >
+    <div class="bundlestack-widget__header">
+      <p class="bundlestack-widget__title">
+        {{ block.settings.heading | default: 'Buy more, save more' }}
+      </p>
+    </div>
+    <div
+      class="bundlestack-widget__tiers"
+      role="group"
+      aria-label="{{ block.settings.heading | default: 'Buy more, save more' }}"
+      aria-live="polite"
+    ></div>
+  </div>
+  <script>
+    (function () {
+      var root = document.getElementById("bundlestack-widget-embed");
+      if (!root) return;
+      if (
+        document.querySelector(
+          ".bundlestack-widget:not(.bundlestack-widget--embed)",
+        )
+      ) {
+        root.remove();
+        return;
+      }
+      var host =
+        document.querySelector("product-form") ||
+        document.querySelector('form[action*="/cart/add"]');
+      if (host && host.parentNode) host.parentNode.insertBefore(root, host);
+    })();
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "BundleStack quantity breaks",
+  "target": "body",
+  "javascript": "bundlestack-widget.js",
+  "stylesheet": "bundlestack-widget.css",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Buy more, save more"
+    }
+  ]
+}
+{% endschema %}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseOfferForm } from "./bundle.server";
+import { parseOfferForm, isCatalogOffer } from "./bundle.server";
 
 function form(entries: Record<string, string>) {
   const data = new FormData();
@@ -89,6 +89,32 @@ describe("parseOfferForm", () => {
           title: "Test",
           status: "live",
           productIds: validProductId,
+          tiers: validTiers,
+        }),
+      ),
+    ).toThrow(Response);
+  });
+
+  it("accepts a catalog-wide offer with allProducts", () => {
+    const result = parseOfferForm(
+      form({
+        title: "Storewide",
+        status: "active",
+        allProducts: "true",
+        tiers: validTiers,
+      }),
+    );
+
+    expect(result.productIds).toEqual([]);
+    expect(isCatalogOffer(result.productIds)).toBe(true);
+  });
+
+  it("rejects an offer with no products and no allProducts flag", () => {
+    expect(() =>
+      parseOfferForm(
+        form({
+          title: "Test",
+          status: "active",
           tiers: validTiers,
         }),
       ),

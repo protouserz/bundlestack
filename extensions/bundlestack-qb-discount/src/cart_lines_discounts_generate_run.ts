@@ -52,15 +52,18 @@ export function cartLinesDiscountsGenerateRun(
   }
 
   const config = parseConfig(input.discount.metafield?.jsonValue);
-  const productIds = new Set(config?.productIds ?? []);
+  const productIds = config?.productIds ?? [];
+  const restrictToProducts = productIds.length > 0;
+  const allowedProducts = new Set(productIds);
   const tiers = config?.tiers ?? [];
-  if (productIds.size === 0 || tiers.length === 0) {
+  if (tiers.length === 0) {
     return { operations: [] };
   }
 
   const matchingLines = input.cart.lines.filter((line) => {
     if (line.merchandise.__typename !== "ProductVariant") return false;
-    return productIds.has(line.merchandise.product.id);
+    if (!restrictToProducts) return true;
+    return allowedProducts.has(line.merchandise.product.id);
   });
 
   if (matchingLines.length === 0) {

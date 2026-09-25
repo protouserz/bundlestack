@@ -8,12 +8,14 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 
 import { authenticate } from "../shopify.server";
+import { seedDefaultOfferIfNeeded } from "../models/onboarding.server";
 import { AppLoadingIndicator } from "../components/AppLoadingIndicator";
 import { AppSupportFooter } from "../components/AppSupportFooter";
 import { SAppNav, SNavLink } from "../components/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
+  await seedDefaultOfferIfNeeded(session.shop, admin);
 
   const apiKey = process.env.SHOPIFY_API_KEY || "";
   if (process.env.NODE_ENV === "production" && !apiKey) {

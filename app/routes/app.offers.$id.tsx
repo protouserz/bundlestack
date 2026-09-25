@@ -106,6 +106,7 @@ export default function EditOffer() {
           defaultTitle={offer.title}
           defaultStatus={offer.status}
           defaultOfferType={offer.offerType}
+          defaultAllProducts={offer.productIds.length === 0}
           initialProducts={products}
           initialTiers={offer.tiers}
           error={actionData?.error}

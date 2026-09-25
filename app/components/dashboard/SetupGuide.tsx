@@ -21,43 +21,64 @@ export function SetupGuide({
   themeEditorUrl,
   dismissFetcher,
 }: SetupGuideProps) {
-  const steps = [
-    {
-      id: "offer",
-      done: hasOffers,
-      title: "Create a quantity-break offer",
-      body: "Pick products, set Buy 2 / Buy 3 tiers, and set the offer to Active.",
-      action: hasOffers ? null : (
-        <SButton href="/app/offers/new" variant="primary">
-          Create offer
-        </SButton>
-      ),
-    },
-    {
-      id: "theme",
-      done: false,
-      title: "Add the BundleStack block to your product page",
-      body: "In the theme editor, add the BundleStack block so shoppers see the tiers.",
-      action: (
-        <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
-          Open theme editor
-        </AdminDeepLinkButton>
-      ),
-    },
-    {
-      id: "storefront",
-      done: false,
-      title: "Preview on your storefront",
-      body: "Open a product with the offer, pick a tier, and confirm the discount at checkout.",
-      action: null,
-    },
-  ];
+  const steps = hasOffers
+    ? [
+        {
+          id: "offer",
+          done: true,
+          title: "Quantity breaks are ready",
+          body: "Buy 2 save 10% and Buy 3 save 15% apply to all products. Edit the offer anytime.",
+          action: null,
+        },
+        {
+          id: "theme",
+          done: false,
+          title: "Show offers on product pages",
+          body: "Open the theme editor, enable BundleStack quantity breaks, and save. Shoppers will not see tiers until this is on.",
+          action: (
+            <AdminDeepLinkButton href={themeEditorUrl} variant="primary">
+              Show on product pages
+            </AdminDeepLinkButton>
+          ),
+        },
+        {
+          id: "storefront",
+          done: false,
+          title: "Preview a live product page",
+          body: "Open any product, pick Buy 2 or Buy 3, and confirm the discount at checkout.",
+          action: null,
+        },
+      ]
+    : [
+        {
+          id: "offer",
+          done: false,
+          title: "Create a quantity-break offer",
+          body: "Set Buy 2 / Buy 3 tiers and set the offer to Active.",
+          action: (
+            <SButton href="/app/offers/new" variant="primary">
+              Create offer
+            </SButton>
+          ),
+        },
+        {
+          id: "theme",
+          done: false,
+          title: "Show offers on product pages",
+          body: "Open the theme editor, enable BundleStack quantity breaks, and save.",
+          action: (
+            <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
+              Show on product pages
+            </AdminDeepLinkButton>
+          ),
+        },
+      ];
 
   return (
-    <s-section heading="Set up BundleStack">
+    <s-section heading="Get your first discount live">
       <div className={styles.setupGuideHeader}>
         <p className={styles.setupGuideSubtitle}>
-          Three quick steps to launch quantity breaks on your store.
+          One theme save is what most merchants miss. Do that before anything else.
         </p>
         <dismissFetcher.Form method="post">
           <input type="hidden" name="intent" value="dismiss-onboarding" />

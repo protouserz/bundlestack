@@ -21,11 +21,10 @@ type AppExtensionsHost = {
   };
 };
 
-/** Theme app block handles in `extensions/bundlestack-widget/blocks`. */
+/** Product-page widget handles. Overlay/badge embeds do not count as the widget. */
 const THEME_BLOCK_HANDLES = [
+  "bundle-widget-embed",
   "bundle-offers",
-  "bundle-deal-badge",
-  "bundle-badge-overlay",
 ];
 
 async function loadThemeExtensions(
@@ -128,11 +127,11 @@ export function ThemeWidgetStatus({
         <s-stack direction="block" gap="base">
           <s-text>
             {status === "available"
-              ? `${blockName} is available but not placed on your product template yet.`
-              : `${blockName} is not active on your published theme.`}
+              ? `${blockName} is in your theme but not turned on yet. Open the editor, enable it, and save.`
+              : `Shoppers will not see quantity breaks until BundleStack is on in your theme. Open the editor, enable it, and save.`}
           </s-text>
           <AdminDeepLinkButton href={themeEditorUrl}>
-            Open theme editor
+            Show on product pages
           </AdminDeepLinkButton>
         </s-stack>
       </s-banner>

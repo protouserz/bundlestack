@@ -25,6 +25,7 @@ type OfferFormProps = {
   defaultTitle?: string;
   defaultStatus?: string;
   defaultOfferType?: string;
+  defaultAllProducts?: boolean;
   initialProducts?: SelectedProduct[];
   initialTiers?: DiscountTier[];
   error?: string;
@@ -47,6 +48,7 @@ export function OfferForm({
   defaultTitle = "",
   defaultStatus = "active",
   defaultOfferType = "quantity_break",
+  defaultAllProducts,
   initialProducts = [],
   initialTiers = DEFAULT_TIERS,
   error,
@@ -59,6 +61,9 @@ export function OfferForm({
   const [title, setTitle] = useState(defaultTitle);
   const [status, setStatus] = useState(defaultStatus);
   const [offerType, setOfferType] = useState(defaultOfferType);
+  const [allProducts, setAllProducts] = useState(
+    defaultAllProducts ?? (mode === "create" || initialProducts.length === 0),
+  );
   const [productCount, setProductCount] = useState(initialProducts.length);
   const tiersInputRef = useRef<HTMLInputElement>(null);
 
@@ -198,13 +203,30 @@ export function OfferForm({
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>Products</h2>
             <p className={styles.cardDescription}>
-              Select products included in this offer.
+              Apply this offer to the whole catalog, or pick specific products.
             </p>
-            <ProductPickerField
-              initialProducts={initialProducts}
-              onProductsChange={handleProductsChange}
-              browseLabel="Browse products"
-            />
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                name="allProducts"
+                value="true"
+                checked={allProducts}
+                onChange={(event) => setAllProducts(event.target.checked)}
+              />
+              <span>All products</span>
+            </label>
+            {allProducts ? (
+              <p className={styles.cardDescription}>
+                Shoppers see Buy 2 / Buy 3 tiers on every product page.
+              </p>
+            ) : (
+              <ProductPickerField
+                initialProducts={initialProducts}
+                onProductsChange={handleProductsChange}
+                browseLabel="Browse products"
+                required
+              />
+            )}
           </section>
 
           <section className={styles.card}>
@@ -294,7 +316,9 @@ export function OfferForm({
               <li className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Products</span>
                 <span className={styles.summaryValue}>
-                  {productCount} product{productCount === 1 ? "" : "s"}
+                  {allProducts
+                    ? "All products"
+                    : `${productCount} product${productCount === 1 ? "" : "s"}`}
                 </span>
               </li>
               <li className={styles.summaryItem}>

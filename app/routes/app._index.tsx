@@ -21,7 +21,7 @@ import { SetupGuide } from "../components/dashboard/SetupGuide";
 import { ThemeWidgetStatus } from "../components/dashboard/ThemeWidgetStatus";
 import { TopOffersList } from "../components/dashboard/TopOffersList";
 import styles from "../components/dashboard/dashboard.module.css";
-import { toShopifyAdminProtocol } from "../components/AdminLink";
+import { toShopifyAdminProtocol, themeEmbedActivateUrl } from "../components/AdminLink";
 import {
   ensureShopSettings,
   fetchOfferThumbnails,
@@ -170,6 +170,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     currentPlan,
     stats.totalDiscountUses,
   );
+  const apiKey = process.env.SHOPIFY_API_KEY || "";
 
   return {
     stats,
@@ -178,7 +179,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     offers,
     offerThumbnails,
     onboardingDone: settings.onboardingDone,
-    themeEditorUrl: themeEditorUrlForShop(shop),
+    themeEditorUrl: apiKey
+      ? themeEmbedActivateUrl(shop, apiKey)
+      : themeEditorUrlForShop(shop),
     syncFeedback: readSyncFeedback(request),
   };
 };
@@ -381,21 +384,24 @@ export default function Dashboard() {
           health={health}
         />
 
-        <statsFetcher.Form method="post">
-          <input type="hidden" name="intent" value="refresh-stats" />
-          <SButton
-            type="submit"
-            variant="tertiary"
-            {...(statsFetcher.state !== "idle" ? { loading: true } : {})}
-          >
-            Refresh redemption stats
-          </SButton>
-        </statsFetcher.Form>
-
-        <div className={styles.midRow}>
-          <RevenueChart offers={offers} />
-          <TopOffersList offers={offers} thumbnails={offerThumbnails} />
-        </div>
+        {stats.totalDiscountUses > 0 ? (
+          <>
+            <statsFetcher.Form method="post">
+              <input type="hidden" name="intent" value="refresh-stats" />
+              <SButton
+                type="submit"
+                variant="tertiary"
+                {...(statsFetcher.state !== "idle" ? { loading: true } : {})}
+              >
+                Refresh redemption stats
+              </SButton>
+            </statsFetcher.Form>
+            <div className={styles.midRow}>
+              <RevenueChart offers={offers} />
+              <TopOffersList offers={offers} thumbnails={offerThumbnails} />
+            </div>
+          </>
+        ) : null}
 
         <OffersTable offers={offers} thumbnails={offerThumbnails} />
 

@@ -7,6 +7,7 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { shopifyBillingConfig } from "./billing.shopify";
 import prisma from "./db.server";
+import { seedDefaultOfferIfNeeded } from "./models/onboarding.server";
 
 if (process.env.NODE_ENV === "production" && !process.env.SHOPIFY_API_SECRET) {
   throw new Error("SHOPIFY_API_SECRET is required in production");
@@ -22,6 +23,11 @@ const shopify = shopifyApp({
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   billing: shopifyBillingConfig(),
+  hooks: {
+    afterAuth: async ({ session, admin }) => {
+      await seedDefaultOfferIfNeeded(session.shop, admin);
+    },
+  },
   future: {
     expiringOfflineAccessTokens: true,
   },

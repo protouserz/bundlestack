@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import type {
-  listOffers,
-  OfferThumbnail,
+import {
+  isCatalogOffer,
+  type listOffers,
+  type OfferThumbnail,
 } from "../../models/bundle.server";
 import styles from "./dashboard.module.css";
 
@@ -96,7 +97,11 @@ export function OffersTable({
                           {offer.status}
                         </span>
                       </td>
-                      <td>{offer.productIds.length}</td>
+                      <td>
+                        {isCatalogOffer(offer.productIds)
+                          ? "All products"
+                          : offer.productIds.length}
+                      </td>
                       <td>{discountTypeLabel(offer)}</td>
                       <td>{formatDate(offer.createdAt)}</td>
                       <td>{offer.discountUses ?? 0}</td>

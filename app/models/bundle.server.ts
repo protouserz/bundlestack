@@ -19,6 +19,18 @@ export type BundleOfferInput = {
   tiers: DiscountTier[];
 };
 
+export const DEFAULT_OFFER_TITLE = "Buy more, save more";
+
+export const DEFAULT_QUANTITY_TIERS: DiscountTier[] = [
+  { minQty: 2, discountType: "percentage", discountValue: 10, label: "Save 10%" },
+  { minQty: 3, discountType: "percentage", discountValue: 15, label: "Save 15%" },
+];
+
+/** Empty product list means the offer applies to the whole catalog. */
+export function isCatalogOffer(productIds: string[]) {
+  return productIds.length === 0;
+}
+
 function parseTiers(raw: string): DiscountTier[] {
   return safeJsonParse<DiscountTier[]>(raw, []);
 }
@@ -140,18 +152,17 @@ export async function removeOfferRecord(id: string) {
 
 export async function getActiveOffersForProduct(shop: string, productId: string) {
   const offers = await prisma.bundleOffer.findMany({
-    where: {
-      shop,
-      status: "active",
-      // productIds is stored as a JSON string array; contain the GID.
-      productIds: { contains: productId },
-    },
+    where: { shop, status: "active" },
     orderBy: { updatedAt: "desc" },
   });
 
   return offers
     .map(serializeOffer)
-    .filter((offer) => offer.productIds.includes(productId));
+    .filter(
+      (offer) =>
+        isCatalogOffer(offer.productIds) ||
+        offer.productIds.includes(productId),
+    );
 }
 
 export type OfferBadge = {
@@ -383,11 +394,17 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
   const offerType = String(formData.get("offerType") ?? "quantity_break");
   const productIdsRaw = String(formData.get("productIds") ?? "");
   const tiersRaw = String(formData.get("tiers") ?? "[]");
+  const allProducts =
+    formData.get("allProducts") === "on" ||
+    formData.get("allProducts") === "true" ||
+    formData.get("allProducts") === "1";
 
-  const productIds = productIdsRaw
-    .split(/[\n,]/)
-    .map((id) => id.trim())
-    .filter(Boolean);
+  const productIds = allProducts
+    ? []
+    : productIdsRaw
+        .split(/[\n,]/)
+        .map((id) => id.trim())
+        .filter(Boolean);
 
   let rawTiers: unknown;
   try {
@@ -408,7 +425,7 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     throw new Response("Invalid offer type", { status: 400 });
   }
 
-  if (productIds.length === 0) {
+  if (!allProducts && productIds.length === 0) {
     throw new Response("Select at least one product", { status: 400 });
   }
 

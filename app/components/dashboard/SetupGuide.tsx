@@ -26,8 +26,8 @@ export function SetupGuide({
         {
           id: "offer",
           done: true,
-          title: "Quantity breaks are ready",
-          body: "Buy 2 save 10% and Buy 3 save 15% apply to all products. Edit the offer anytime.",
+          title: "A catalog offer is ready",
+          body: "Buy 2 / Buy 3 quantity breaks apply to all products. Add a buy-one-get-one-free offer anytime.",
           action: null,
         },
         {
@@ -53,8 +53,8 @@ export function SetupGuide({
         {
           id: "offer",
           done: false,
-          title: "Create a quantity-break offer",
-          body: "Set Buy 2 / Buy 3 tiers and set the offer to Active.",
+          title: "Create an offer",
+          body: "Set Buy 2 / Buy 3 quantity breaks or a buy-one-get-one-free deal, then set the offer to Active.",
           action: (
             <SButton href="/app/offers/new" variant="primary">
               Create offer

@@ -7,7 +7,7 @@
         "lines": [
           {
             "id": "gid://shopify/CartLine/0",
-            "quantity": 1,
+            "quantity": 4,
             "cost": {
               "amountPerQuantity": {
                 "amount": "10.0"
@@ -27,14 +27,40 @@
         "discountClasses": ["PRODUCT"],
         "metafield": {
           "jsonValue": {
-            "productIds": ["gid://shopify/Product/1"],
-            "tiers": [{ "minQty": 2, "discountValue": 10 }]
+            "type": "bogo",
+            "productIds": [],
+            "buyQuantity": 1,
+            "getQuantity": 1
           }
         }
       }
     },
     "output": {
-      "operations": []
+      "operations": [
+        {
+          "productDiscountsAdd": {
+            "candidates": [
+              {
+                "message": "Buy 1 get 1 free",
+                "targets": [
+                  {
+                    "cartLine": {
+                      "id": "gid://shopify/CartLine/0",
+                      "quantity": 2
+                    }
+                  }
+                ],
+                "value": {
+                  "percentage": {
+                    "value": 100.0
+                  }
+                }
+              }
+            ],
+            "selectionStrategy": "FIRST"
+          }
+        }
+      ]
     }
   }
 }

@@ -51,7 +51,7 @@ export default function NewOffer() {
   const formId = "create-offer-form";
 
   return (
-    <SPage heading="Create quantity break discount">
+    <SPage heading="Create offer">
       <Form
         id={formId}
         key={formKey}

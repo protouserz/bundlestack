@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseOfferForm, isCatalogOffer } from "./bundle.server";
+import { parseOfferForm, isCatalogOffer, offerDiscountSummary } from "./bundle.server";
 
 function form(entries: Record<string, string>) {
   const data = new FormData();
@@ -119,5 +119,76 @@ describe("parseOfferForm", () => {
         }),
       ),
     ).toThrow(Response);
+  });
+
+  it("accepts a buy-one-get-one-free offer", () => {
+    const result = parseOfferForm(
+      form({
+        title: "BOGO",
+        status: "active",
+        offerType: "bogo",
+        allProducts: "true",
+        tiers: JSON.stringify([
+          { minQty: 1, getQty: 1, discountType: "percentage", discountValue: 100 },
+        ]),
+      }),
+    );
+
+    expect(result.offerType).toBe("bogo");
+    expect(result.tiers).toEqual([
+      {
+        minQty: 1,
+        getQty: 1,
+        discountType: "percentage",
+        discountValue: 100,
+        label: "Buy 1 get 1 free",
+      },
+    ]);
+  });
+
+  it("rejects BOGO buy quantity of 0", () => {
+    expect(() =>
+      parseOfferForm(
+        form({
+          title: "BOGO",
+          status: "active",
+          offerType: "bogo",
+          allProducts: "true",
+          tiers: JSON.stringify([{ minQty: 0, getQty: 1 }]),
+        }),
+      ),
+    ).toThrow(Response);
+  });
+
+  it("still rejects unknown offer types", () => {
+    expect(() =>
+      parseOfferForm(
+        form({
+          title: "Test",
+          status: "active",
+          offerType: "free_gift",
+          allProducts: "true",
+          tiers: validTiers,
+        }),
+      ),
+    ).toThrow(Response);
+  });
+});
+
+describe("offerDiscountSummary", () => {
+  it("summarizes BOGO deals", () => {
+    expect(
+      offerDiscountSummary({
+        offerType: "bogo",
+        tiers: [
+          {
+            minQty: 1,
+            getQty: 1,
+            discountType: "percentage",
+            discountValue: 100,
+          },
+        ],
+      }),
+    ).toBe("Buy 1 get 1 free");
   });
 });

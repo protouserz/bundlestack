@@ -1,5 +1,5 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
-import type { DiscountTier } from "./bundle.server";
+import { isBogoOffer, type DiscountTier } from "./offer";
 import {
   listAllAutomaticDiscountNodes,
   normalizeDiscountNodeId,
@@ -14,6 +14,7 @@ type SerializedOffer = {
   id: string;
   title: string;
   status: string;
+  offerType?: string;
   productIds: string[];
   tiers: DiscountTier[];
   discountIds?: string[];
@@ -71,6 +72,18 @@ function assertGraphqlOk(json: GraphqlResponse, context: string) {
 }
 
 function functionConfigurationValue(offer: SerializedOffer) {
+  if (isBogoOffer(offer.offerType)) {
+    const tier = offer.tiers[0];
+    const buyQuantity = Math.max(1, Math.floor(Number(tier?.minQty) || 1));
+    const getQuantity = Math.max(1, Math.floor(Number(tier?.getQty) || 1));
+    return JSON.stringify({
+      type: "bogo",
+      productIds: offer.productIds,
+      buyQuantity,
+      getQuantity,
+    });
+  }
+
   const tiers = percentageTiers(offer).map((tier) => ({
     minQty: tier.minQty,
     discountValue: Math.min(50, Math.max(0, tier.discountValue)),

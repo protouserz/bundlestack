@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import type { DiscountTier } from "../../models/bundle.server";
+import {
+  DEFAULT_BOGO_TIERS,
+  DEFAULT_BOGO_TITLE,
+  DEFAULT_OFFER_TITLE,
+  bogoLabel,
+  isBogoOffer,
+  type DiscountTier,
+} from "../../models/offer";
 import { useLeaveWithSaveBar } from "../AdminLink";
 import { ProductPickerField, type SelectedProduct } from "../ProductPickerField";
 import { SButton } from "../polaris";
@@ -7,6 +14,7 @@ import styles from "./offer-form.module.css";
 
 const OFFER_TYPES = [
   { value: "quantity_break", label: "Quantity discount" },
+  { value: "bogo", label: "Buy one get one free" },
 ] as const;
 
 const STATUS_OPTIONS = [
@@ -36,7 +44,9 @@ type OfferFormProps = {
 };
 
 function offerTypeLabel(value: string) {
-  return OFFER_TYPES.find((type) => type.value === value)?.label ?? "Quantity discount";
+  return (
+    OFFER_TYPES.find((type) => type.value === value)?.label ?? "Quantity discount"
+  );
 }
 
 function statusHelp(status: string) {
@@ -93,6 +103,50 @@ export function OfferForm({
         return { ...tier, [field]: value };
       }),
     );
+  };
+
+  const handleOfferTypeChange = (value: string) => {
+    setOfferType(value);
+    if (value === "bogo") {
+      setTiers((current) =>
+        current.length === 1 && (current[0].getQty ?? 0) > 0
+          ? current
+          : DEFAULT_BOGO_TIERS,
+      );
+      if (
+        mode === "create" &&
+        (title === defaultTitle ||
+          title === DEFAULT_OFFER_TITLE ||
+          title === "Volume Discount Offer")
+      ) {
+        setTitle(DEFAULT_BOGO_TITLE);
+      }
+      return;
+    }
+
+    setTiers((current) =>
+      current.some((tier) => (tier.getQty ?? 0) > 0) ? DEFAULT_TIERS : current,
+    );
+    if (mode === "create" && title === DEFAULT_BOGO_TITLE) {
+      setTitle(defaultTitle || "Volume Discount Offer");
+    }
+  };
+
+  const updateBogoQty = (field: "minQty" | "getQty", value: string) => {
+    const numeric = Math.max(1, Math.min(10, Number(value) || 1));
+    setTiers((current) => {
+      const buyQty = field === "minQty" ? numeric : current[0]?.minQty ?? 1;
+      const getQty = field === "getQty" ? numeric : current[0]?.getQty ?? 1;
+      return [
+        {
+          minQty: buyQty,
+          getQty,
+          discountType: "percentage",
+          discountValue: 100,
+          label: bogoLabel(buyQty, getQty),
+        },
+      ];
+    });
   };
 
   const addTier = () => {
@@ -188,7 +242,7 @@ export function OfferForm({
                 <select
                   className={styles.select}
                   value={offerType}
-                  onChange={(event) => setOfferType(event.target.value)}
+                  onChange={(event) => handleOfferTypeChange(event.target.value)}
                 >
                   {OFFER_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -217,7 +271,9 @@ export function OfferForm({
             </label>
             {allProducts ? (
               <p className={styles.cardDescription}>
-                Shoppers see Buy 2 / Buy 3 tiers on every product page.
+                {isBogoOffer(offerType)
+                  ? "Shoppers get the free item on every product when they buy the required quantity."
+                  : "Shoppers see Buy 2 / Buy 3 tiers on every product page."}
               </p>
             ) : (
               <ProductPickerField
@@ -230,10 +286,45 @@ export function OfferForm({
           </section>
 
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Quantity tiers</h2>
+            <h2 className={styles.cardTitle}>
+              {isBogoOffer(offerType) ? "Buy one get one" : "Quantity tiers"}
+            </h2>
             <p className={styles.cardDescription}>
-              Set the quantity breaks and discount to apply.
+              {isBogoOffer(offerType)
+                ? "The cheapest matching units are free once the shopper buys the required quantity of the same product."
+                : "Set the quantity breaks and discount to apply."}
             </p>
+            {isBogoOffer(offerType) ? (
+              <div className={styles.fieldGrid}>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>Buy</span>
+                  <input
+                    className={styles.input}
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={tiers[0]?.minQty ?? 1}
+                    onChange={(event) =>
+                      updateBogoQty("minQty", event.target.value)
+                    }
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>Get free</span>
+                  <input
+                    className={styles.input}
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={tiers[0]?.getQty ?? 1}
+                    onChange={(event) =>
+                      updateBogoQty("getQty", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+            ) : (
+              <>
             <table className={styles.tierTable}>
               <thead>
                 <tr>
@@ -300,6 +391,8 @@ export function OfferForm({
                 Add tier
               </SButton>
             </div>
+              </>
+            )}
           </section>
         </div>
 
@@ -322,9 +415,13 @@ export function OfferForm({
                 </span>
               </li>
               <li className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Quantity tiers</span>
+                <span className={styles.summaryLabel}>
+                  {isBogoOffer(offerType) ? "Deal" : "Quantity tiers"}
+                </span>
                 <span className={styles.summaryValue}>
-                  {tiers.length} tier{tiers.length === 1 ? "" : "s"}
+                  {isBogoOffer(offerType)
+                    ? bogoLabel(tiers[0]?.minQty ?? 1, tiers[0]?.getQty ?? 1)
+                    : `${tiers.length} tier${tiers.length === 1 ? "" : "s"}`}
                 </span>
               </li>
               {mode === "edit" && (

@@ -1,9 +1,6 @@
 import { Link } from "react-router";
-import {
-  isCatalogOffer,
-  type listOffers,
-  type OfferThumbnail,
-} from "../../models/bundle.server";
+import { isCatalogOffer, offerDiscountSummary } from "../../models/offer";
+import type { listOffers, OfferThumbnail } from "../../models/bundle.server";
 import styles from "./dashboard.module.css";
 
 type Offer = Awaited<ReturnType<typeof listOffers>>[number];
@@ -12,16 +9,6 @@ type TopOffersListProps = {
   offers: Offer[];
   thumbnails?: Record<string, OfferThumbnail>;
 };
-
-function tierSummary(offer: Offer) {
-  const topTier = [...offer.tiers].sort(
-    (a, b) => b.discountValue - a.discountValue,
-  )[0];
-  if (!topTier) return "Quantity break";
-  return topTier.discountType === "percentage"
-    ? `Up to ${topTier.discountValue}% off`
-    : `Up to $${topTier.discountValue} off`;
-}
 
 export function TopOffersList({
   offers,
@@ -65,7 +52,7 @@ export function TopOffersList({
                       : `${offer.productIds.length} product${
                           offer.productIds.length === 1 ? "" : "s"
                         }`}{" "}
-                    · {tierSummary(offer)}
+                    · {offerDiscountSummary(offer)}
                   </p>
                 </div>
                 <span className={styles.topRevenue}>

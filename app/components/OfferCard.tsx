@@ -1,4 +1,5 @@
 import { Link, useSubmit } from "react-router";
+import { isBogoOffer, offerDiscountSummary } from "../models/offer";
 import type { listOffers } from "../models/bundle.server";
 import { SButton } from "./polaris";
 
@@ -36,15 +37,17 @@ export function OfferCard({
 
         {showTiers ? (
           <s-paragraph>
-            {offer.tiers.map((tier) => (
-              <span key={tier.minQty}>
-                Buy {tier.minQty}+ →{" "}
-                {tier.discountType === "percentage"
-                  ? `${tier.discountValue}% off`
-                  : `$${tier.discountValue} off`}
-                {" · "}
-              </span>
-            ))}
+            {isBogoOffer(offer.offerType)
+              ? offerDiscountSummary(offer)
+              : offer.tiers.map((tier) => (
+                  <span key={tier.minQty}>
+                    Buy {tier.minQty}+ →{" "}
+                    {tier.discountType === "percentage"
+                      ? `${tier.discountValue}% off`
+                      : `$${tier.discountValue} off`}
+                    {" · "}
+                  </span>
+                ))}
           </s-paragraph>
         ) : (
           <s-text tone="neutral">

@@ -8,6 +8,14 @@
   }
 
   function badgeLines(badge) {
+    if (badge.offerType === "bogo" || Number(badge.getQty) > 0) {
+      const getQty = Math.max(1, Math.floor(Number(badge.getQty)) || 1);
+      return {
+        primary: `Buy ${badge.minQty} get ${getQty} free`,
+        secondary: null,
+      };
+    }
+
     const startingSaving = formatSaving(
       badge.startingDiscountType,
       badge.startingDiscountValue,

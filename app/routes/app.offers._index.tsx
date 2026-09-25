@@ -68,8 +68,8 @@ export default function OffersIndex() {
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
           <s-stack direction="inline" gap="base">
             <s-text tone="neutral">
-              Quantity-break offers encourage shoppers to buy more with tiered
-              discounts — synced automatically as Shopify discounts at checkout.
+              Quantity-break and buy-one-get-one offers encourage shoppers to
+              buy more — synced automatically as Shopify discounts at checkout.
             </s-text>
             {offers.length > 0 && (
               <SButton
@@ -87,7 +87,7 @@ export default function OffersIndex() {
         {offers.length === 0 ? (
           <EmptyState
             heading="No offers yet"
-            description='Create your first offer — e.g. "Buy 2, save 10%" or "Buy 3, save 15%" — and assign it to products in your catalog.'
+            description='Create a quantity-break offer — e.g. "Buy 2, save 10%" — or a buy-one-get-one-free deal, then assign it to products.'
             actionLabel="Create offer"
             actionHref="/app/offers/new"
           />

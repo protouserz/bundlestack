@@ -3,33 +3,31 @@ import { isBillingPlan, type BillingPlan } from "../billing.server";
 import { getTierForShopifyPlan } from "../billing.shopify";
 import { PLAN_ORDER } from "../billing.plans";
 import { safeJsonParse } from "../utils/json.server";
+import {
+  OFFER_TYPE_BOGO,
+  OFFER_TYPE_QUANTITY_BREAK,
+  bogoLabel,
+  isBogoOffer,
+  isCatalogOffer,
+  isOfferType,
+  type DiscountTier,
+} from "./offer";
 
-export type DiscountTier = {
-  minQty: number;
-  discountType: "percentage" | "fixed";
-  discountValue: number;
-  label?: string;
-};
-
-export type BundleOfferInput = {
-  title: string;
-  offerType?: string;
-  status?: string;
-  productIds: string[];
-  tiers: DiscountTier[];
-};
-
-export const DEFAULT_OFFER_TITLE = "Buy more, save more";
-
-export const DEFAULT_QUANTITY_TIERS: DiscountTier[] = [
-  { minQty: 2, discountType: "percentage", discountValue: 10, label: "Save 10%" },
-  { minQty: 3, discountType: "percentage", discountValue: 15, label: "Save 15%" },
-];
-
-/** Empty product list means the offer applies to the whole catalog. */
-export function isCatalogOffer(productIds: string[]) {
-  return productIds.length === 0;
-}
+export {
+  DEFAULT_BOGO_TIERS,
+  DEFAULT_BOGO_TITLE,
+  DEFAULT_OFFER_TITLE,
+  DEFAULT_QUANTITY_TIERS,
+  OFFER_TYPE_BOGO,
+  OFFER_TYPE_QUANTITY_BREAK,
+  OFFER_TYPES,
+  bogoLabel,
+  isBogoOffer,
+  isCatalogOffer,
+  isOfferType,
+  offerDiscountSummary,
+} from "./offer";
+export type { BundleOfferInput, DiscountTier, OfferType } from "./offer";
 
 function parseTiers(raw: string): DiscountTier[] {
   return safeJsonParse<DiscountTier[]>(raw, []);
@@ -85,7 +83,7 @@ export async function createOffer(shop: string, input: BundleOfferInput) {
     data: {
       shop,
       title: input.title,
-      offerType: input.offerType ?? "quantity_break",
+      offerType: input.offerType ?? OFFER_TYPE_QUANTITY_BREAK,
       status: input.status ?? "draft",
       productIds: JSON.stringify(input.productIds),
       tiers: JSON.stringify(input.tiers),
@@ -173,6 +171,8 @@ export type OfferBadge = {
   startingDiscountValue: number;
   discountType: "percentage" | "fixed";
   discountValue: number;
+  offerType?: string;
+  getQty?: number;
 };
 
 function numericProductId(gid: string): string | null {
@@ -201,6 +201,8 @@ export async function getActiveOfferBadges(
       startingDiscountValue: number;
       discountType: "percentage" | "fixed";
       discountValue: number;
+      offerType: string;
+      getQty?: number;
     }
   >();
 
@@ -220,6 +222,10 @@ export async function getActiveOfferBadges(
       startingDiscountValue: startingTier.discountValue,
       discountType: best.discountType,
       discountValue: best.discountValue,
+      offerType: offer.offerType,
+      ...(isBogoOffer(offer.offerType)
+        ? { getQty: startingTier.getQty ?? 1 }
+        : {}),
     };
 
     for (const productId of offer.productIds) {
@@ -391,7 +397,7 @@ export async function setOnboardingDone(shop: string, done = true) {
 export function parseOfferForm(formData: FormData): BundleOfferInput {
   const title = String(formData.get("title") ?? "").trim();
   const status = String(formData.get("status") ?? "draft");
-  const offerType = String(formData.get("offerType") ?? "quantity_break");
+  const offerType = String(formData.get("offerType") ?? OFFER_TYPE_QUANTITY_BREAK);
   const productIdsRaw = String(formData.get("productIds") ?? "");
   const tiersRaw = String(formData.get("tiers") ?? "[]");
   const allProducts =
@@ -421,7 +427,7 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     throw new Response("Invalid offer status", { status: 400 });
   }
 
-  if (offerType !== "quantity_break") {
+  if (!isOfferType(offerType)) {
     throw new Response("Invalid offer type", { status: 400 });
   }
 
@@ -439,7 +445,50 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
   }
 
   if (!Array.isArray(rawTiers) || rawTiers.length === 0) {
-    throw new Response("At least one quantity tier is required", { status: 400 });
+    throw new Response(
+      offerType === OFFER_TYPE_BOGO
+        ? "Buy and get quantities are required"
+        : "At least one quantity tier is required",
+      { status: 400 },
+    );
+  }
+
+  if (offerType === OFFER_TYPE_BOGO) {
+    const record = rawTiers[0];
+    if (!record || typeof record !== "object") {
+      throw new Response("Invalid BOGO configuration", { status: 400 });
+    }
+
+    const data = record as Record<string, unknown>;
+    const buyQty = Number(data.minQty);
+    const getQty = Number(data.getQty ?? 1);
+
+    if (!Number.isInteger(buyQty) || buyQty < 1 || buyQty > 10) {
+      throw new Response("Buy quantity must be a whole number from 1 to 10", {
+        status: 400,
+      });
+    }
+    if (!Number.isInteger(getQty) || getQty < 1 || getQty > 10) {
+      throw new Response("Get quantity must be a whole number from 1 to 10", {
+        status: 400,
+      });
+    }
+
+    return {
+      title,
+      status,
+      offerType,
+      productIds,
+      tiers: [
+        {
+          minQty: buyQty,
+          getQty,
+          discountType: "percentage",
+          discountValue: 100,
+          label: bogoLabel(buyQty, getQty),
+        },
+      ],
+    };
   }
 
   const tiers: DiscountTier[] = rawTiers.map((tier, index) => {

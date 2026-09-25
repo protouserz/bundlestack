@@ -578,15 +578,29 @@
         tiersEl.innerHTML = offer.tiers
           .map((tier) => {
             const minQty = Math.max(1, Math.floor(Number(tier.minQty)) || 1);
-            const label = tierLabel({ ...tier, minQty });
-            const badge = formatBadge({ ...tier, minQty });
-            const price = renderPrice(priceCents, { ...tier, minQty }, currency);
+            const getQty = Math.max(1, Math.floor(Number(tier.getQty)) || 1);
+            const isBogo = offer.offerType === "bogo" || Number(tier.getQty) > 0;
+            const cartQty = isBogo ? minQty + getQty : minQty;
+            const display = {
+              ...tier,
+              minQty,
+              ...(isBogo
+                ? {
+                    discountType: "percentage",
+                    discountValue: (100 * getQty) / cartQty,
+                    label: tier.label || `Buy ${minQty} get ${getQty} free`,
+                  }
+                : {}),
+            };
+            const label = tierLabel(display);
+            const badge = isBogo ? "Free" : formatBadge(display);
+            const price = renderPrice(priceCents, display, currency);
 
             return `
               <button
                 type="button"
                 class="bundlestack-widget__tier"
-                data-min-qty="${minQty}"
+                data-min-qty="${cartQty}"
                 aria-pressed="false"
               >
                 <span class="bundlestack-widget__tier-radio" aria-hidden="true"></span>

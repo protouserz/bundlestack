@@ -1,9 +1,6 @@
 import { Link } from "react-router";
-import {
-  isCatalogOffer,
-  type listOffers,
-  type OfferThumbnail,
-} from "../../models/bundle.server";
+import { isCatalogOffer } from "../../models/offer";
+import type { listOffers, OfferThumbnail } from "../../models/bundle.server";
 import styles from "./dashboard.module.css";
 
 type Offer = Awaited<ReturnType<typeof listOffers>>[number];
@@ -14,6 +11,7 @@ type OffersTableProps = {
 };
 
 function discountTypeLabel(offer: Offer) {
+  if (offer.offerType === "bogo") return "BOGO";
   const types = new Set(offer.tiers.map((tier) => tier.discountType));
   if (types.size > 1) return "Mixed";
   return types.has("fixed") ? "Fixed amount" : "Percentage";

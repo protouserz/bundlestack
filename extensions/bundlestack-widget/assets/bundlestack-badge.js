@@ -1,8 +1,13 @@
 (function () {
-  function badgeText(tiers) {
-    const sorted = [...tiers].sort((a, b) => a.minQty - b.minQty);
-    const startingTier = sorted[0];
+  function badgeText(offer) {
+    const tiers = offer?.tiers || [];
+    const startingTier = [...tiers].sort((a, b) => a.minQty - b.minQty)[0];
     if (!startingTier?.minQty || startingTier.discountValue <= 0) return null;
+
+    if (offer.offerType === "bogo" || Number(startingTier.getQty) > 0) {
+      const getQty = Math.max(1, Math.floor(Number(startingTier.getQty)) || 1);
+      return `Buy ${startingTier.minQty} get ${getQty} free`;
+    }
 
     const best = tiers.reduce((max, tier) =>
       tier.discountValue > max.discountValue ? tier : max
@@ -88,8 +93,8 @@
         }));
 
     fetchJson(url).then((data) => {
-        const tiers = data.offers?.[0]?.tiers || [];
-        const text = badgeText(tiers);
+        const offer = data.offers?.[0];
+        const text = badgeText(offer);
 
         if (!text) {
           hideBadge();

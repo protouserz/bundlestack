@@ -34,7 +34,7 @@ export function SetupGuide({
           id: "theme",
           done: false,
           title: "Show offers on product pages",
-          body: "Open the theme editor, enable BundleStack quantity breaks, and save. Shoppers will not see tiers until this is on.",
+          body: "Open the theme editor, enable BundleStack qty breaks, and save. Shoppers will not see tiers until this is on.",
           action: (
             <AdminDeepLinkButton href={themeEditorUrl} variant="primary">
               Show on product pages

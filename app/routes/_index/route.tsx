@@ -29,7 +29,7 @@ const FEATURES = [
   {
     icon: "💰",
     title: "Simple pricing",
-    text: "Free to start with unlimited offers. Upgrade or downgrade plans anytime from the app — billed through Shopify.",
+    text: "Free includes unlimited offers. Add customer support for $2/month.",
   },
 ];
 
@@ -80,7 +80,7 @@ export default function App() {
             </div>
             <div className={styles.stat}>
               <span className={styles.statValue}>Unlimited</span>
-              <span className={styles.statLabel}>offers on free plan</span>
+              <span className={styles.statLabel}>offers included</span>
             </div>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function App() {
           </h2>
           <p className={styles.featuresSubheading}>
             BundleStack focuses on quantity breaks done right — fast setup,
-            clean uninstall, and pricing that scales with your success.
+            clean uninstall, and a free plan that includes the full product.
           </p>
           <ul className={styles.featureGrid}>
             {FEATURES.map((feature) => (

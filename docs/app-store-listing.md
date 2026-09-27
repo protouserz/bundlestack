@@ -46,51 +46,25 @@ Each plan has a short description plus a **Features** list (one feature per line
 
 ### Free — $0 / month
 
-**Short description:** Perfect for getting started
+**Short description:** Full product included
 
 **Features:**
 ```
-Unlimited quantity-break offers
+Unlimited quantity-break and BOGO offers
 Product-page theme widget
 Automatic Shopify discount sync
 Product picker — no manual IDs
 Store health monitor
 ```
 
-### Starter — $7.99 / month (30-day free trial)
+### Support — $2 / month
 
-**Short description:** For stores with steady bundle sales
+**Short description:** Email customer support
 
 **Features:**
 ```
 Everything in Free
-Email support
-Suggested for ~500 discount redemptions / month
-Clean uninstall removes discounts; offer data erased on shop/redact
-```
-
-### Growth — $14.99 / month (30-day free trial)
-
-**Short description:** For stores with growing bundle volume
-
-**Features:**
-```
-Everything in Starter
-Priority email support
-Suggested for ~2,000 discount redemptions / month
-Faster help when offers need tuning
-```
-
-### Pro — $29.99 / month (30-day free trial)
-
-**Short description:** For high-volume stores with no cap
-
-**Features:**
-```
-Everything in Growth
-No redemption tracking limits
-Suggested for 5,000+ discount redemptions / month
-Best value at scale
+Email customer support
 ```
 
 ## Screenshot captions (suggested)

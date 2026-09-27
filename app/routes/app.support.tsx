@@ -6,8 +6,13 @@ import type {
 import { Form, useActionData, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { SPage } from "../components/polaris";
+import { SButton, SPage } from "../components/polaris";
 import prisma from "../db.server";
+import { isBillingPlan, isPaidPlan } from "../billing.server";
+import {
+  getShopSettings,
+  resolveCurrentBillingPlan,
+} from "../models/bundle.server";
 
 type ShopContactResponse = {
   data?: {
@@ -49,18 +54,41 @@ async function resolveMerchantContactEmail(
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
-  const profile = await getSessionProfile(session.id);
+  const { session, billing } = await authenticate.admin(request);
+  const [profile, settings] = await Promise.all([
+    getSessionProfile(session.id),
+    getShopSettings(session.shop),
+  ]);
+
+  const storedPlan = isBillingPlan(settings.billingPlan)
+    ? settings.billingPlan
+    : "free";
+
+  let hasSupport = isPaidPlan(storedPlan);
+  try {
+    const billingCheck = await billing.check();
+    const activeSubscriptionNames = billingCheck.appSubscriptions
+      .filter((subscription) => subscription.status === "ACTIVE")
+      .map((subscription) => subscription.name);
+    const currentPlan = resolveCurrentBillingPlan({
+      activeSubscriptionNames,
+      storedPlan,
+    });
+    hasSupport = isPaidPlan(currentPlan);
+  } catch {
+    // Keep the stored plan if Shopify billing is unavailable.
+  }
 
   return {
     shop: session.shop,
     userName:
       [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || null,
+    hasSupport,
   };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
   const formData = await request.formData();
   const subject = String(formData.get("subject") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
@@ -69,6 +97,33 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return {
       ok: false as const,
       error: "Subject and message are required.",
+    };
+  }
+
+  const settings = await getShopSettings(session.shop);
+  const storedPlan = isBillingPlan(settings.billingPlan)
+    ? settings.billingPlan
+    : "free";
+  let hasSupport = isPaidPlan(storedPlan);
+  try {
+    const billingCheck = await billing.check();
+    const activeSubscriptionNames = billingCheck.appSubscriptions
+      .filter((subscription) => subscription.status === "ACTIVE")
+      .map((subscription) => subscription.name);
+    hasSupport = isPaidPlan(
+      resolveCurrentBillingPlan({
+        activeSubscriptionNames,
+        storedPlan,
+      }),
+    );
+  } catch {
+    // Fall back to stored plan.
+  }
+
+  if (!hasSupport) {
+    return {
+      ok: false as const,
+      error: "Customer support is included with the Support plan ($2/month).",
     };
   }
 
@@ -91,7 +146,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function AppSupport() {
-  const { shop, userName } = useLoaderData<typeof loader>();
+  const { shop, userName, hasSupport } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
   return (
@@ -121,6 +176,7 @@ export default function AppSupport() {
         </s-box>
 
         <s-section heading="Send a message">
+          {hasSupport ? (
           <Form method="post">
             <s-stack direction="block" gap="base">
               <label>
@@ -166,6 +222,19 @@ export default function AppSupport() {
               </div>
             </s-stack>
           </Form>
+          ) : (
+            <s-box padding="large" borderWidth="base" borderRadius="base">
+              <s-stack direction="block" gap="base">
+                <s-text>
+                  Email customer support is included with the Support plan for
+                  $2/month. The rest of the app stays free.
+                </s-text>
+                <SButton variant="primary" href="/app/billing">
+                  Add customer support
+                </SButton>
+              </s-stack>
+            </s-box>
+          )}
         </s-section>
 
         <s-section heading="Common questions">

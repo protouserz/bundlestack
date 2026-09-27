@@ -1,29 +1,33 @@
 import { describe, expect, it } from "vitest";
 import {
   getBillingSummary,
+  getNextPlan,
   getSuggestedPlanForRedemptions,
 } from "./billing.server";
 
 describe("getSuggestedPlanForRedemptions", () => {
-  it("suggests free for low redemption counts", () => {
+  it("does not upsell the product based on redemption volume", () => {
     expect(getSuggestedPlanForRedemptions(0)).toBe("free");
-    expect(getSuggestedPlanForRedemptions(499)).toBe("free");
+    expect(getSuggestedPlanForRedemptions(5000)).toBe("free");
   });
+});
 
-  it("suggests higher tiers as redemptions grow", () => {
-    expect(getSuggestedPlanForRedemptions(500)).toBe("starter");
-    expect(getSuggestedPlanForRedemptions(2000)).toBe("scale");
-    expect(getSuggestedPlanForRedemptions(5000)).toBe("pro");
+describe("getNextPlan", () => {
+  it("offers Support from Free and nothing after that", () => {
+    expect(getNextPlan("free")).toBe("starter");
+    expect(getNextPlan("starter")).toBeNull();
+    expect(getNextPlan("pro")).toBeNull();
   });
 });
 
 describe("getBillingSummary", () => {
-  it("tracks discount redemptions without implying automatic billing", () => {
-    const summary = getBillingSummary("free", 1200);
+  it("treats legacy paid tiers as Support", () => {
+    const summary = getBillingSummary("scale", 1200);
 
     expect(summary.discountRedemptions).toBe(1200);
-    expect(summary.suggestedPlan).toBe("starter");
-    expect(summary.suggestedPlanLabel).toBe("Starter");
-    expect(summary.plan).toBe("free");
+    expect(summary.plan).toBe("starter");
+    expect(summary.planLabel).toBe("Support");
+    expect(summary.monthlyPrice).toBe(2);
+    expect(summary.suggestedPlan).toBe("free");
   });
 });

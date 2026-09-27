@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { resolvePlanFromSubscriptionWebhook } from "../routes/webhooks.app.subscriptions_update";
 
 describe("resolvePlanFromSubscriptionWebhook", () => {
-  it("maps active Growth subscriptions to scale", () => {
+  it("maps active Growth subscriptions to Support", () => {
     expect(
       resolvePlanFromSubscriptionWebhook({
         app_subscription: {
@@ -10,7 +10,7 @@ describe("resolvePlanFromSubscriptionWebhook", () => {
           status: "ACTIVE",
         },
       }),
-    ).toBe("scale");
+    ).toBe("starter");
   });
 
   it("maps cancelled subscriptions to free", () => {

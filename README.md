@@ -62,14 +62,10 @@ Free to install. Merchants choose a paid plan on the in-app **Billing** page whe
 
 | Plan | Price | Best for |
 |------|-------|----------|
-| **Free** | $0/mo | Getting started |
-| **Starter** | $7.99/mo | Steady bundle sales |
-| **Growth** | $14.99/mo | Growing bundle volume |
-| **Pro** | $29.99/mo | High-volume stores |
+| **Free** | $0/mo | Full product |
+| **Support** | $2/mo | Email customer support |
 
-Compared to leading bundle apps: Growth at $14.99 undercuts Kaching's $29.99 band for similar stores. Pro unlimited at $29.99 undercuts Appstle's $39.99 unlimited tier.
-
-Shopify bills approved plans on a 30-day cycle. Uninstalling removes app discounts and offer data automatically.
+Shopify bills the Support plan on a 30-day cycle. Uninstalling removes app discounts and offer data automatically.
 
 > Tier definitions live in `app/billing.plans.ts`. Charge creation uses the Shopify Billing API (with Managed Pricing fallback) in `app/billing.shopify.ts`.
 

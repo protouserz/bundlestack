@@ -6,25 +6,28 @@ import {
 } from "./billing.shopify";
 
 describe("getTierForPlanHandle", () => {
-  it("maps Shopify App Pricing handles to app tiers", () => {
-    expect(getTierForPlanHandle("growth")).toBe("scale");
+  it("maps Shopify App Pricing handles to free or Support", () => {
+    expect(getTierForPlanHandle("growth")).toBe("starter");
     expect(getTierForPlanHandle("starter")).toBe("starter");
-    expect(getTierForPlanHandle("pro")).toBe("pro");
+    expect(getTierForPlanHandle("support")).toBe("starter");
+    expect(getTierForPlanHandle("pro")).toBe("starter");
     expect(getTierForPlanHandle("free")).toBe("free");
   });
 });
 
 describe("getTierForShopifyPlan", () => {
-  it("maps exact Shopify billing plan names", () => {
+  it("maps current and legacy Shopify billing plan names to Support", () => {
+    expect(getTierForShopifyPlan(SHOPIFY_BILLING_PLANS.SUPPORT)).toBe("starter");
     expect(getTierForShopifyPlan(SHOPIFY_BILLING_PLANS.STARTER)).toBe("starter");
-    expect(getTierForShopifyPlan(SHOPIFY_BILLING_PLANS.SCALE)).toBe("scale");
-    expect(getTierForShopifyPlan(SHOPIFY_BILLING_PLANS.PRO)).toBe("pro");
+    expect(getTierForShopifyPlan(SHOPIFY_BILLING_PLANS.SCALE)).toBe("starter");
+    expect(getTierForShopifyPlan(SHOPIFY_BILLING_PLANS.PRO)).toBe("starter");
   });
 
   it("maps managed pricing style short names exactly", () => {
+    expect(getTierForShopifyPlan("Support")).toBe("starter");
     expect(getTierForShopifyPlan("Starter")).toBe("starter");
-    expect(getTierForShopifyPlan("Growth")).toBe("scale");
-    expect(getTierForShopifyPlan("Pro")).toBe("pro");
+    expect(getTierForShopifyPlan("Growth")).toBe("starter");
+    expect(getTierForShopifyPlan("Pro")).toBe("starter");
   });
 
   it("does not substring-match unrelated plan names", () => {

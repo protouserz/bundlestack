@@ -12,14 +12,15 @@ describe("resolveBillingPlan", () => {
     expect(resolveBillingPlan(["Some other app plan"])).toBe("free");
   });
 
-  it("maps active Shopify subscription names to app tiers", () => {
+  it("maps active Shopify subscription names to Support", () => {
+    expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.SUPPORT])).toBe("starter");
     expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.STARTER])).toBe("starter");
-    expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.SCALE])).toBe("scale");
-    expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.PRO])).toBe("pro");
+    expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.SCALE])).toBe("starter");
+    expect(resolveBillingPlan([SHOPIFY_BILLING_PLANS.PRO])).toBe("starter");
   });
 
-  it("prefers the highest active tier when multiple subscriptions exist", () => {
-    expect(resolveBillingPlan(["Starter", "Growth"])).toBe("scale");
+  it("treats any paid subscription as Support", () => {
+    expect(resolveBillingPlan(["Starter", "Growth"])).toBe("starter");
   });
 });
 

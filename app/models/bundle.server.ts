@@ -1,7 +1,7 @@
 import prisma from "../db.server";
 import { isBillingPlan, type BillingPlan } from "../billing.server";
+import { SUPPORT_PLAN } from "../billing.plans";
 import { getTierForShopifyPlan } from "../billing.shopify";
-import { PLAN_ORDER } from "../billing.plans";
 import { safeJsonParse } from "../utils/json.server";
 import {
   OFFER_TYPE_BOGO,
@@ -10,6 +10,7 @@ import {
   isBogoOffer,
   isCatalogOffer,
   isOfferType,
+  type BundleOfferInput,
   type DiscountTier,
 } from "./offer";
 
@@ -330,18 +331,13 @@ export async function clearPendingBillingPlan(shop: string) {
 export function resolveBillingPlan(
   activeSubscriptionNames: string[],
 ): BillingPlan {
-  let bestPlan: BillingPlan = "free";
-
   for (const name of activeSubscriptionNames) {
-    const tier = getTierForShopifyPlan(name);
-    if (!tier) continue;
-
-    if (PLAN_ORDER.indexOf(tier) > PLAN_ORDER.indexOf(bestPlan)) {
-      bestPlan = tier;
+    if (getTierForShopifyPlan(name)) {
+      return SUPPORT_PLAN;
     }
   }
 
-  return bestPlan;
+  return "free";
 }
 
 export function resolveCurrentBillingPlan({

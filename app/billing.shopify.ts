@@ -1,10 +1,11 @@
 import { BillingInterval } from "@shopify/shopify-app-react-router/server";
 import type { BillingConfigSubscriptionLineItemPlan } from "@shopify/shopify-api";
-import { PLAN_PRICES, type BillingPlan } from "./billing.plans";
+import { PLAN_PRICES, SUPPORT_PLAN, type BillingPlan } from "./billing.plans";
 
 export type { BillingPlan };
 
 export const SHOPIFY_BILLING_PLANS = {
+  SUPPORT: "BundleStack Support",
   STARTER: "BundleStack Starter",
   SCALE: "BundleStack Growth",
   PRO: "BundleStack Pro",
@@ -17,16 +18,26 @@ export const BILLING_PLAN_BY_TIER: Record<
   Exclude<BillingPlan, "free">,
   ShopifyBillingPlanName
 > = {
-  starter: SHOPIFY_BILLING_PLANS.STARTER,
-  scale: SHOPIFY_BILLING_PLANS.SCALE,
-  pro: SHOPIFY_BILLING_PLANS.PRO,
+  starter: SHOPIFY_BILLING_PLANS.SUPPORT,
+  scale: SHOPIFY_BILLING_PLANS.SUPPORT,
+  pro: SHOPIFY_BILLING_PLANS.SUPPORT,
 };
 
 export const ALL_SHOPIFY_BILLING_PLANS: ShopifyBillingPlanName[] = [
+  SHOPIFY_BILLING_PLANS.SUPPORT,
   SHOPIFY_BILLING_PLANS.STARTER,
   SHOPIFY_BILLING_PLANS.SCALE,
   SHOPIFY_BILLING_PLANS.PRO,
 ];
+
+const LEGACY_PLAN_AMOUNTS: Record<
+  "STARTER" | "SCALE" | "PRO",
+  number
+> = {
+  STARTER: 7.99,
+  SCALE: 14.99,
+  PRO: 29.99,
+};
 
 export function getShopifyPlanForTier(
   plan: BillingPlan,
@@ -35,38 +46,30 @@ export function getShopifyPlanForTier(
   return BILLING_PLAN_BY_TIER[plan];
 }
 
+function monthlyPlan(
+  amount: number,
+): BillingConfigSubscriptionLineItemPlan {
+  return {
+    lineItems: [
+      {
+        amount,
+        currencyCode: "USD" as const,
+        interval: BillingInterval.Every30Days,
+      },
+    ],
+  };
+}
+
 export function shopifyBillingConfig(): Record<
   ShopifyBillingPlanName,
   BillingConfigSubscriptionLineItemPlan
 > {
   return {
-    [SHOPIFY_BILLING_PLANS.STARTER]: {
-      lineItems: [
-        {
-          amount: PLAN_PRICES.starter,
-          currencyCode: "USD" as const,
-          interval: BillingInterval.Every30Days,
-        },
-      ],
-    },
-    [SHOPIFY_BILLING_PLANS.SCALE]: {
-      lineItems: [
-        {
-          amount: PLAN_PRICES.scale,
-          currencyCode: "USD" as const,
-          interval: BillingInterval.Every30Days,
-        },
-      ],
-    },
-    [SHOPIFY_BILLING_PLANS.PRO]: {
-      lineItems: [
-        {
-          amount: PLAN_PRICES.pro,
-          currencyCode: "USD" as const,
-          interval: BillingInterval.Every30Days,
-        },
-      ],
-    },
+    [SHOPIFY_BILLING_PLANS.SUPPORT]: monthlyPlan(PLAN_PRICES[SUPPORT_PLAN]),
+    // Keep legacy names so existing subscriptions can still be read/cancelled.
+    [SHOPIFY_BILLING_PLANS.STARTER]: monthlyPlan(LEGACY_PLAN_AMOUNTS.STARTER),
+    [SHOPIFY_BILLING_PLANS.SCALE]: monthlyPlan(LEGACY_PLAN_AMOUNTS.SCALE),
+    [SHOPIFY_BILLING_PLANS.PRO]: monthlyPlan(LEGACY_PLAN_AMOUNTS.PRO),
   };
 }
 
@@ -80,23 +83,22 @@ export function isBillingTestMode(): boolean {
 export function getTierForShopifyPlan(
   planName: string,
 ): Exclude<BillingPlan, "free"> | null {
-  const entry = Object.entries(BILLING_PLAN_BY_TIER).find(
-    ([, name]) => name === planName,
-  );
-  if (entry) {
-    return entry[0] as Exclude<BillingPlan, "free">;
+  const knownPaid = new Set<string>(Object.values(SHOPIFY_BILLING_PLANS));
+  if (knownPaid.has(planName)) {
+    return SUPPORT_PLAN;
   }
 
-  // Exact aliases only — never substring match (e.g. "Promo" must not map to Pro).
+  // Exact aliases only — never substring match (e.g. "Promo" must not map).
   const normalized = planName.toLowerCase().trim();
-  const aliases: Record<string, Exclude<BillingPlan, "free">> = {
-    starter: "starter",
-    growth: "scale",
-    scale: "scale",
-    pro: "pro",
-  };
+  const aliases = new Set([
+    "support",
+    "starter",
+    "growth",
+    "scale",
+    "pro",
+  ]);
 
-  return aliases[normalized] ?? null;
+  return aliases.has(normalized) ? SUPPORT_PLAN : null;
 }
 
 /** Map Shopify App Pricing plan_handle values to app billing tiers. */
@@ -105,9 +107,6 @@ export function getTierForPlanHandle(
 ): BillingPlan | null {
   const normalized = planHandle.toLowerCase().trim();
   if (normalized === "free") return "free";
-  if (normalized === "starter") return "starter";
-  if (normalized === "growth" || normalized === "scale") return "scale";
-  if (normalized === "pro") return "pro";
 
   const tier = getTierForShopifyPlan(planHandle);
   return tier ?? null;

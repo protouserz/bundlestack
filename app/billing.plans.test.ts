@@ -3,6 +3,8 @@ import {
   PLAN_LABELS,
   PLAN_ORDER,
   PLAN_PRICES,
+  SUPPORT_PLAN,
+  isPaidPlan,
   type BillingPlan,
 } from "./billing.plans";
 
@@ -18,8 +20,12 @@ describe("billing plans", () => {
     expect(PLAN_PRICES.free).toBe(0);
   });
 
-  it("orders plans from free to pro", () => {
-    const tiers: BillingPlan[] = ["free", "starter", "scale", "pro"];
+  it("offers free and a $2 support plan", () => {
+    const tiers: BillingPlan[] = ["free", "starter"];
     expect(PLAN_ORDER).toEqual(tiers);
+    expect(PLAN_PRICES[SUPPORT_PLAN]).toBe(2);
+    expect(PLAN_LABELS[SUPPORT_PLAN]).toBe("Support");
+    expect(isPaidPlan("starter")).toBe(true);
+    expect(isPaidPlan("free")).toBe(false);
   });
 });

@@ -1,37 +1,40 @@
 export type BillingPlan = "free" | "starter" | "scale" | "pro";
 
-/** Suggested monthly discount redemption counts when choosing a paid plan. */
+/** The paid plan merchants can subscribe to. Legacy scale/pro map here. */
+export const SUPPORT_PLAN = "starter" as const satisfies BillingPlan;
+
+/** Suggested monthly discount redemption counts (unused for gating). */
 export const PLAN_THRESHOLDS: Record<BillingPlan, number> = {
   free: 0,
-  starter: 500,
-  scale: 2000,
-  pro: 5000,
+  starter: 0,
+  scale: 0,
+  pro: 0,
 };
 
 export const PLAN_PRICES: Record<BillingPlan, number> = {
   free: 0,
-  starter: 7.99,
-  scale: 14.99,
-  pro: 29.99,
+  starter: 2,
+  scale: 2,
+  pro: 2,
 };
 
 export const PLAN_LABELS: Record<BillingPlan, string> = {
   free: "Free",
-  starter: "Starter",
-  scale: "Growth",
-  pro: "Pro",
+  starter: "Support",
+  scale: "Support",
+  pro: "Support",
 };
 
 export const PLAN_REVENUE_CAPS: Record<BillingPlan, string> = {
-  free: "Best for stores getting started",
-  starter: "For stores with steady bundle sales",
-  scale: "For stores with growing bundle volume",
-  pro: "For high-volume stores with no cap",
+  free: "Full product — unlimited offers, widget, and checkout discounts",
+  starter: "Email customer support when you need help",
+  scale: "Email customer support when you need help",
+  pro: "Email customer support when you need help",
 };
 
 export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   free: [
-    "Unlimited quantity-break offers",
+    "Unlimited quantity-break and BOGO offers",
     "Product-page theme widget",
     "Automatic Shopify discount sync",
     "Product picker — no manual IDs",
@@ -39,25 +42,28 @@ export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   ],
   starter: [
     "Everything in Free",
-    "Email support",
-    "Suggested for ~500 discount redemptions / month",
-    "Clean uninstall removes discounts; offers erased on shop/redact",
+    "Email customer support",
   ],
   scale: [
-    "Everything in Starter",
-    "Priority email support",
-    "Suggested for ~2,000 discount redemptions / month",
-    "Faster help when offers need tuning",
+    "Everything in Free",
+    "Email customer support",
   ],
   pro: [
-    "Everything in Growth",
-    "No redemption tracking limits",
-    "Suggested for 5,000+ discount redemptions / month",
-    "Best value at scale",
+    "Everything in Free",
+    "Email customer support",
   ],
 };
 
-export const PLAN_ORDER: BillingPlan[] = ["free", "starter", "scale", "pro"];
+/** Plans shown on the Billing page. */
+export const PLAN_ORDER: BillingPlan[] = ["free", "starter"];
+
+export function isPaidPlan(plan: string): boolean {
+  return plan === "starter" || plan === "scale" || plan === "pro";
+}
+
+export function normalizeBillingPlan(plan: BillingPlan): BillingPlan {
+  return isPaidPlan(plan) ? SUPPORT_PLAN : "free";
+}
 
 export function formatPlanPrice(plan: BillingPlan): string {
   const price = PLAN_PRICES[plan];

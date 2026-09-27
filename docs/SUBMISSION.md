@@ -161,10 +161,8 @@ Paste feature bullets from [`app-store-listing.md`](./app-store-listing.md) into
 
 | Plan | Price | Notes |
 |------|-------|-------|
-| Free | $0/mo | Full core product (offers, widget, sync) |
-| Starter | $7.99/mo | Email support; ~500 redemptions/mo guidance |
-| Growth | $14.99/mo | Priority support; ~2,000 redemptions/mo |
-| Pro | $29.99/mo | No redemption tracking limits; 5,000+/mo |
+| Free | $0/mo | Full product (offers, widget, BOGO, sync) |
+| Support | $2/mo | Email customer support |
 
 Merchants choose a paid plan on the in-app Billing page and approve the charge in Shopify. Plans do not upgrade automatically.
 
@@ -231,7 +229,7 @@ Verify production:
 |-------|-----|
 | OAuth redirect mismatch | `SHOPIFY_APP_URL` on Render must match `shopify.app.toml` |
 | Webhook failures | Check Render logs; cold start may delay first webhook |
-| Billing not shown | Add all four plans in Partners pricing section |
+| Billing not shown | Add Free and Support in Partners pricing section |
 | Protected customer data | Select **No** — app has no `read_orders` or customer scopes |
 | Support email rejected | Use a real address without "Shopify" in the domain or local part |
 

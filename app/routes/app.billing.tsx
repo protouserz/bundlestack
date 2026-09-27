@@ -38,6 +38,7 @@ import {
   PLAN_LABELS,
   PLAN_ORDER,
   PLAN_REVENUE_CAPS,
+  SUPPORT_PLAN,
   type BillingPlan,
 } from "../billing.plans";
 import { getBillingSummary, isBillingPlan } from "../billing.server";
@@ -239,7 +240,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     try {
-      return await requestPaidPlan(billingContext, request, plan);
+      return await requestPaidPlan(billingContext, request, SUPPORT_PLAN);
     } catch (error) {
       if (isManagedPricingBillingError(error)) {
         redirectToShopifyPricing();
@@ -444,17 +445,16 @@ export default function BillingPage() {
         {usesShopifyAppPricing && (
           <s-banner tone="info">
             <s-text>
-              Plan changes use Shopify&apos;s hosted plan page. Click a paid plan
-              below to open it in Shopify admin, then approve the charge there.
+              Plan changes use Shopify&apos;s hosted plan page. Open Support
+              below to approve the $2/month charge in Shopify admin.
             </s-text>
           </s-banner>
         )}
 
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
           <s-text tone="neutral">
-            Choose the plan that fits your store. Upgrade or downgrade anytime
-            from this page — paid plans are billed through Shopify on a 30-day
-            cycle.
+            The app is free. Add customer support for $2/month, billed through
+            Shopify on a 30-day cycle. Cancel anytime.
           </s-text>
         </s-box>
 
@@ -503,9 +503,9 @@ export default function BillingPage() {
         <s-section heading="Pricing plans">
           <s-stack direction="block" gap="large">
             <s-paragraph>
-              Choose a plan below when you are ready. Paid plans are approved
-              through Shopify — you can upgrade, downgrade, or return to Free
-              anytime without reinstalling or contacting support.
+              Free includes the full product. The Support plan adds email help
+              when you need it — approve the $2/month charge in Shopify. You can
+              return to Free anytime without reinstalling.
             </s-paragraph>
 
             <div className={styles.gridCards}>
@@ -526,15 +526,15 @@ export default function BillingPage() {
                 <s-heading>How billing works</s-heading>
                 <s-unordered-list>
                   <s-list-item>
-                    Free includes unlimited offers, the theme widget, and
+                    Free includes unlimited offers, BOGO, the theme widget, and
                     automatic Shopify discounts
                   </s-list-item>
                   <s-list-item>
-                    Select a paid plan when you are ready — approve the charge in
-                    Shopify (plans are not upgraded automatically)
+                    Support is $2/month and adds email customer support —
+                    approve the charge in Shopify (not billed automatically)
                   </s-list-item>
                   <s-list-item>
-                    Switch plans or return to Free anytime from this page
+                    Return to Free anytime from this page
                   </s-list-item>
                   <s-list-item>
                     Discount redemptions are counted from your synced Shopify

@@ -1,7 +1,9 @@
 import {
   PLAN_LABELS,
   PLAN_PRICES,
-  PLAN_THRESHOLDS,
+  isPaidPlan,
+  normalizeBillingPlan,
+  SUPPORT_PLAN,
   type BillingPlan,
 } from "./billing.plans";
 
@@ -13,15 +15,15 @@ export {
   PLAN_PRICES,
   PLAN_REVENUE_CAPS,
   PLAN_THRESHOLDS,
+  SUPPORT_PLAN,
   formatPlanPrice,
+  isPaidPlan,
+  normalizeBillingPlan,
 } from "./billing.plans";
 
 export function getSuggestedPlanForRedemptions(
-  discountRedemptions: number,
+  _discountRedemptions: number,
 ): BillingPlan {
-  if (discountRedemptions >= PLAN_THRESHOLDS.pro) return "pro";
-  if (discountRedemptions >= PLAN_THRESHOLDS.scale) return "scale";
-  if (discountRedemptions >= PLAN_THRESHOLDS.starter) return "starter";
   return "free";
 }
 
@@ -29,10 +31,7 @@ export function getSuggestedPlanForRedemptions(
 export const getPlanForRevenue = getSuggestedPlanForRedemptions;
 
 export function getNextPlan(current: BillingPlan): BillingPlan | null {
-  if (current === "free") return "starter";
-  if (current === "starter") return "scale";
-  if (current === "scale") return "pro";
-  return null;
+  return isPaidPlan(current) ? null : SUPPORT_PLAN;
 }
 
 export type BillingSummary = {
@@ -54,30 +53,14 @@ export function getBillingSummary(
   plan: BillingPlan,
   discountUses: number,
 ): BillingSummary {
+  const normalized = normalizeBillingPlan(plan);
   const suggestedPlan = getSuggestedPlanForRedemptions(discountUses);
-  const nextPlan = getNextPlan(plan);
-  const monthlyPrice = PLAN_PRICES[plan];
-
-  let redemptionsUntilSuggestedTier: number | null = null;
-  let progressToSuggestedTier = 100;
-
-  if (nextPlan) {
-    const nextThreshold = PLAN_THRESHOLDS[nextPlan];
-    const currentThreshold = PLAN_THRESHOLDS[plan];
-    redemptionsUntilSuggestedTier = Math.max(0, nextThreshold - discountUses);
-    const range = nextThreshold - currentThreshold;
-    progressToSuggestedTier =
-      range > 0
-        ? Math.min(100, ((discountUses - currentThreshold) / range) * 100)
-        : 100;
-  }
-
-  const alertAtEightyPercent =
-    nextPlan !== null && progressToSuggestedTier >= 80 && progressToSuggestedTier < 100;
+  const nextPlan = getNextPlan(normalized);
+  const monthlyPrice = PLAN_PRICES[normalized];
 
   return {
-    plan,
-    planLabel: PLAN_LABELS[plan],
+    plan: normalized,
+    planLabel: PLAN_LABELS[normalized],
     monthlyPrice,
     discountRedemptions: discountUses,
     suggestedPlan,
@@ -85,12 +68,12 @@ export function getBillingSummary(
     nextPlan,
     nextPlanLabel: nextPlan ? PLAN_LABELS[nextPlan] : null,
     nextPlanPrice: nextPlan ? PLAN_PRICES[nextPlan] : null,
-    redemptionsUntilSuggestedTier,
-    progressToSuggestedTier: Math.round(Math.max(0, progressToSuggestedTier)),
-    alertAtEightyPercent,
+    redemptionsUntilSuggestedTier: null,
+    progressToSuggestedTier: 100,
+    alertAtEightyPercent: false,
   };
 }
 
 export function isBillingPlan(value: string): value is BillingPlan {
-  return value === "free" || value === "starter" || value === "scale" || value === "pro";
+  return value === "free" || isPaidPlan(value);
 }

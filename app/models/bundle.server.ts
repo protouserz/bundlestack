@@ -164,21 +164,88 @@ export async function getActiveOffersForProduct(shop: string, productId: string)
     );
 }
 
-export type OfferBadge = {
-  handle: string;
-  productId: string;
+type OfferBadgeFields = {
   minQty: number;
   startingDiscountType: "percentage" | "fixed";
   startingDiscountValue: number;
   discountType: "percentage" | "fixed";
   discountValue: number;
-  offerType?: string;
+  offerType: string;
   getQty?: number;
+};
+
+export type OfferBadge = OfferBadgeFields & {
+  handle: string;
+  productId: string;
+  catalog?: boolean;
 };
 
 function numericProductId(gid: string): string | null {
   const match = /Product\/(\d+)/.exec(gid);
   return match?.[1] ?? null;
+}
+
+function badgeFieldsFromOffer(offer: {
+  offerType: string;
+  tiers: DiscountTier[];
+}): OfferBadgeFields | null {
+  const bogo = isBogoOffer(offer.offerType);
+  const tiers = [...offer.tiers].sort((a, b) => a.minQty - b.minQty);
+  const startingTier = tiers[0];
+  if (!startingTier?.minQty) return null;
+  if (!bogo && startingTier.discountValue <= 0) return null;
+
+  const best = tiers.reduce((max, tier) =>
+    tier.discountValue > max.discountValue ? tier : max,
+  );
+
+  return {
+    minQty: startingTier.minQty,
+    startingDiscountType: startingTier.discountType,
+    startingDiscountValue: startingTier.discountValue,
+    discountType: best.discountType,
+    discountValue: best.discountValue,
+    offerType: offer.offerType,
+    ...(bogo || Number(startingTier.getQty) > 0
+      ? { getQty: Math.max(1, Math.floor(Number(startingTier.getQty)) || 1) }
+      : {}),
+  };
+}
+
+function preferBadge(
+  existing: OfferBadgeFields | undefined,
+  incoming: OfferBadgeFields,
+): OfferBadgeFields {
+  if (!existing) return incoming;
+  const incomingBogo = isBogoOffer(incoming.offerType);
+  const existingBogo = isBogoOffer(existing.offerType);
+  if (incomingBogo && !existingBogo) return incoming;
+  if (existingBogo && !incomingBogo) return existing;
+  return incoming.discountValue > existing.discountValue ? incoming : existing;
+}
+
+/** Pick overlay copy for catalog-wide vs product-assigned offers. */
+export function selectStorefrontBadges(
+  offers: Array<{ offerType: string; productIds: string[]; tiers: DiscountTier[] }>,
+): { catalog: OfferBadgeFields | null; byProductId: Map<string, OfferBadgeFields> } {
+  let catalog: OfferBadgeFields | null = null;
+  const byProductId = new Map<string, OfferBadgeFields>();
+
+  for (const offer of offers) {
+    const entry = badgeFieldsFromOffer(offer);
+    if (!entry) continue;
+
+    if (isCatalogOffer(offer.productIds)) {
+      catalog = preferBadge(catalog ?? undefined, entry);
+      continue;
+    }
+
+    for (const productId of offer.productIds) {
+      byProductId.set(productId, preferBadge(byProductId.get(productId), entry));
+    }
+  }
+
+  return { catalog, byProductId };
 }
 
 /**
@@ -194,51 +261,24 @@ export async function getActiveOfferBadges(
     orderBy: { updatedAt: "desc" },
   });
 
-  const bestByProduct = new Map<
-    string,
-    {
-      minQty: number;
-      startingDiscountType: "percentage" | "fixed";
-      startingDiscountValue: number;
-      discountType: "percentage" | "fixed";
-      discountValue: number;
-      offerType: string;
-      getQty?: number;
-    }
-  >();
-
-  for (const offer of offers.map(serializeOffer)) {
-    const tiers = offer.tiers
-      .filter((tier) => tier.discountValue > 0)
-      .sort((a, b) => a.minQty - b.minQty);
-    if (tiers.length === 0) continue;
-
-    const startingTier = tiers[0];
-    const best = tiers.reduce((max, tier) =>
-      tier.discountValue > max.discountValue ? tier : max,
-    );
-    const entry = {
-      minQty: startingTier.minQty,
-      startingDiscountType: startingTier.discountType,
-      startingDiscountValue: startingTier.discountValue,
-      discountType: best.discountType,
-      discountValue: best.discountValue,
-      offerType: offer.offerType,
-      ...(isBogoOffer(offer.offerType)
-        ? { getQty: startingTier.getQty ?? 1 }
-        : {}),
-    };
-
-    for (const productId of offer.productIds) {
-      const existing = bestByProduct.get(productId);
-      if (!existing || entry.discountValue > existing.discountValue) {
-        bestByProduct.set(productId, entry);
-      }
-    }
-  }
+  const { catalog, byProductId: bestByProduct } = selectStorefrontBadges(
+    offers.map(serializeOffer),
+  );
 
   const productIds = [...bestByProduct.keys()];
-  if (productIds.length === 0) return [];
+  if (productIds.length === 0 && !catalog) return [];
+
+  const badges: OfferBadge[] = [];
+  if (catalog) {
+    badges.push({
+      handle: "",
+      productId: "",
+      catalog: true,
+      ...catalog,
+    });
+  }
+
+  if (productIds.length === 0) return badges;
 
   const response = await admin.graphql(
     `#graphql
@@ -261,7 +301,6 @@ export async function getActiveOfferBadges(
   const nodes: Array<{ id?: string; handle?: string } | null> =
     json.data?.nodes ?? [];
 
-  const badges: OfferBadge[] = [];
   for (const node of nodes) {
     if (!node?.id || !node.handle) continue;
     const entry = bestByProduct.get(node.id);

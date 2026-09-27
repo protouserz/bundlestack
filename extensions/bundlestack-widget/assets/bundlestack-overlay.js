@@ -96,7 +96,7 @@
     return true;
   }
 
-  function badgeForAnchor(anchor, byHandle, byProductId) {
+  function badgeForAnchor(anchor, byHandle, byProductId, catalog) {
     const handle = handleFromHref(anchor.getAttribute("href"));
     if (handle && byHandle.has(handle)) return byHandle.get(handle);
 
@@ -108,16 +108,16 @@
     if (idAttr && byProductId.has(String(idAttr))) {
       return byProductId.get(String(idAttr));
     }
-    return null;
+    return catalog || null;
   }
 
-  function scan(byHandle, byProductId) {
+  function scan(byHandle, byProductId, catalog) {
     const seenCards = new WeakSet();
 
     document.querySelectorAll('a[href*="/products/"]').forEach((anchor) => {
       if (anchor.closest(".bundlestack-widget, .bundlestack-badge")) return;
 
-      const badge = badgeForAnchor(anchor, byHandle, byProductId);
+      const badge = badgeForAnchor(anchor, byHandle, byProductId, catalog);
       if (!badge) return;
 
       const card = findCard(anchor);
@@ -153,18 +153,21 @@
     fetchJson(url, fetchOpts)
       .then((data) => {
         const badges = data.badges || [];
-        if (badges.length === 0) return;
+        const catalog = data.catalog || badges.find((badge) => badge.catalog);
+        if (badges.length === 0 && !catalog) return;
 
         const byHandle = new Map(
-          badges.map((badge) => [badge.handle, badge]),
+          badges
+            .filter((badge) => !badge.catalog && badge.handle)
+            .map((badge) => [badge.handle, badge]),
         );
         const byProductId = new Map(
           badges
-            .filter((badge) => badge.productId)
+            .filter((badge) => !badge.catalog && badge.productId)
             .map((badge) => [String(badge.productId), badge]),
         );
 
-        scan(byHandle, byProductId);
+        scan(byHandle, byProductId, catalog);
 
         let timer = null;
         let quietTimer = null;
@@ -199,7 +202,7 @@
           if (timer) return;
           timer = setTimeout(() => {
             timer = null;
-            scan(byHandle, byProductId);
+            scan(byHandle, byProductId, catalog);
           }, 500);
         });
         observer.observe(document.body, { childList: true, subtree: true });

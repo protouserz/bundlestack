@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appDiscountTitle, isOfferDiscountTitle } from "./discount.server";
+import { appDiscountTitle, functionConfigurationValue, isOfferDiscountTitle } from "./discount.server";
 
 const offer = {
   id: "offer123",
@@ -55,5 +55,32 @@ describe("isOfferDiscountTitle", () => {
       false,
     );
     expect(isOfferDiscountTitle("Sale · storewide", saleOffer)).toBe(false);
+  });
+});
+
+describe("functionConfigurationValue", () => {
+  it("serializes BOGO buy/get quantities for the Function metafield", () => {
+    expect(
+      JSON.parse(
+        functionConfigurationValue({
+          ...offer,
+          title: "Buy 1 get 1 free",
+          offerType: "bogo",
+          tiers: [
+            {
+              minQty: 1,
+              getQty: 1,
+              discountType: "percentage",
+              discountValue: 100,
+            },
+          ],
+        }),
+      ),
+    ).toEqual({
+      type: "bogo",
+      productIds: ["gid://shopify/Product/1"],
+      buyQuantity: 1,
+      getQuantity: 1,
+    });
   });
 });

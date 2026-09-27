@@ -51,13 +51,14 @@
                   }
                 ],
                 "value": {
-                  "percentage": {
-                    "value": 100.0
+                  "fixedAmount": {
+                    "amount": "10.00",
+                    "appliesToEachItem": true
                   }
                 }
               }
             ],
-            "selectionStrategy": "FIRST"
+            "selectionStrategy": "ALL"
           }
         }
       ]

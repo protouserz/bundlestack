@@ -26,8 +26,30 @@ type MatchingLine = {
 };
 
 function parseConfig(value: unknown): FunctionConfig | null {
-  if (!value || typeof value !== "object") return null;
-  return value as FunctionConfig;
+  let parsed: unknown = value;
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return null;
+    }
+  }
+  if (!parsed || typeof parsed !== "object") return null;
+  return parsed as FunctionConfig;
+}
+
+function isBogoConfig(config: FunctionConfig | null): boolean {
+  if (!config) return false;
+  if (String(config.type ?? "").toLowerCase() === "bogo") return true;
+  const buyQuantity = Number(config.buyQuantity);
+  const getQuantity = Number(config.getQuantity);
+  return (
+    Number.isFinite(buyQuantity) &&
+    buyQuantity > 0 &&
+    Number.isFinite(getQuantity) &&
+    getQuantity > 0 &&
+    (!config.tiers || config.tiers.length === 0)
+  );
 }
 
 function bestTier(tiers: QuantityTier[], quantity: number): QuantityTier | null {
@@ -105,26 +127,30 @@ function runBogo(
     return { operations: [] };
   }
 
+  const linesById = new Map(lines.map((line) => [line.id, line]));
+  const message = `Buy ${buyQuantity} get ${getQuantity} free`;
+
   return {
     operations: [
       {
         productDiscountsAdd: {
-          candidates: [
-            {
-              message: `Buy ${buyQuantity} get ${getQuantity} free`,
-              targets: [...discountedQtyByLine.entries()].map(
-                ([id, quantity]) => ({
-                  cartLine: { id, quantity },
-                }),
-              ),
+          // One candidate per line so mixed-price variants stay exact. Use a
+          // fixed amount instead of 100% — Shopify drops some 100% Function
+          // product discounts at checkout when another product discount also
+          // targets the line.
+          candidates: [...discountedQtyByLine.entries()].map(
+            ([id, quantity]) => ({
+              message,
+              targets: [{ cartLine: { id, quantity } }],
               value: {
-                percentage: {
-                  value: 100,
+                fixedAmount: {
+                  amount: Number(linesById.get(id)?.unitPrice ?? 0).toFixed(2),
+                  appliesToEachItem: true,
                 },
               },
-            },
-          ],
-          selectionStrategy: ProductDiscountSelectionStrategy.First,
+            }),
+          ),
+          selectionStrategy: ProductDiscountSelectionStrategy.All,
         },
       },
     ],
@@ -152,7 +178,7 @@ export function cartLinesDiscountsGenerateRun(
     return { operations: [] };
   }
 
-  if (config?.type === "bogo") {
+  if (config && isBogoConfig(config)) {
     return runBogo(config, lines);
   }
 

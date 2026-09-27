@@ -56,7 +56,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     try {
       const admin = await resolveAdmin(shop, proxyAdmin);
       const badges = admin ? await getActiveOfferBadges(shop, admin) : [];
-      return new Response(JSON.stringify({ badges }), {
+      const catalog = badges.find((badge) => badge.catalog) ?? null;
+      return new Response(JSON.stringify({ badges, catalog }), {
         headers: {
           "Content-Type": "application/json",
           // Shop-scoped config — avoid shared public caches that key poorly.

@@ -27,7 +27,6 @@
         "discountClasses": ["PRODUCT"],
         "metafield": {
           "jsonValue": {
-            "type": "bogo",
             "productIds": ["gid://shopify/Product/1"],
             "buyQuantity": 1,
             "getQuantity": 1

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseOfferForm, isCatalogOffer, offerDiscountSummary } from "./bundle.server";
+import { parseOfferForm, isCatalogOffer, offerDiscountSummary, selectStorefrontBadges } from "./bundle.server";
 
 function form(entries: Record<string, string>) {
   const data = new FormData();
@@ -190,5 +190,53 @@ describe("offerDiscountSummary", () => {
         ],
       }),
     ).toBe("Buy 1 get 1 free");
+  });
+});
+
+describe("selectStorefrontBadges", () => {
+  const qb = {
+    offerType: "quantity_break",
+    productIds: [] as string[],
+    tiers: [
+      { minQty: 2, discountType: "percentage" as const, discountValue: 10 },
+      { minQty: 3, discountType: "percentage" as const, discountValue: 15 },
+    ],
+  };
+  const bogo = {
+    offerType: "bogo",
+    productIds: [] as string[],
+    tiers: [
+      {
+        minQty: 1,
+        getQty: 1,
+        discountType: "percentage" as const,
+        discountValue: 100,
+      },
+    ],
+  };
+
+  it("emits a catalog badge for all-products BOGO", () => {
+    const { catalog, byProductId } = selectStorefrontBadges([bogo]);
+    expect(byProductId.size).toBe(0);
+    expect(catalog).toMatchObject({
+      offerType: "bogo",
+      minQty: 1,
+      getQty: 1,
+    });
+  });
+
+  it("prefers BOGO copy over a catalog quantity-break", () => {
+    const { catalog } = selectStorefrontBadges([qb, bogo]);
+    expect(catalog?.offerType).toBe("bogo");
+    expect(catalog?.getQty).toBe(1);
+  });
+
+  it("lets a product-specific BOGO override a catalog quantity-break", () => {
+    const { catalog, byProductId } = selectStorefrontBadges([
+      qb,
+      { ...bogo, productIds: ["gid://shopify/Product/1"] },
+    ]);
+    expect(catalog?.offerType).toBe("quantity_break");
+    expect(byProductId.get("gid://shopify/Product/1")?.offerType).toBe("bogo");
   });
 });

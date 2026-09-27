@@ -29,6 +29,20 @@ function percentageTiers(offer: SerializedOffer): DiscountTier[] {
   return offer.tiers.filter((tier) => tier.discountType === "percentage");
 }
 
+function canSyncOfferDiscounts(offer: SerializedOffer): boolean {
+  return isBogoOffer(offer.offerType) || percentageTiers(offer).length > 0;
+}
+
+function combinesWithForOffer(offer: SerializedOffer) {
+  return {
+    orderDiscounts: true,
+    // BOGO must not stack with the catalog quantity-break on the same line —
+    // Shopify drops the free unit. Let checkout pick the better product discount.
+    productDiscounts: !isBogoOffer(offer.offerType),
+    shippingDiscounts: true,
+  };
+}
+
 export function appDiscountTitle(offer: SerializedOffer): string {
   const name = offer.title.trim() || "Volume discount";
   return `BundleStack ${offer.id} · ${name}`;
@@ -71,7 +85,7 @@ function assertGraphqlOk(json: GraphqlResponse, context: string) {
   }
 }
 
-function functionConfigurationValue(offer: SerializedOffer) {
+export function functionConfigurationValue(offer: SerializedOffer) {
   if (isBogoOffer(offer.offerType)) {
     const tier = offer.tiers[0];
     const buyQuantity = Math.max(1, Math.floor(Number(tier?.minQty) || 1));
@@ -241,11 +255,7 @@ async function createAppAutomaticDiscount(
           functionHandle: FUNCTION_HANDLE,
           discountClasses: ["PRODUCT"],
           startsAt,
-          combinesWith: {
-            orderDiscounts: true,
-            productDiscounts: true,
-            shippingDiscounts: true,
-          },
+          combinesWith: combinesWithForOffer(offer),
           metafields: [
             {
               namespace: METAFIELD_NAMESPACE,
@@ -313,11 +323,7 @@ async function updateAppAutomaticDiscount(
         automaticAppDiscount: {
           title,
           discountClasses: ["PRODUCT"],
-          combinesWith: {
-            orderDiscounts: true,
-            productDiscounts: true,
-            shippingDiscounts: true,
-          },
+          combinesWith: combinesWithForOffer(offer),
           metafields: [
             {
               namespace: METAFIELD_NAMESPACE,
@@ -358,7 +364,7 @@ export async function syncOfferDiscounts(
     return [];
   }
 
-  if (percentageTiers(offer).length === 0) {
+  if (!canSyncOfferDiscounts(offer)) {
     throw new Error(
       "Add at least one percentage discount tier before activating.",
     );
@@ -385,7 +391,7 @@ export async function replaceOfferDiscounts(
   offer: SerializedOffer,
   existingDiscountIds: string[],
 ): Promise<string[]> {
-  if (percentageTiers(offer).length === 0) {
+  if (!canSyncOfferDiscounts(offer)) {
     return [];
   }
 

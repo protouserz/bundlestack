@@ -632,6 +632,14 @@
           qtyInput.addEventListener("input", () =>
             syncSelectedFromQuantity(root)
           );
+        }
+
+        const firstTier = tiersEl.querySelector(".bundlestack-widget__tier");
+        const isBogo =
+          offer.offerType === "bogo" || Number(offer.tiers[0]?.getQty) > 0;
+        if (isBogo && firstTier) {
+          selectTier(root, firstTier, firstTier.dataset.minQty);
+        } else if (qtyInput) {
           syncSelectedFromQuantity(root);
         }
       })

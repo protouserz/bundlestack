@@ -92,8 +92,6 @@ export default function PromotionsHub() {
         <s-stack direction="block" gap="base">
           {PROMOTION_TYPES.map((type) => {
             const meta = PROMOTION_TYPE_META[type];
-            const isAdvanced = type === "bundle_builder" || type === "fbt";
-            const locked = isAdvanced && !access.advancedAllowed;
 
             return (
               <s-box
@@ -108,26 +106,14 @@ export default function PromotionsHub() {
                     <s-badge>
                       {counts[type]} offer{counts[type] === 1 ? "" : "s"}
                     </s-badge>
-                    {locked ? <s-badge>Growth+</s-badge> : null}
                   </s-stack>
                   <s-text tone="neutral">{meta.description}</s-text>
-                  {locked ? (
-                    <s-stack direction="inline" gap="base">
-                      <s-text tone="neutral">
-                        Requires Growth or Pro. You&apos;re on {access.planLabel}.
-                      </s-text>
-                      <SButton variant="primary" href="/app/billing">
-                        Upgrade
-                      </SButton>
-                    </s-stack>
-                  ) : (
-                    <s-stack direction="inline" gap="base">
-                      <SButton variant="primary" href={meta.href}>
-                        Manage {meta.shortLabel}
-                      </SButton>
-                      <Link to={`${meta.href}/new`}>Create new</Link>
-                    </s-stack>
-                  )}
+                  <s-stack direction="inline" gap="base">
+                    <SButton variant="primary" href={meta.href}>
+                      Manage {meta.shortLabel}
+                    </SButton>
+                    <Link to={`${meta.href}/new`}>Create new</Link>
+                  </s-stack>
                 </s-stack>
               </s-box>
             );

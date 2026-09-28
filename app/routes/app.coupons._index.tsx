@@ -3,7 +3,7 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Link, redirect, useLoaderData, useSubmit } from "react-router";
+import { redirect, useLoaderData, useSubmit } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { EmptyState } from "../components/EmptyState";
@@ -123,8 +123,7 @@ export default function CouponsIndex() {
             <s-text tone="neutral">
               Create checkout codes for percentage or fixed-amount discounts.
               Fixed-amount codes work like gift-card style credits at checkout
-              (Shopify discount codes — not Gift Card balances). Included on{" "}
-              {access.planLabel}.
+              (Shopify discount codes — not Gift Card balances).
             </s-text>
             {coupons.length > 0 ? (
               <SButton
@@ -191,11 +190,6 @@ export default function CouponsIndex() {
           </SButton>
         </s-modal>
       ) : null}
-
-      <s-text tone="neutral">
-        Need a higher plan?{" "}
-        <Link to="/app/billing">View billing</Link>
-      </s-text>
     </SPage>
   );
 }

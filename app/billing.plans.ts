@@ -35,6 +35,8 @@ export const PLAN_REVENUE_CAPS: Record<BillingPlan, string> = {
 export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   free: [
     "Unlimited quantity-break and BOGO offers",
+    "Free gifts, mix & match, builders, and FBT",
+    "Discount codes (coupons)",
     "Product-page theme widget",
     "Automatic Shopify discount sync",
     "Product picker — no manual IDs",

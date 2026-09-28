@@ -47,9 +47,22 @@ export function toShopifyAdminProtocol(url: string): string {
 
 export const THEME_WIDGET_EMBED_HANDLE = "bundle-widget-embed";
 
-export function themeEmbedActivateUrl(shop: string, apiKey: string) {
+function productPreviewPath(handle?: string) {
+  const safe = handle?.trim().split("/").filter(Boolean).pop();
+  return safe ? `/products/${safe}` : null;
+}
+
+export function themeEmbedActivateUrl(
+  shop: string,
+  apiKey: string,
+  productHandle?: string,
+) {
   const storeHandle = shop.replace(/\.myshopify\.com$/i, "");
-  return `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&template=product&activateAppId=${apiKey}/${THEME_WIDGET_EMBED_HANDLE}`;
+  const previewPath = productPreviewPath(productHandle);
+  const previewQuery = previewPath
+    ? `&previewPath=${encodeURIComponent(previewPath)}`
+    : "";
+  return `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&template=product&activateAppId=${apiKey}/${THEME_WIDGET_EMBED_HANDLE}${previewQuery}`;
 }
 
 export function themeProductBlockAddUrl(shop: string, apiKey: string) {

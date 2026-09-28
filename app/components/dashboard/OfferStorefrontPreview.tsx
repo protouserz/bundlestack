@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   storefrontPreviewModel,
   type DiscountTier,
+  type StorefrontPreviewProduct,
 } from "../../models/offer";
 import styles from "./dashboard.module.css";
 
@@ -13,10 +14,15 @@ type PreviewOffer = {
 
 export function OfferStorefrontPreview({
   offer,
+  product,
 }: {
   offer?: PreviewOffer | null;
+  product?: StorefrontPreviewProduct | null;
 }) {
-  const model = storefrontPreviewModel(offer);
+  const model = storefrontPreviewModel(offer, {
+    exampleAmount: product?.exampleAmount,
+    currencyCode: product?.currencyCode,
+  });
   const defaultKey =
     model.rows.find((row) => row.defaultSelected)?.key ?? null;
   const [selectedKey, setSelectedKey] = useState<string | null>(defaultKey);
@@ -25,7 +31,20 @@ export function OfferStorefrontPreview({
     <div className={styles.storefrontPreview}>
       <div className={styles.storefrontPreviewCard}>
         <span className={styles.storefrontPreviewBadge}>{model.overlay}</span>
-        <div className={styles.storefrontPreviewImage} aria-hidden="true" />
+        {product?.imageUrl ? (
+          <img
+            className={styles.storefrontPreviewPhoto}
+            src={product.imageUrl}
+            alt={product.imageAlt || product.title}
+          />
+        ) : (
+          <div className={styles.storefrontPreviewImage} aria-hidden="true" />
+        )}
+        {product?.title ? (
+          <span className={styles.storefrontPreviewProductName}>
+            {product.title}
+          </span>
+        ) : null}
       </div>
 
       <div className={styles.storefrontPreviewWidget}>

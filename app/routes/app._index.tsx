@@ -25,6 +25,7 @@ import { toShopifyAdminProtocol, themeEmbedActivateUrl } from "../components/Adm
 import {
   ensureShopSettings,
   fetchOfferThumbnails,
+  fetchPreviewProduct,
   getShopSettings,
   getShopStats,
   listOffers,
@@ -124,15 +125,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   await ensureShopSettings(shop);
 
   const offers = await listOffers(shop);
+  const previewOffer =
+    offers.find((offer) => offer.status === "active") ?? offers[0] ?? null;
 
   // Resolve all dashboard data together. Streaming these Admin API requests
   // left embedded-app Suspense fallbacks pending indefinitely in production.
-  const [settings, stats, health, offerThumbnails] = await Promise.all([
-    getShopSettings(shop),
-    getShopStats(shop, offers),
-    getShopHealth(admin, shop, offers),
-    fetchOfferThumbnails(admin, offers),
-  ]);
+  const [settings, stats, health, offerThumbnails, previewProduct] =
+    await Promise.all([
+      getShopSettings(shop),
+      getShopStats(shop, offers),
+      getShopHealth(admin, shop, offers),
+      fetchOfferThumbnails(admin, offers),
+      fetchPreviewProduct(admin, shop, previewOffer?.productIds ?? []),
+    ]);
 
   const requestUrl = new URL(request.url);
   const hasBillingCallback =
@@ -178,9 +183,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     health,
     offers,
     offerThumbnails,
+    previewProduct,
     onboardingDone: settings.onboardingDone,
     themeEditorUrl: apiKey
-      ? themeEmbedActivateUrl(shop, apiKey)
+      ? themeEmbedActivateUrl(shop, apiKey, previewProduct?.handle)
       : themeEditorUrlForShop(shop),
     syncFeedback: readSyncFeedback(request),
   };
@@ -312,6 +318,7 @@ export default function Dashboard() {
     health,
     offers,
     offerThumbnails,
+    previewProduct,
     onboardingDone,
     themeEditorUrl,
     syncFeedback,
@@ -353,6 +360,12 @@ export default function Dashboard() {
       <SButton slot="primary-action" variant="primary" href="/app/offers/new">
         Create offer
       </SButton>
+      <SButton slot="secondary-actions" variant="secondary" href="/app/promotions">
+        Promotions
+      </SButton>
+      <SButton slot="secondary-actions" variant="secondary" href="/app/coupons">
+        Coupons
+      </SButton>
 
       <div className={styles.dashboard}>
         {fixResult ? (
@@ -372,12 +385,15 @@ export default function Dashboard() {
           previewOffer={
             offers.find((offer) => offer.status === "active") ?? offers[0] ?? null
           }
+          previewProduct={previewProduct}
         />
 
         {showSetupGuide && (
           <SetupGuide
             hasOffers={stats.totalOffers > 0}
             themeEditorUrl={themeEditorUrl}
+            storefrontProductUrl={previewProduct?.storefrontUrl}
+            productTitle={previewProduct?.title}
             dismissFetcher={onboardingFetcher}
           />
         )}
@@ -388,6 +404,23 @@ export default function Dashboard() {
           discountUses={stats.totalDiscountUses}
           health={health}
         />
+
+        <s-section heading="Promotions and coupons">
+          <s-stack direction="block" gap="base">
+            <s-paragraph>
+              Free gifts, mix and match, bundle builders, frequently bought
+              together, and checkout discount codes.
+            </s-paragraph>
+            <s-stack direction="inline" gap="base">
+              <SButton href="/app/promotions" variant="primary">
+                Promotions
+              </SButton>
+              <SButton href="/app/coupons" variant="secondary">
+                Coupons
+              </SButton>
+            </s-stack>
+          </s-stack>
+        </s-section>
 
         {stats.totalDiscountUses > 0 ? (
           <>

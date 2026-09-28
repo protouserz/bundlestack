@@ -1,11 +1,13 @@
 import type { ElementType } from "react";
-import { AdminDeepLinkButton } from "../AdminLink";
+import { AdminDeepLinkButton, ExternalLinkButton } from "../AdminLink";
 import { SButton } from "../polaris";
 import styles from "./dashboard.module.css";
 
 type SetupGuideProps = {
   hasOffers: boolean;
   themeEditorUrl: string;
+  storefrontProductUrl?: string | null;
+  productTitle?: string | null;
   dismissFetcher: {
     Form: ElementType;
     state: string;
@@ -19,6 +21,8 @@ type SetupGuideProps = {
 export function SetupGuide({
   hasOffers,
   themeEditorUrl,
+  storefrontProductUrl,
+  productTitle,
   dismissFetcher,
 }: SetupGuideProps) {
   const steps = hasOffers
@@ -45,8 +49,18 @@ export function SetupGuide({
           id: "storefront",
           done: false,
           title: "Confirm on a live product",
-          body: "After you save the theme, open any product. The same widget should appear above Add to cart.",
-          action: null,
+          body: productTitle
+            ? `After you save the theme, open ${productTitle}. The same widget should appear above Add to cart.`
+            : "After you save the theme, open any product. The same widget should appear above Add to cart.",
+          action: storefrontProductUrl ? (
+            <ExternalLinkButton href={storefrontProductUrl}>
+              Preview on a live product
+            </ExternalLinkButton>
+          ) : (
+            <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
+              Preview on a live product
+            </AdminDeepLinkButton>
+          ),
         },
       ]
     : [

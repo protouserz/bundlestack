@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs } from "react-router";
 import { clearShopSessions } from "../models/bundle.server";
 import { cleanupAllShopDiscounts } from "../models/discount.server";
+import { cleanupAllShopCouponDiscounts } from "../models/discount-code.server";
 import {
   authenticateWebhookRequest,
   headers,
@@ -25,6 +26,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       await cleanupAllShopDiscounts(admin, shop);
     } catch (error) {
       console.error(`Failed to cleanup discounts for ${shop}:`, error);
+    }
+    try {
+      await cleanupAllShopCouponDiscounts(admin, shop);
+    } catch (error) {
+      console.error(`Failed to cleanup coupon codes for ${shop}:`, error);
     }
   } else {
     console.warn(

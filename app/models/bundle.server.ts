@@ -6,12 +6,14 @@ import { safeJsonParse } from "../utils/json.server";
 import {
   OFFER_TYPE_BOGO,
   OFFER_TYPE_QUANTITY_BREAK,
+  PREVIEW_EXAMPLE_AMOUNT,
   bogoLabel,
   isBogoOffer,
   isCatalogOffer,
   isOfferType,
   type BundleOfferInput,
   type DiscountTier,
+  type StorefrontPreviewProduct,
 } from "./offer";
 
 export {
@@ -586,6 +588,8 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
 
 export async function cleanupShopData(shop: string) {
   await prisma.bundleOffer.deleteMany({ where: { shop } });
+  await prisma.promotion.deleteMany({ where: { shop } });
+  await prisma.coupon.deleteMany({ where: { shop } });
   await prisma.shopSettings.deleteMany({ where: { shop } });
 }
 
@@ -718,4 +722,131 @@ export async function fetchOfferThumbnails(
   }
 
   return thumbnails;
+}
+
+const PREVIEW_PRODUCT_FIELDS = `
+  title
+  handle
+  onlineStoreUrl
+  featuredMedia {
+    ... on MediaImage {
+      image {
+        url
+        altText
+      }
+    }
+  }
+  priceRangeV2 {
+    minVariantPrice {
+      amount
+      currencyCode
+    }
+  }
+`;
+
+export type PreviewProductNode = {
+  title?: string | null;
+  handle?: string | null;
+  onlineStoreUrl?: string | null;
+  featuredMedia?: {
+    image?: { url?: string; altText?: string | null } | null;
+  } | null;
+  priceRangeV2?: {
+    minVariantPrice?: {
+      amount?: string | null;
+      currencyCode?: string | null;
+    } | null;
+  } | null;
+};
+
+export function previewProductFromNode(
+  node: PreviewProductNode | null | undefined,
+  shop?: string,
+): StorefrontPreviewProduct | null {
+  const handle = node?.handle?.trim();
+  if (!node || !handle) return null;
+
+  const amount = Number(node.priceRangeV2?.minVariantPrice?.amount);
+  const currencyCode =
+    node.priceRangeV2?.minVariantPrice?.currencyCode?.trim() || "USD";
+  const image = node.featuredMedia?.image;
+  const shopHost = shop
+    ?.replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "");
+  const fallbackStorefront =
+    shopHost && handle ? `https://${shopHost}/products/${handle}` : undefined;
+  const storefrontUrl = node.onlineStoreUrl || fallbackStorefront;
+
+  return {
+    title: node.title?.trim() || handle,
+    handle,
+    exampleAmount:
+      Number.isFinite(amount) && amount > 0 ? amount : PREVIEW_EXAMPLE_AMOUNT,
+    currencyCode,
+    ...(image?.url
+      ? {
+          imageUrl: image.url,
+          imageAlt: image.altText?.trim() || node.title?.trim() || handle,
+        }
+      : {}),
+    ...(storefrontUrl ? { storefrontUrl } : {}),
+  };
+}
+
+function pickPreviewProduct(
+  nodes: Array<PreviewProductNode | null | undefined>,
+  shop?: string,
+): StorefrontPreviewProduct | null {
+  const mapped = nodes
+    .map((node) => previewProductFromNode(node, shop))
+    .filter((product): product is StorefrontPreviewProduct => Boolean(product));
+  return mapped.find((product) => product.imageUrl) ?? mapped[0] ?? null;
+}
+
+/**
+ * Product used in the in-app storefront preview and theme-editor deep link.
+ * Prefers an offer-assigned product; otherwise the first active catalog product.
+ */
+export async function fetchPreviewProduct(
+  admin: {
+    graphql: (
+      query: string,
+      options?: { variables?: Record<string, unknown> },
+    ) => Promise<Response>;
+  },
+  shop: string,
+  productIds: string[] = [],
+): Promise<StorefrontPreviewProduct | null> {
+  try {
+    const assignedId = productIds.find(Boolean);
+    if (assignedId) {
+      const response = await admin.graphql(
+        `#graphql
+          query previewAssignedProduct($id: ID!) {
+            product(id: $id) {
+              ${PREVIEW_PRODUCT_FIELDS}
+            }
+          }`,
+        { variables: { id: assignedId } },
+      );
+      const json = await response.json();
+      const assigned = previewProductFromNode(json.data?.product, shop);
+      if (assigned) return assigned;
+    }
+
+    const response = await admin.graphql(
+      `#graphql
+        query previewCatalogProduct {
+          products(first: 12, query: "status:active") {
+            nodes {
+              ${PREVIEW_PRODUCT_FIELDS}
+            }
+          }
+        }`,
+    );
+    const json = await response.json();
+    return pickPreviewProduct(json.data?.products?.nodes ?? [], shop);
+  } catch {
+    return null;
+  }
 }

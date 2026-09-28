@@ -4,6 +4,7 @@ import {
   getActiveOfferBadges,
   getActiveOffersForProduct,
 } from "../models/bundle.server";
+import { getActivePromotionsForProduct } from "../models/promotion.server";
 
 type AdminClient = {
   graphql: (
@@ -84,9 +85,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     });
   }
 
-  const offers = await getActiveOffersForProduct(shop, productId);
+  const [offers, promotions] = await Promise.all([
+    getActiveOffersForProduct(shop, productId),
+    getActivePromotionsForProduct(shop, productId),
+  ]);
 
-  return new Response(JSON.stringify({ offers }), {
+  return new Response(JSON.stringify({ offers, promotions }), {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "private, max-age=120",

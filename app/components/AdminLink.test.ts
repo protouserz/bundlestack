@@ -25,4 +25,16 @@ describe("themeEmbedActivateUrl", () => {
       "https://admin.shopify.com/store/pawnest-2272/themes/current/editor?context=apps&template=product&activateAppId=4aade1f433c3c5bd867c99cce348cede/bundle-widget-embed",
     );
   });
+
+  it("adds a product previewPath so the editor opens a live product", () => {
+    expect(
+      themeEmbedActivateUrl(
+        "pawnest-2272.myshopify.com",
+        "4aade1f433c3c5bd867c99cce348cede",
+        "forest-bed",
+      ),
+    ).toBe(
+      "https://admin.shopify.com/store/pawnest-2272/themes/current/editor?context=apps&template=product&activateAppId=4aade1f433c3c5bd867c99cce348cede/bundle-widget-embed&previewPath=%2Fproducts%2Fforest-bed",
+    );
+  });
 });

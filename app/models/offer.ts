@@ -76,7 +76,18 @@ export function isCatalogOffer(productIds: string[]) {
   return productIds.length === 0;
 }
 
+export const PREVIEW_EXAMPLE_AMOUNT = 40;
 export const PREVIEW_EXAMPLE_CENTS = 4000;
+
+export type StorefrontPreviewProduct = {
+  title: string;
+  handle: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  exampleAmount: number;
+  currencyCode: string;
+  storefrontUrl?: string;
+};
 
 export function storefrontBadgeText(offer: {
   offerType: string;
@@ -104,22 +115,39 @@ export type StorefrontPreviewRow = {
   defaultSelected: boolean;
 };
 
-function formatPreviewMoney(cents: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
+function formatPreviewMoney(amount: number, currencyCode: string) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currencyCode,
+    }).format(amount);
+  } catch {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  }
 }
 
-/** Admin mock of the product-page widget, using sample pricing. */
+export type StorefrontPreviewOptions = {
+  exampleAmount?: number;
+  currencyCode?: string;
+};
+
+/** Admin mock of the product-page widget, using sample or live product pricing. */
 export function storefrontPreviewModel(
   offer?: {
     offerType: string;
     title?: string;
     tiers: DiscountTier[];
   } | null,
-  exampleCents = PREVIEW_EXAMPLE_CENTS,
+  options: StorefrontPreviewOptions = {},
 ) {
+  const exampleAmount =
+    options.exampleAmount && options.exampleAmount > 0
+      ? options.exampleAmount
+      : PREVIEW_EXAMPLE_AMOUNT;
+  const currencyCode = options.currencyCode?.trim() || "USD";
   const source =
     offer?.tiers?.length
       ? offer
@@ -134,14 +162,11 @@ export function storefrontPreviewModel(
     const getQty = Math.max(1, Math.floor(Number(tier.getQty)) || 1);
     const isBogo = isBogoOffer(source.offerType) || Number(tier.getQty) > 0;
     const cartQty = isBogo ? minQty + getQty : minQty;
-    const unitCents = isBogo
-      ? Math.round(exampleCents * (1 - getQty / cartQty))
+    const unitAmount = isBogo
+      ? exampleAmount * (1 - getQty / cartQty)
       : tier.discountType === "percentage"
-        ? Math.round(exampleCents * (1 - tier.discountValue / 100))
-        : Math.max(
-            0,
-            exampleCents - Math.round((tier.discountValue * 100) / minQty),
-          );
+        ? exampleAmount * (1 - tier.discountValue / 100)
+        : Math.max(0, exampleAmount - tier.discountValue / minQty);
     const customLabel = tier.label?.trim() ?? "";
     const label = isBogo
       ? bogoLabel(minQty, getQty)
@@ -157,7 +182,7 @@ export function storefrontPreviewModel(
         : tier.discountType === "percentage"
           ? `Save ${tier.discountValue}%`
           : `Save $${tier.discountValue}`,
-      unitPriceLabel: `${formatPreviewMoney(unitCents)} each`,
+      unitPriceLabel: `${formatPreviewMoney(unitAmount, currencyCode)} each`,
       defaultSelected: isBogo && index === 0,
     };
   });

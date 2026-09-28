@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseOfferForm, isCatalogOffer, offerDiscountSummary, selectStorefrontBadges } from "./bundle.server";
+import { parseOfferForm, isCatalogOffer, offerDiscountSummary, previewProductFromNode, selectStorefrontBadges } from "./bundle.server";
 import { storefrontBadgeText, storefrontPreviewModel } from "./offer";
 
 function form(entries: Record<string, string>) {
@@ -292,5 +292,58 @@ describe("storefront preview", () => {
       unitPriceLabel: "$20.00 each",
       defaultSelected: true,
     });
+  });
+
+  it("prices tiers from a live product amount and currency", () => {
+    const model = storefrontPreviewModel(
+      {
+        offerType: "quantity_break",
+        title: "Buy more, save more",
+        tiers: [
+          { minQty: 2, discountType: "percentage", discountValue: 10, label: "Save 10%" },
+        ],
+      },
+      { exampleAmount: 49, currencyCode: "USD" },
+    );
+
+    expect(model.rows[0].unitPriceLabel).toBe("$44.10 each");
+  });
+});
+
+describe("previewProductFromNode", () => {
+  it("maps image, price, and storefront URL", () => {
+    expect(
+      previewProductFromNode(
+        {
+          title: "Forest bed",
+          handle: "forest-bed",
+          onlineStoreUrl: "https://pawnest.com/products/forest-bed",
+          featuredMedia: {
+            image: { url: "https://cdn.example/bed.jpg", altText: "Bed" },
+          },
+          priceRangeV2: {
+            minVariantPrice: { amount: "49.00", currencyCode: "USD" },
+          },
+        },
+        "pawnest-2272.myshopify.com",
+      ),
+    ).toEqual({
+      title: "Forest bed",
+      handle: "forest-bed",
+      imageUrl: "https://cdn.example/bed.jpg",
+      imageAlt: "Bed",
+      exampleAmount: 49,
+      currencyCode: "USD",
+      storefrontUrl: "https://pawnest.com/products/forest-bed",
+    });
+  });
+
+  it("falls back to the shop product URL when the storefront URL is missing", () => {
+    expect(
+      previewProductFromNode(
+        { title: "Forest bed", handle: "forest-bed" },
+        "pawnest-2272.myshopify.com",
+      )?.storefrontUrl,
+    ).toBe("https://pawnest-2272.myshopify.com/products/forest-bed");
   });
 });

@@ -15,7 +15,9 @@ type GraphqlResponse = {
   data?: Record<string, unknown>;
 };
 
-const FUNCTION_HANDLE = "bundlestack-discount";
+const FUNCTION_HANDLE = "bundlestack-qb-discount";
+const METAFIELD_NAMESPACE = "$app:bundlestack-qb-discount";
+const METAFIELD_KEY = "function-configuration";
 
 function assertGraphqlOk(json: GraphqlResponse, context: string) {
   if (json.errors?.length) {
@@ -194,13 +196,13 @@ async function createAppDiscount(
           discountClasses: ["PRODUCT"],
           combinesWith: {
             orderDiscounts: true,
-            productDiscounts: true,
+            productDiscounts: promotion.promotionType !== "free_gift",
             shippingDiscounts: true,
           },
           metafields: [
             {
-              namespace: "$app",
-              key: "function-configuration",
+              namespace: METAFIELD_NAMESPACE,
+              key: METAFIELD_KEY,
               type: "json",
               value: metafieldValueForPromotion(promotion),
             },

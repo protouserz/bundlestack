@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { AdminDeepLinkButton } from "../AdminLink";
+import { AdminDeepLinkButton, ExternalLinkButton } from "../AdminLink";
 import { OfferStorefrontPreview } from "./OfferStorefrontPreview";
-import type { DiscountTier } from "../../models/offer";
+import type { DiscountTier, StorefrontPreviewProduct } from "../../models/offer";
 import styles from "./dashboard.module.css";
 
 type BlockStatus = "loading" | "active" | "available" | "unavailable" | "unknown";
@@ -68,9 +68,11 @@ function pickPrimaryBlock(activations: ThemeExtensionActivation[]) {
 export function ThemeWidgetStatus({
   themeEditorUrl,
   previewOffer,
+  previewProduct,
 }: {
   themeEditorUrl: string;
   previewOffer?: PreviewOffer | null;
+  previewProduct?: StorefrontPreviewProduct | null;
 }) {
   const shopify = useAppBridge();
   const [status, setStatus] = useState<BlockStatus>("loading");
@@ -125,10 +127,17 @@ export function ThemeWidgetStatus({
           </s-banner>
         ) : embedOn ? (
           <s-banner tone="success">
-            <s-text>
-              <strong>{blockName}</strong> is active on your published theme.
-              This is what shoppers see on product pages.
-            </s-text>
+            <s-stack direction="block" gap="base">
+              <s-text>
+                <strong>{blockName}</strong> is active on your published theme.
+                This is what shoppers see on product pages.
+              </s-text>
+              {previewProduct?.storefrontUrl ? (
+                <ExternalLinkButton href={previewProduct.storefrontUrl}>
+                  Open live product
+                </ExternalLinkButton>
+              ) : null}
+            </s-stack>
           </s-banner>
         ) : (
           <s-banner tone="warning">
@@ -148,10 +157,14 @@ export function ThemeWidgetStatus({
 
         <p className={styles.storefrontPreviewCaption}>
           {embedOn
-            ? "Preview of the live product-page widget."
-            : "Preview inside the app — works before the theme embed is on."}
+            ? previewProduct?.title
+              ? `Preview of ${previewProduct.title} on a product page.`
+              : "Preview of the live product-page widget."
+            : previewProduct?.title
+              ? `Preview using ${previewProduct.title} — works before the theme embed is on.`
+              : "Preview inside the app — works before the theme embed is on."}
         </p>
-        <OfferStorefrontPreview offer={previewOffer} />
+        <OfferStorefrontPreview offer={previewOffer} product={previewProduct} />
       </s-stack>
     </s-section>
   );

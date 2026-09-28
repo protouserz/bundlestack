@@ -6,6 +6,7 @@ import type {
 import { Outlet, useLoaderData, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
+import { NavMenu } from "@shopify/app-bridge-react";
 
 import { authenticate } from "../shopify.server";
 import { seedDefaultOfferIfNeeded } from "../models/onboarding.server";
@@ -45,13 +46,25 @@ export default function App() {
 
   return (
     <AppProvider embedded apiKey={apiKey}>
-      {/* BFS 4.1.4: admin nav via s-app-nav. rel="home" is hidden; the app
-          name in the sidebar already opens Dashboard. */}
+      {/* Host admin sidebar. App Bridge reads NavMenu on embed; s-app-nav
+          satisfies Built for Shopify 4.1.4. */}
+      <NavMenu>
+        <a href="/app" rel="home">
+          Dashboard
+        </a>
+        <a href="/app/offers">Offers</a>
+        <a href="/app/promotions">Promotions</a>
+        <a href="/app/coupons">Coupons</a>
+        <a href="/app/billing">Billing</a>
+        <a href="/app/support">Support</a>
+      </NavMenu>
       <SAppNav>
         <SNavLink href="/app" rel="home">
           Dashboard
         </SNavLink>
         <SNavLink href="/app/offers">Offers</SNavLink>
+        <SNavLink href="/app/promotions">Promotions</SNavLink>
+        <SNavLink href="/app/coupons">Coupons</SNavLink>
         <SNavLink href="/app/billing">Billing</SNavLink>
         <SNavLink href="/app/support">Support</SNavLink>
       </SAppNav>

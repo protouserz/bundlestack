@@ -1,55 +1,45 @@
-# AOV promotion suite (feature/aov-offer-suite)
+# AOV promotions and coupons
 
-Competitor-parity offer types beyond quantity breaks.
+Offer types beyond quantity breaks. Included on Free (Support is email help only).
 
 ## Offer types
 
-| Type | Admin path | Plan | Checkout sync | Product page |
-|------|------------|------|---------------|--------------|
-| BOGO | `/app/promotions/bogo` | Starter+ | Discount Function | Widget card |
-| Free gifts | `/app/promotions/free-gifts` | Starter+ | Discount Function | Widget card |
-| Mix & match | `/app/promotions/mix-match` | Starter+ | Discount Function | Widget card |
-| Bundle builder | `/app/promotions/builders` | Growth+ | Discount Function | Widget card |
-| FBT / upsells | `/app/promotions/fbt` | Growth+ | Discount Function | Widget card |
+| Type | Admin path | Checkout | Product page |
+|------|------------|----------|--------------|
+| Quantity breaks & simple BOGO | `/app/offers` | `bundlestack-qb-discount` | Widget tiers |
+| BOGO (incl. different product) | `/app/promotions/bogo` | Same Function | Widget promo card |
+| Free gifts | `/app/promotions/free-gifts` | Same Function | Widget promo card |
+| Mix & match | `/app/promotions/mix-match` | Same Function | Widget promo card |
+| Bundle builder | `/app/promotions/builders` | Same Function | Widget promo card |
+| FBT / upsells | `/app/promotions/fbt` | Same Function | Widget promo card |
+| Coupons | `/app/coupons` | Shopify discount codes | N/A |
 
 Hub: `/app/promotions`
 
 ## Architecture
 
-- Prisma `Promotion` model with `promotionType` + JSON `config`
-- Shared types in `app/models/promotion.types.ts`
-- CRUD in `app/models/promotion.server.ts`
-- Plan gates in `app/models/promotion-access.server.ts`
-- Sync in `app/models/promotion-sync.server.ts` (all types → `discountAutomaticAppCreate`)
-- Function extension: `extensions/bundlestack-discount`
-- Storefront: app proxy `/apps/bundlestack/offers` returns `{ offers, promotions }`; theme widget renders both
+- Prisma `Promotion` + `Coupon`
+- Types in `app/models/promotion.types.ts` / `coupon.types.ts`
+- Sync: `promotion-sync.server.ts` → automatic App Function (`bundlestack-qb-discount`)
+- Coupons: `discount-code.server.ts` → `discountCodeBasicCreate`
+- Storefront proxy `/apps/bundlestack/offers` returns `{ offers, promotions }`
 
-## Checkout sync
-
-Active promotions call `discountAutomaticAppCreate` with:
-
-- `functionHandle`: `bundlestack-discount`
-- `discountClasses`: `PRODUCT`
-- Metafield `$app` / `function-configuration` (JSON discriminated by `type`)
-
-Function rules (v1):
+## Function rules
 
 | Type | Rule |
 |------|------|
-| `bogo` | Buy X get Y (same or different products) |
-| `free_gift` | Threshold on subtotal/qty → 100% off gift units already in cart |
-| `mix_match` | N+ units from product set → % / fixed on those lines |
-| `bundle_builder` | Enough step selections → % / fixed on matched lines |
-| `fbt` | Anchor + recommended (optional requireAll) → % / fixed on recommended |
+| quantity_break | Existing tier % off matching lines |
+| bogo (offers) | Same-product cheapest get-units as a fixed unit price |
+| bogo (promotions) | Buy X get Y, optional different get products |
+| free_gift | Threshold on subtotal/qty → free gift units already in cart |
+| mix_match | N+ units from a set → % / fixed on those lines |
+| bundle_builder | Enough step selections → % / fixed on matched lines |
+| fbt | Anchor + recommended → % / fixed on recommended |
 
-Deploy before testing at checkout:
+Deploy the Function after this ships:
 
 ```bash
 npm run deploy
 ```
 
-## Storefront
-
-1. Add the BundleStack theme block on a product template.
-2. Active quantity-break offers and AOV promotions for that product appear in the widget.
-3. Discounts apply at cart/checkout via the Discount Function (gift products must be in cart for free-gift).
+Gift products must be in the cart for free-gift discounts to apply.

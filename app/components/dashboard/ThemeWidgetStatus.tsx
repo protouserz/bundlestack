@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { AdminDeepLinkButton } from "../AdminLink";
+import { OfferStorefrontPreview } from "./OfferStorefrontPreview";
+import type { DiscountTier } from "../../models/offer";
+import styles from "./dashboard.module.css";
 
 type BlockStatus = "loading" | "active" | "available" | "unavailable" | "unknown";
 
@@ -19,6 +22,12 @@ type AppExtensionsHost = {
   app?: {
     extensions?: () => Promise<AppExtension[]>;
   };
+};
+
+type PreviewOffer = {
+  offerType: string;
+  title?: string;
+  tiers: DiscountTier[];
 };
 
 /** Product-page widget handles. Overlay/badge embeds do not count as the widget. */
@@ -58,8 +67,10 @@ function pickPrimaryBlock(activations: ThemeExtensionActivation[]) {
 
 export function ThemeWidgetStatus({
   themeEditorUrl,
+  previewOffer,
 }: {
   themeEditorUrl: string;
+  previewOffer?: PreviewOffer | null;
 }) {
   const shopify = useAppBridge();
   const [status, setStatus] = useState<BlockStatus>("loading");
@@ -99,42 +110,49 @@ export function ThemeWidgetStatus({
     };
   }, [shopify]);
 
-  if (status === "loading") {
-    return (
-      <s-section heading="Theme widget">
-        <s-banner tone="info">
-          <s-text>Checking theme widget status…</s-text>
-        </s-banner>
-      </s-section>
-    );
-  }
-
-  if (status === "active") {
-    return (
-      <s-section heading="Theme widget">
-        <s-banner tone="success">
-          <s-text>
-            <strong>{blockName}</strong> is active on your published theme.
-          </s-text>
-        </s-banner>
-      </s-section>
-    );
-  }
+  const embedOn = status === "active";
 
   return (
-    <s-section heading="Theme widget">
-      <s-banner tone="warning">
-        <s-stack direction="block" gap="base">
-          <s-text>
-            {status === "available"
-              ? `${blockName} is in your theme but not turned on yet. Open the editor, enable it, and save.`
-              : `Shoppers will not see quantity breaks until BundleStack is on in your theme. Open the editor, enable it, and save.`}
-          </s-text>
-          <AdminDeepLinkButton href={themeEditorUrl}>
-            Show on product pages
-          </AdminDeepLinkButton>
-        </s-stack>
-      </s-banner>
+    <s-section
+      heading={
+        embedOn ? "Live on product pages" : "Shoppers cannot see this yet"
+      }
+    >
+      <s-stack direction="block" gap="base">
+        {status === "loading" ? (
+          <s-banner tone="info">
+            <s-text>Checking whether the theme widget is on…</s-text>
+          </s-banner>
+        ) : embedOn ? (
+          <s-banner tone="success">
+            <s-text>
+              <strong>{blockName}</strong> is active on your published theme.
+              This is what shoppers see on product pages.
+            </s-text>
+          </s-banner>
+        ) : (
+          <s-banner tone="warning">
+            <s-stack direction="block" gap="base">
+              <s-text>
+                Quantity breaks already apply at checkout, but the product-page
+                widget stays hidden until you enable <strong>{blockName}</strong>{" "}
+                in the theme editor and click Save. That is the step most
+                merchants skip.
+              </s-text>
+              <AdminDeepLinkButton href={themeEditorUrl}>
+                Show on product pages
+              </AdminDeepLinkButton>
+            </s-stack>
+          </s-banner>
+        )}
+
+        <p className={styles.storefrontPreviewCaption}>
+          {embedOn
+            ? "Preview of the live product-page widget."
+            : "Preview inside the app — works before the theme embed is on."}
+        </p>
+        <OfferStorefrontPreview offer={previewOffer} />
+      </s-stack>
     </s-section>
   );
 }

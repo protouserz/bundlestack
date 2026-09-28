@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseOfferForm, isCatalogOffer, offerDiscountSummary, selectStorefrontBadges } from "./bundle.server";
+import { storefrontBadgeText, storefrontPreviewModel } from "./offer";
 
 function form(entries: Record<string, string>) {
   const data = new FormData();
@@ -238,5 +239,58 @@ describe("selectStorefrontBadges", () => {
     ]);
     expect(catalog?.offerType).toBe("quantity_break");
     expect(byProductId.get("gid://shopify/Product/1")?.offerType).toBe("bogo");
+  });
+});
+
+describe("storefront preview", () => {
+  it("builds quantity-break overlay copy and sample prices", () => {
+    const model = storefrontPreviewModel({
+      offerType: "quantity_break",
+      title: "Buy more, save more",
+      tiers: [
+        { minQty: 2, discountType: "percentage", discountValue: 10, label: "Save 10%" },
+        { minQty: 3, discountType: "percentage", discountValue: 15, label: "Save 15%" },
+      ],
+    });
+
+    expect(storefrontBadgeText({
+      offerType: "quantity_break",
+      tiers: model.rows.length
+        ? [
+            { minQty: 2, discountType: "percentage", discountValue: 10 },
+            { minQty: 3, discountType: "percentage", discountValue: 15 },
+          ]
+        : [],
+    })).toBe("Buy 2, save 10%");
+    expect(model.overlay).toBe("Buy 2, save 10%");
+    expect(model.rows[0]).toMatchObject({
+      label: "Buy 2",
+      badge: "Save 10%",
+      unitPriceLabel: "$36.00 each",
+      defaultSelected: false,
+    });
+  });
+
+  it("preselects a BOGO row and uses Free as the badge", () => {
+    const model = storefrontPreviewModel({
+      offerType: "bogo",
+      title: "Buy 1 get 1 free",
+      tiers: [
+        {
+          minQty: 1,
+          getQty: 1,
+          discountType: "percentage",
+          discountValue: 100,
+        },
+      ],
+    });
+
+    expect(model.overlay).toBe("Buy 1 get 1 free");
+    expect(model.rows[0]).toMatchObject({
+      label: "Buy 1 get 1 free",
+      badge: "Free",
+      unitPriceLabel: "$20.00 each",
+      defaultSelected: true,
+    });
   });
 });

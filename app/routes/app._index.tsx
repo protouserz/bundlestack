@@ -367,6 +367,13 @@ export default function Dashboard() {
           Reporting period: {formatDateRange()}
         </s-text>
 
+        <ThemeWidgetStatus
+          themeEditorUrl={themeEditorUrl}
+          previewOffer={
+            offers.find((offer) => offer.status === "active") ?? offers[0] ?? null
+          }
+        />
+
         {showSetupGuide && (
           <SetupGuide
             hasOffers={stats.totalOffers > 0}
@@ -374,8 +381,6 @@ export default function Dashboard() {
             dismissFetcher={onboardingFetcher}
           />
         )}
-
-        <ThemeWidgetStatus themeEditorUrl={themeEditorUrl} />
 
         <DashboardMetrics
           activeOffers={stats.activeOffers}

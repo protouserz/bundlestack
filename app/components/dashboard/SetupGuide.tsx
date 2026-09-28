@@ -33,8 +33,8 @@ export function SetupGuide({
         {
           id: "theme",
           done: false,
-          title: "Show offers on product pages",
-          body: "Open the theme editor, enable BundleStack qty breaks, and save. Shoppers will not see tiers until this is on.",
+          title: "Show this on product pages",
+          body: "The preview above is only in the app. Open the theme editor, enable BundleStack qty breaks, and click Save. Shoppers will not see anything until that save.",
           action: (
             <AdminDeepLinkButton href={themeEditorUrl} variant="primary">
               Show on product pages
@@ -44,8 +44,8 @@ export function SetupGuide({
         {
           id: "storefront",
           done: false,
-          title: "Preview a live product page",
-          body: "Open any product, pick Buy 2 or Buy 3, and confirm the discount at checkout.",
+          title: "Confirm on a live product",
+          body: "After you save the theme, open any product. The same widget should appear above Add to cart.",
           action: null,
         },
       ]
@@ -65,7 +65,7 @@ export function SetupGuide({
           id: "theme",
           done: false,
           title: "Show offers on product pages",
-          body: "Open the theme editor, enable BundleStack qty breaks, and save.",
+          body: "Open the theme editor, enable BundleStack qty breaks, and click Save. The preview above will not appear in your store until then.",
           action: (
             <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
               Show on product pages
@@ -78,7 +78,7 @@ export function SetupGuide({
     <s-section heading="Get your first discount live">
       <div className={styles.setupGuideHeader}>
         <p className={styles.setupGuideSubtitle}>
-          One theme save is what most merchants miss. Do that before anything else.
+          One theme save is what most merchants miss. Turn on the widget preview above for shoppers before you leave.
         </p>
         <dismissFetcher.Form method="post">
           <input type="hidden" name="intent" value="dismiss-onboarding" />

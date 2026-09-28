@@ -1,20 +1,20 @@
 # AOV promotions and coupons
 
-Offer types beyond quantity breaks. Included on **Pro** ($2/month). Quantity breaks and simple BOGO stay on Free.
+Offer types beyond quantity breaks. **Frequently bought together** (upsell and cross-sell) is included on Free. Other promotion types and coupons require **Pro** ($2/month). Quantity breaks and simple BOGO also stay on Free.
 
-Admin create/edit is blocked on Free. The storefront proxy also omits promotion cards unless the shop is on Pro. Already-synced Shopify automatic discounts keep applying at checkout until they are deleted.
+Admin create/edit for Pro-only types is blocked on Free. The storefront proxy only returns promotion types the shop's plan includes. Already-synced Shopify automatic discounts keep applying at checkout until they are deleted.
 
 ## Offer types
 
-| Type | Admin path | Checkout | Product page |
-|------|------------|----------|--------------|
-| Quantity breaks & simple BOGO | `/app/offers` | `bundlestack-qb-discount` | Widget tiers |
-| BOGO (incl. different product) | `/app/promotions/bogo` | Same Function | Widget promo card |
-| Free gifts | `/app/promotions/free-gifts` | Same Function | Widget promo card |
-| Mix & match | `/app/promotions/mix-match` | Same Function | Widget promo card |
-| Bundle builder | `/app/promotions/builders` | Same Function | Widget promo card |
-| FBT / upsells | `/app/promotions/fbt` | Same Function | Widget promo card |
-| Coupons | `/app/coupons` | Shopify discount codes | N/A |
+| Type | Admin path | Plan |
+|------|------------|------|
+| Quantity breaks & simple BOGO | `/app/offers` | Free |
+| BOGO (incl. different product) | `/app/promotions/bogo` | Pro |
+| Free gifts | `/app/promotions/free-gifts` | Pro |
+| Mix & match | `/app/promotions/mix-match` | Pro |
+| Bundle builder | `/app/promotions/builders` | Pro |
+| FBT / upsells | `/app/promotions/fbt` | Free |
+| Coupons | `/app/coupons` | Pro |
 
 Hub: `/app/promotions`
 

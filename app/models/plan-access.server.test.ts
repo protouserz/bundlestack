@@ -3,7 +3,7 @@ import { planAllowsAovFeatures } from "./plan-access.server";
 import { planIncludesPromotionType } from "./promotion-access.server";
 
 describe("planAllowsAovFeatures", () => {
-  it("keeps promotions and coupons off Free", () => {
+  it("keeps paid AOV features off Free", () => {
     expect(planAllowsAovFeatures("free")).toBe(false);
   });
 
@@ -15,9 +15,15 @@ describe("planAllowsAovFeatures", () => {
 });
 
 describe("planIncludesPromotionType", () => {
-  it("gates every promotion type behind the paid plan", () => {
+  it("keeps upsell and cross-sell (FBT) on Free", () => {
+    expect(planIncludesPromotionType("free", "fbt")).toBe(true);
+  });
+
+  it("gates other promotion types behind Pro", () => {
     expect(planIncludesPromotionType("free", "bogo")).toBe(false);
-    expect(planIncludesPromotionType("free", "fbt")).toBe(false);
+    expect(planIncludesPromotionType("free", "free_gift")).toBe(false);
+    expect(planIncludesPromotionType("free", "mix_match")).toBe(false);
+    expect(planIncludesPromotionType("free", "bundle_builder")).toBe(false);
     expect(planIncludesPromotionType("pro", "bogo")).toBe(true);
     expect(planIncludesPromotionType("starter", "bundle_builder")).toBe(true);
   });

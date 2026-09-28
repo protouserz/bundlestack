@@ -410,20 +410,18 @@ export default function Dashboard() {
             <s-paragraph>
               {isPaidPlan(billing.plan)
                 ? "Free gifts, mix and match, bundle builders, frequently bought together, and checkout discount codes."
-                : "Free gifts, mix and match, bundle builders, frequently bought together, and checkout discount codes are included on Pro."}
+                : "Frequently bought together (upsell and cross-sell) is included. Free gifts, mix and match, builders, and coupons unlock on Pro."}
             </s-paragraph>
             <s-stack direction="inline" gap="base">
+              <SButton href="/app/promotions" variant="primary">
+                Promotions
+              </SButton>
               {isPaidPlan(billing.plan) ? (
-                <>
-                  <SButton href="/app/promotions" variant="primary">
-                    Promotions
-                  </SButton>
-                  <SButton href="/app/coupons" variant="secondary">
-                    Coupons
-                  </SButton>
-                </>
+                <SButton href="/app/coupons" variant="secondary">
+                  Coupons
+                </SButton>
               ) : (
-                <SButton href="/app/billing" variant="primary">
+                <SButton href="/app/billing" variant="secondary">
                   Upgrade to Pro
                 </SButton>
               )}

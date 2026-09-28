@@ -227,8 +227,8 @@ export default function AppSupport() {
               <s-stack direction="block" gap="base">
                 <s-text>
                   Email customer support is included with the Pro plan for
-                  $2/month, along with promotions and coupons. Quantity breaks
-                  stay on Free.
+                  $2/month, along with gifts, mix & match, builders, and
+                  coupons. Quantity breaks and product-page upsells stay on Free.
                 </s-text>
                 <SButton variant="primary" href="/app/billing">
                   Upgrade to Pro

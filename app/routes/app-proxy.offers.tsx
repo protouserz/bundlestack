@@ -6,7 +6,7 @@ import {
   getShopBillingPlan,
 } from "../models/bundle.server";
 import { getActivePromotionsForProduct } from "../models/promotion.server";
-import { isPaidPlan } from "../billing.plans";
+import { planIncludesPromotionType } from "../models/promotion-access.server";
 
 type AdminClient = {
   graphql: (
@@ -89,11 +89,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const [offers, promotions] = await Promise.all([
     getActiveOffersForProduct(shop, productId),
-    getShopBillingPlan(shop).then((shopPlan) =>
-      isPaidPlan(shopPlan)
-        ? getActivePromotionsForProduct(shop, productId)
-        : [],
-    ),
+    getShopBillingPlan(shop).then(async (shopPlan) => {
+      const active = await getActivePromotionsForProduct(shop, productId);
+      return active.filter((promotion) =>
+        planIncludesPromotionType(shopPlan, promotion.promotionType),
+      );
+    }),
   ]);
 
   return new Response(JSON.stringify({ offers, promotions }), {

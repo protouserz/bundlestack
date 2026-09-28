@@ -144,6 +144,11 @@
   color: #047857;
 }
 
+.badgePro {
+  background: #f1f5f9;
+  color: var(--promo-navy);
+}
+
 .cardTitle {
   margin: 0;
   font-size: 0.9375rem;

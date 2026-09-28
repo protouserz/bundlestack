@@ -13,7 +13,8 @@ import {
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { getBillingSummary, isBillingPlan, isPaidPlan } from "../billing.server";
+import { getBillingSummary, isBillingPlan } from "../billing.server";
+import { isPaidPlan } from "../billing.plans";
 import { DashboardMetrics } from "../components/dashboard/DashboardMetrics";
 import { OffersTable } from "../components/dashboard/OffersTable";
 import { RevenueChart } from "../components/dashboard/RevenueChart";

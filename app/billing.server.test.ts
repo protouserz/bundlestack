@@ -13,7 +13,7 @@ describe("getSuggestedPlanForRedemptions", () => {
 });
 
 describe("getNextPlan", () => {
-  it("offers Support from Free and nothing after that", () => {
+  it("offers Pro from Free and nothing after that", () => {
     expect(getNextPlan("free")).toBe("starter");
     expect(getNextPlan("starter")).toBeNull();
     expect(getNextPlan("pro")).toBeNull();
@@ -21,12 +21,12 @@ describe("getNextPlan", () => {
 });
 
 describe("getBillingSummary", () => {
-  it("treats legacy paid tiers as Support", () => {
+  it("treats legacy paid tiers as Pro", () => {
     const summary = getBillingSummary("scale", 1200);
 
     expect(summary.discountRedemptions).toBe(1200);
     expect(summary.plan).toBe("starter");
-    expect(summary.planLabel).toBe("Support");
+    expect(summary.planLabel).toBe("Pro");
     expect(summary.monthlyPrice).toBe(2);
     expect(summary.suggestedPlan).toBe("free");
   });

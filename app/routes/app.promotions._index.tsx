@@ -70,12 +70,11 @@ export default function PromotionsHub() {
         <s-banner tone="warning">
           <s-stack direction="block" gap="base">
             <s-text>
-              Promotions are available on the <strong>Starter</strong>,{" "}
-              <strong>Growth</strong>, and <strong>Pro</strong> plans. Your
+              Promotions are included on the <strong>Pro</strong> plan. Your
               current plan is <strong>{access.planLabel}</strong>.
             </s-text>
             <SButton variant="primary" href="/app/billing">
-              Upgrade to unlock promotions
+              Upgrade to Pro
             </SButton>
           </s-stack>
         </s-banner>

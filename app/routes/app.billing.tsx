@@ -503,9 +503,9 @@ export default function BillingPage() {
         <s-section heading="Pricing plans">
           <s-stack direction="block" gap="large">
             <s-paragraph>
-              Free includes the full product. The Support plan adds email help
-              when you need it — approve the $2/month charge in Shopify. You can
-              return to Free anytime without reinstalling.
+              Free includes quantity breaks and BOGO. The Pro plan unlocks
+              promotions, coupons, and email help — approve the $2/month charge
+              in Shopify. You can return to Free anytime without reinstalling.
             </s-paragraph>
 
             <div className={styles.gridCards}>
@@ -526,12 +526,13 @@ export default function BillingPage() {
                 <s-heading>How billing works</s-heading>
                 <s-unordered-list>
                   <s-list-item>
-                    Free includes unlimited offers, BOGO, the theme widget, and
-                    automatic Shopify discounts
+                    Free includes unlimited quantity-break and BOGO offers, the
+                    theme widget, and automatic Shopify discounts
                   </s-list-item>
                   <s-list-item>
-                    Support is $2/month and adds email customer support —
-                    approve the charge in Shopify (not billed automatically)
+                    Pro is $2/month and adds promotions, coupons, and email
+                    customer support — approve the charge in Shopify (not billed
+                    automatically)
                   </s-list-item>
                   <s-list-item>
                     Return to Free anytime from this page

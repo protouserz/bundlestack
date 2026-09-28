@@ -1,6 +1,8 @@
 # AOV promotions and coupons
 
-Offer types beyond quantity breaks. Included on Free (Support is email help only).
+Offer types beyond quantity breaks. Included on **Pro** ($2/month). Quantity breaks and simple BOGO stay on Free.
+
+Admin create/edit is blocked on Free. The storefront proxy also omits promotion cards unless the shop is on Pro. Already-synced Shopify automatic discounts keep applying at checkout until they are deleted.
 
 ## Offer types
 

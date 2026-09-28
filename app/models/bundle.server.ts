@@ -349,6 +349,16 @@ export async function getShopSettings(shop: string) {
   });
 }
 
+export async function getShopBillingPlan(shop: string): Promise<BillingPlan> {
+  const settings = await prisma.shopSettings.findUnique({
+    where: { shop },
+    select: { billingPlan: true },
+  });
+  return settings && isBillingPlan(settings.billingPlan)
+    ? settings.billingPlan
+    : "free";
+}
+
 export async function setShopBillingPlan(shop: string, plan: BillingPlan) {
   return prisma.shopSettings.upsert({
     where: { shop },

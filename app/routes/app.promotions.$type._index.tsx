@@ -106,19 +106,16 @@ export default function PromotionTypeIndex() {
   const meta = PROMOTION_TYPE_META[promotionType];
 
   if (!access.allowed) {
-    const needsGrowth =
-      promotionType === "bundle_builder" || promotionType === "fbt";
     return (
       <SPage heading={meta.label}>
         <s-banner tone="warning">
           <s-stack direction="block" gap="base">
             <s-text>
-              {meta.label} requires the{" "}
-              <strong>{needsGrowth ? "Growth" : "Starter"}</strong> plan or
-              higher. Your current plan is <strong>{access.planLabel}</strong>.
+              {meta.label} is included on the <strong>Pro</strong> plan. Your
+              current plan is <strong>{access.planLabel}</strong>.
             </s-text>
             <SButton variant="primary" href="/app/billing">
-              Upgrade to unlock
+              Upgrade to Pro
             </SButton>
           </s-stack>
         </s-banner>

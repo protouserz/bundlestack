@@ -20,11 +20,11 @@ describe("billing plans", () => {
     expect(PLAN_PRICES.free).toBe(0);
   });
 
-  it("offers free and a $2 support plan", () => {
+  it("offers free and a $2 Pro plan", () => {
     const tiers: BillingPlan[] = ["free", "starter"];
     expect(PLAN_ORDER).toEqual(tiers);
     expect(PLAN_PRICES[SUPPORT_PLAN]).toBe(2);
-    expect(PLAN_LABELS[SUPPORT_PLAN]).toBe("Support");
+    expect(PLAN_LABELS[SUPPORT_PLAN]).toBe("Pro");
     expect(isPaidPlan("starter")).toBe(true);
     expect(isPaidPlan("free")).toBe(false);
   });

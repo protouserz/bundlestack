@@ -20,23 +20,21 @@ export const PLAN_PRICES: Record<BillingPlan, number> = {
 
 export const PLAN_LABELS: Record<BillingPlan, string> = {
   free: "Free",
-  starter: "Support",
-  scale: "Support",
-  pro: "Support",
+  starter: "Pro",
+  scale: "Pro",
+  pro: "Pro",
 };
 
 export const PLAN_REVENUE_CAPS: Record<BillingPlan, string> = {
-  free: "Full product — unlimited offers, widget, and checkout discounts",
-  starter: "Email customer support when you need help",
-  scale: "Email customer support when you need help",
-  pro: "Email customer support when you need help",
+  free: "Quantity breaks, BOGO, and the product-page widget",
+  starter: "Promotions, coupons, and email customer support",
+  scale: "Promotions, coupons, and email customer support",
+  pro: "Promotions, coupons, and email customer support",
 };
 
 export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   free: [
     "Unlimited quantity-break and BOGO offers",
-    "Free gifts, mix & match, builders, and FBT",
-    "Discount codes (coupons)",
     "Product-page theme widget",
     "Automatic Shopify discount sync",
     "Product picker — no manual IDs",
@@ -44,14 +42,20 @@ export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   ],
   starter: [
     "Everything in Free",
+    "Free gifts, mix & match, builders, and FBT",
+    "Discount codes (coupons)",
     "Email customer support",
   ],
   scale: [
     "Everything in Free",
+    "Free gifts, mix & match, builders, and FBT",
+    "Discount codes (coupons)",
     "Email customer support",
   ],
   pro: [
     "Everything in Free",
+    "Free gifts, mix & match, builders, and FBT",
+    "Discount codes (coupons)",
     "Email customer support",
   ],
 };

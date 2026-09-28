@@ -1,4 +1,8 @@
 import type { BillingPlan } from "../billing.plans";
+import {
+  planAllowsAovFeatures,
+  resolveShopAccessPlan,
+} from "./plan-access.server";
 
 type BillingCheck = {
   check: () => Promise<{
@@ -6,10 +10,14 @@ type BillingCheck = {
   }>;
 };
 
-/** Product is not gated — coupons are included on Free. */
+/** Discount codes require the paid Pro plan. */
 export async function assertCouponsPlanAccess(
-  _shop: string,
-  _billing?: BillingCheck,
+  shop: string,
+  billing?: BillingCheck,
 ): Promise<{ allowed: boolean; plan: BillingPlan }> {
-  return { allowed: true, plan: "free" };
+  const plan = await resolveShopAccessPlan(shop, billing);
+  return {
+    allowed: planAllowsAovFeatures(plan),
+    plan,
+  };
 }

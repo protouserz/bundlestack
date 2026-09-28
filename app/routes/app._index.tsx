@@ -13,7 +13,7 @@ import {
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { getBillingSummary, isBillingPlan } from "../billing.server";
+import { getBillingSummary, isBillingPlan, isPaidPlan } from "../billing.server";
 import { DashboardMetrics } from "../components/dashboard/DashboardMetrics";
 import { OffersTable } from "../components/dashboard/OffersTable";
 import { RevenueChart } from "../components/dashboard/RevenueChart";
@@ -408,16 +408,25 @@ export default function Dashboard() {
         <s-section heading="Promotions and coupons">
           <s-stack direction="block" gap="base">
             <s-paragraph>
-              Free gifts, mix and match, bundle builders, frequently bought
-              together, and checkout discount codes.
+              {isPaidPlan(billing.plan)
+                ? "Free gifts, mix and match, bundle builders, frequently bought together, and checkout discount codes."
+                : "Free gifts, mix and match, bundle builders, frequently bought together, and checkout discount codes are included on Pro."}
             </s-paragraph>
             <s-stack direction="inline" gap="base">
-              <SButton href="/app/promotions" variant="primary">
-                Promotions
-              </SButton>
-              <SButton href="/app/coupons" variant="secondary">
-                Coupons
-              </SButton>
+              {isPaidPlan(billing.plan) ? (
+                <>
+                  <SButton href="/app/promotions" variant="primary">
+                    Promotions
+                  </SButton>
+                  <SButton href="/app/coupons" variant="secondary">
+                    Coupons
+                  </SButton>
+                </>
+              ) : (
+                <SButton href="/app/billing" variant="primary">
+                  Upgrade to Pro
+                </SButton>
+              )}
             </s-stack>
           </s-stack>
         </s-section>

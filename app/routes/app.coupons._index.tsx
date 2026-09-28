@@ -89,12 +89,11 @@ export default function CouponsIndex() {
         <s-banner tone="warning">
           <s-stack direction="block" gap="base">
             <s-text>
-              Coupons are available on the <strong>Starter</strong>,{" "}
-              <strong>Growth</strong>, and <strong>Pro</strong> plans. Your
+              Coupons are included on the <strong>Pro</strong> plan. Your
               current plan is <strong>{access.planLabel}</strong>.
             </s-text>
             <SButton variant="primary" href="/app/billing">
-              Upgrade to unlock coupons
+              Upgrade to Pro
             </SButton>
           </s-stack>
         </s-banner>

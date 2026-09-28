@@ -3,8 +3,10 @@ import { authenticate, unauthenticated } from "../shopify.server";
 import {
   getActiveOfferBadges,
   getActiveOffersForProduct,
+  getShopBillingPlan,
 } from "../models/bundle.server";
 import { getActivePromotionsForProduct } from "../models/promotion.server";
+import { isPaidPlan } from "../billing.plans";
 
 type AdminClient = {
   graphql: (
@@ -87,7 +89,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const [offers, promotions] = await Promise.all([
     getActiveOffersForProduct(shop, productId),
-    getActivePromotionsForProduct(shop, productId),
+    getShopBillingPlan(shop).then((shopPlan) =>
+      isPaidPlan(shopPlan)
+        ? getActivePromotionsForProduct(shop, productId)
+        : [],
+    ),
   ]);
 
   return new Response(JSON.stringify({ offers, promotions }), {

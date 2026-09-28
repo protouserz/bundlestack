@@ -123,7 +123,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (!hasSupport) {
     return {
       ok: false as const,
-      error: "Customer support is included with the Support plan ($2/month).",
+      error: "Customer support is included with the Pro plan ($2/month).",
     };
   }
 
@@ -226,11 +226,12 @@ export default function AppSupport() {
             <s-box padding="large" borderWidth="base" borderRadius="base">
               <s-stack direction="block" gap="base">
                 <s-text>
-                  Email customer support is included with the Support plan for
-                  $2/month. The rest of the app stays free.
+                  Email customer support is included with the Pro plan for
+                  $2/month, along with promotions and coupons. Quantity breaks
+                  stay on Free.
                 </s-text>
                 <SButton variant="primary" href="/app/billing">
-                  Add customer support
+                  Upgrade to Pro
                 </SButton>
               </s-stack>
             </s-box>

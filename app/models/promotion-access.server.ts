@@ -1,5 +1,9 @@
 import type { BillingPlan } from "../billing.plans";
 import type { PromotionType } from "./promotion.types";
+import {
+  planAllowsAovFeatures,
+  resolveShopAccessPlan,
+} from "./plan-access.server";
 
 type BillingCheck = {
   check: () => Promise<{
@@ -7,35 +11,41 @@ type BillingCheck = {
   }>;
 };
 
-/** Product is not gated — Free includes every promotion type. */
+/** AOV promotions (BOGO+ beyond quantity breaks) require the paid Pro plan. */
 export function planIncludesPromotionType(
-  _plan: BillingPlan,
+  plan: BillingPlan,
   _type: PromotionType,
 ): boolean {
-  return true;
+  return planAllowsAovFeatures(plan);
 }
 
 export async function assertPromotionPlanAccess(
-  _shop: string,
-  _type: PromotionType,
-  _billing?: BillingCheck,
+  shop: string,
+  type: PromotionType,
+  billing?: BillingCheck,
 ): Promise<{ allowed: boolean; plan: BillingPlan }> {
-  return { allowed: true, plan: "free" };
+  const plan = await resolveShopAccessPlan(shop, billing);
+  return {
+    allowed: planIncludesPromotionType(plan, type),
+    plan,
+  };
 }
 
 export async function assertAnyPromotionPlanAccess(
-  _shop: string,
-  _billing?: BillingCheck,
+  shop: string,
+  billing?: BillingCheck,
 ): Promise<{
   allowed: boolean;
   plan: BillingPlan;
   coreAllowed: boolean;
   advancedAllowed: boolean;
 }> {
+  const plan = await resolveShopAccessPlan(shop, billing);
+  const allowed = planAllowsAovFeatures(plan);
   return {
-    allowed: true,
-    plan: "free",
-    coreAllowed: true,
-    advancedAllowed: true,
+    allowed,
+    plan,
+    coreAllowed: allowed,
+    advancedAllowed: allowed,
   };
 }

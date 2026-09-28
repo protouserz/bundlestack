@@ -30,7 +30,7 @@ export function CouponCard({ coupon, showDelete = false }: CouponCardProps) {
       <div>
         <div className={styles.rowTitleRow}>
           <h3 className={styles.rowTitle}>{coupon.title}</h3>
-          <span className={live ? styles.badgeLive : styles.badge}>
+          <span className={`${styles.badge}${live ? ` ${styles.badgeLive}` : ""}`}>
             {coupon.status}
           </span>
         </div>

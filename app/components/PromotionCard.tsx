@@ -1,4 +1,4 @@
-import { Link, useSubmit } from "react-router";
+import { useSubmit } from "react-router";
 import type { PromotionRecord } from "../models/promotion.types";
 import {
   PROMOTION_TYPE_META,
@@ -39,7 +39,7 @@ export function PromotionCard({
         <div className={styles.rowTitleRow}>
           <PromotionTypeMark type={promotion.promotionType} />
           <h3 className={styles.rowTitle}>{promotion.title}</h3>
-          <span className={live ? styles.badgeLive : styles.badge}>
+          <span className={`${styles.badge}${live ? ` ${styles.badgeLive}` : ""}`}>
             {promotion.status}
           </span>
           <span className={styles.badge}>{meta.shortLabel}</span>

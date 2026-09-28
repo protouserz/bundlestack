@@ -103,14 +103,21 @@ export default function PromotionsHub() {
             const count = counts[type];
 
             return (
-              <article key={type} className={styles.card}>
+              <article
+                key={type}
+                className={`${styles.card}${type === "fbt" ? ` ${styles.cardWide}` : ""}`}
+              >
                 <div className={styles.cardHeader}>
                   <PromotionTypeMark type={type} />
-                  <span className={count > 0 ? styles.badgeLive : styles.badge}>
-                    {count} live
-                  </span>
+                  <div className={styles.cardHeading}>
+                    <h2 className={styles.cardTitle}>{meta.label}</h2>
+                    <span
+                      className={`${styles.badge}${count > 0 ? ` ${styles.badgeLive}` : ""}`}
+                    >
+                      {count} live
+                    </span>
+                  </div>
                 </div>
-                <h2 className={styles.cardTitle}>{meta.label}</h2>
                 <p className={styles.cardBody}>{meta.description}</p>
                 <p className={styles.example}>{TYPE_EXAMPLE[type]}</p>
                 <div className={styles.actions}>

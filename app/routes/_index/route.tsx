@@ -29,7 +29,7 @@ const FEATURES = [
   {
     icon: "💰",
     title: "Simple pricing",
-    text: "Free includes unlimited offers. Add customer support for $2/month.",
+    text: "Free includes unlimited quantity breaks, BOGO, and product-page upsells. Pro is $2/month for extra offer types and email support.",
   },
 ];
 
@@ -46,6 +46,73 @@ const STEPS = [
     title: "Add the widget",
     text: "Enable the theme block on your product template and start boosting average order value.",
   },
+];
+
+const COMPARE_ROWS = [
+  {
+    label: "Typical price",
+    us: "Free; Pro $2/mo",
+    specialists: "Often $7–30/mo, or a revenue-capped free plan",
+    suites: "Often $20–100+/mo",
+  },
+  {
+    label: "Quantity breaks",
+    us: "Unlimited, no revenue cap",
+    specialists: "Yes — this is the core product",
+    suites: "Yes, plus many other offer types",
+  },
+  {
+    label: "BOGO",
+    us: "Included on Free",
+    specialists: "Usually on a paid plan",
+    suites: "Usually included",
+  },
+  {
+    label: "Product-page upsell / FBT",
+    us: "Included on Free",
+    specialists: "Sometimes",
+    suites: "Usually a flagship feature",
+  },
+  {
+    label: "Gifts, mix & match, builders, coupons",
+    us: "Pro",
+    specialists: "Varies by app",
+    suites: "Usually included",
+  },
+  {
+    label: "Checkout discounts",
+    us: "Shopify Function — automatic",
+    specialists: "Functions on some plans; others still use codes",
+    suites: "Usually automatic",
+  },
+  {
+    label: "Product-page widget",
+    us: "Theme block + app embed",
+    specialists: "Usually",
+    suites: "Usually, often more templates",
+  },
+  {
+    label: "Reviews and installs",
+    us: "Newer app",
+    specialists: "Often thousands of reviews",
+    suites: "Often thousands of reviews",
+  },
+];
+
+const PROS = [
+  "No revenue cap on Free for quantity breaks, BOGO, and product-page upsells.",
+  "Pro is $2/month — extra offer types plus email support — instead of a $10–30 plan.",
+  "Discounts apply at checkout through a Shopify Function, not a code shoppers have to enter.",
+  "Uninstall removes the discounts BundleStack created.",
+  "Admin stays small: pick products, set tiers, go live.",
+];
+
+const CONS = [
+  "Fewer public reviews and installs than Bundler, Kaching, Bold, or Rebuy, so social proof is weaker.",
+  "The theme embed still needs a Save in the theme editor before the widget shows on the live store.",
+  "Mix & match, free gifts, bundle builders, and coupons are Pro-only.",
+  "Not a merchandising platform — no email flows, A/B tests, or cart-drawer ecosystem.",
+  "Free-gift discounts only apply when the gift is already in the cart.",
 ];
 
 export default function App() {
@@ -104,7 +171,8 @@ export default function App() {
           </h2>
           <p className={styles.featuresSubheading}>
             BundleStack focuses on quantity breaks done right — fast setup,
-            clean uninstall, and a free plan that includes the full product.
+            a product-page widget, and pricing that does not scale with your
+            revenue.
           </p>
           <ul className={styles.featureGrid}>
             {FEATURES.map((feature) => (
@@ -115,6 +183,66 @@ export default function App() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      <section className={styles.compare} aria-labelledby="compare-heading">
+        <div className={styles.compareInner}>
+          <h2 id="compare-heading" className={styles.compareHeading}>
+            How we compare to other apps
+          </h2>
+          <p className={styles.compareSubheading}>
+            Most quantity-break apps charge $7–30/month or cap the free plan by
+            revenue. All-in-one AOV suites cost more and take longer to set up.
+            BundleStack keeps the core offers free.
+          </p>
+
+          <div className={styles.tableWrap}>
+            <table className={styles.compareTable}>
+              <thead>
+                <tr>
+                  <th scope="col">What you get</th>
+                  <th scope="col">BundleStack</th>
+                  <th scope="col">Quantity-break apps</th>
+                  <th scope="col">AOV suites</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_ROWS.map((row) => (
+                  <tr key={row.label}>
+                    <th scope="row">{row.label}</th>
+                    <td className={styles.usCell}>{row.us}</td>
+                    <td>{row.specialists}</td>
+                    <td>{row.suites}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className={styles.compareNote}>
+            Specialist apps include listings like Bundler and Kaching.
+            AOV suites include broader tools like Bold, Pumper, and Rebuy.
+            Competitor prices and features change — check each App Store listing.
+          </p>
+
+          <div className={styles.prosCons}>
+            <article className={styles.prosCard}>
+              <h3 className={styles.prosTitle}>Where BundleStack wins</h3>
+              <ul>
+                {PROS.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+            <article className={styles.consCard}>
+              <h3 className={styles.consTitle}>Where others are stronger</h3>
+              <ul>
+                {CONS.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </div>
         </div>
       </section>
 

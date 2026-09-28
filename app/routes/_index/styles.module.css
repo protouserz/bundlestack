@@ -260,6 +260,140 @@
   margin: 0;
 }
 
+.compare {
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 4rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.compareInner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.compareHeading {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+}
+
+.compareSubheading {
+  text-align: center;
+  color: #64748b;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  margin: 0 auto 2rem;
+  max-width: 40rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.compareTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 640px;
+}
+
+.compareTable th,
+.compareTable td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #e2e8f0;
+  line-height: 1.45;
+}
+
+.compareTable thead th {
+  background: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.compareTable tbody th {
+  font-weight: 600;
+  color: #0f172a;
+  width: 22%;
+}
+
+.compareTable tbody tr:last-child th,
+.compareTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.usCell {
+  font-weight: 600;
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.compareNote {
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.prosCons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 720px) {
+  .prosCons {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prosCard,
+.consCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+}
+
+.prosTitle,
+.consTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.prosTitle {
+  color: #047857;
+}
+
+.consTitle {
+  color: #9a3412;
+}
+
+.prosCard ul,
+.consCard ul {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  color: #334155;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
 .steps {
   background: #fff;
   padding: 4rem 1.5rem;

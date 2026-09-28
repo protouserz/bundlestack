@@ -5,6 +5,8 @@ import {
   summarizePromotionConfig,
 } from "../models/promotion.types";
 import { SButton } from "./polaris";
+import { PromotionTypeMark } from "./promotions/PromotionTypeMark";
+import styles from "./promotions/promotions.module.css";
 
 type PromotionCardProps = {
   promotion: PromotionRecord;
@@ -17,6 +19,7 @@ export function PromotionCard({
 }: PromotionCardProps) {
   const submit = useSubmit();
   const meta = PROMOTION_TYPE_META[promotion.promotionType];
+  const live = promotion.status === "active";
 
   const handleDelete = () => {
     const confirmed = window.confirm(
@@ -31,37 +34,38 @@ export function PromotionCard({
   };
 
   return (
-    <s-box padding="large" borderWidth="base" borderRadius="base">
-      <s-stack direction="block" gap="base">
-        <s-stack direction="inline" gap="base">
-          <s-heading>{promotion.title}</s-heading>
-          <s-badge tone={promotion.status === "active" ? "success" : "info"}>
+    <article className={styles.row}>
+      <div>
+        <div className={styles.rowTitleRow}>
+          <PromotionTypeMark type={promotion.promotionType} />
+          <h3 className={styles.rowTitle}>{promotion.title}</h3>
+          <span className={live ? styles.badgeLive : styles.badge}>
             {promotion.status}
-          </s-badge>
-          <s-badge>{meta.shortLabel}</s-badge>
-        </s-stack>
-
-        <s-text tone="neutral">
+          </span>
+          <span className={styles.badge}>{meta.shortLabel}</span>
+        </div>
+        <p className={styles.rowMeta}>
           {summarizePromotionConfig(promotion.promotionType, promotion.config)}
           {promotion.discountIds.length > 0
-            ? ` · ${promotion.discountIds.length} discount(s) synced`
+            ? " · synced at checkout"
             : " · checkout sync pending"}
-        </s-text>
-
-        <s-stack direction="inline" gap="base">
-          <Link to={`${meta.href}/${promotion.id}`}>Edit</Link>
-          {showDelete ? (
-            <SButton
-              type="button"
-              tone="critical"
-              variant="tertiary"
-              onClick={handleDelete}
-            >
-              Delete
-            </SButton>
-          ) : null}
-        </s-stack>
-      </s-stack>
-    </s-box>
+        </p>
+      </div>
+      <div className={styles.rowActions}>
+        <SButton variant="secondary" href={`${meta.href}/${promotion.id}`}>
+          Edit
+        </SButton>
+        {showDelete ? (
+          <SButton
+            type="button"
+            tone="critical"
+            variant="tertiary"
+            onClick={handleDelete}
+          >
+            Delete
+          </SButton>
+        ) : null}
+      </div>
+    </article>
   );
 }

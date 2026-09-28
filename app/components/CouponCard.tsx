@@ -1,7 +1,8 @@
-import { Link, useSubmit } from "react-router";
+import { useSubmit } from "react-router";
 import type { CouponRecord } from "../models/coupon.types";
 import { formatCouponValue } from "../utils/coupon";
 import { SButton } from "./polaris";
+import styles from "./promotions/promotions.module.css";
 
 type CouponCardProps = {
   coupon: CouponRecord;
@@ -10,6 +11,7 @@ type CouponCardProps = {
 
 export function CouponCard({ coupon, showDelete = false }: CouponCardProps) {
   const submit = useSubmit();
+  const live = coupon.status === "active";
 
   const handleDelete = () => {
     const confirmed = window.confirm(
@@ -24,34 +26,37 @@ export function CouponCard({ coupon, showDelete = false }: CouponCardProps) {
   };
 
   return (
-    <s-box padding="large" borderWidth="base" borderRadius="base">
-      <s-stack direction="block" gap="base">
-        <s-stack direction="inline" gap="base">
-          <s-heading>{coupon.title}</s-heading>
-          <s-badge tone={coupon.status === "active" ? "success" : "info"}>
+    <article className={styles.row}>
+      <div>
+        <div className={styles.rowTitleRow}>
+          <h3 className={styles.rowTitle}>{coupon.title}</h3>
+          <span className={live ? styles.badgeLive : styles.badge}>
             {coupon.status}
-          </s-badge>
-        </s-stack>
-
-        <s-text tone="neutral">
-          Code <strong>{coupon.code}</strong> · {formatCouponValue(coupon)}
-          {coupon.discountId ? " · synced to Shopify" : " · not synced"}
-        </s-text>
-
-        <s-stack direction="inline" gap="base">
-          <Link to={`/app/coupons/${coupon.id}`}>Edit coupon</Link>
-          {showDelete ? (
-            <SButton
-              type="button"
-              tone="critical"
-              variant="tertiary"
-              onClick={handleDelete}
-            >
-              Delete
-            </SButton>
-          ) : null}
-        </s-stack>
-      </s-stack>
-    </s-box>
+          </span>
+        </div>
+        <p className={styles.rowMeta}>
+          <span className={styles.ticket}>{coupon.code}</span>
+          <span>{formatCouponValue(coupon)}</span>
+          <span>
+            {coupon.discountId ? "Synced to Shopify" : "Not synced yet"}
+          </span>
+        </p>
+      </div>
+      <div className={styles.rowActions}>
+        <SButton variant="secondary" href={`/app/coupons/${coupon.id}`}>
+          Edit
+        </SButton>
+        {showDelete ? (
+          <SButton
+            type="button"
+            tone="critical"
+            variant="tertiary"
+            onClick={handleDelete}
+          >
+            Delete
+          </SButton>
+        ) : null}
+      </div>
+    </article>
   );
 }

@@ -2,7 +2,7 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Link, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { listPromotions } from "../models/promotion.server";
@@ -14,6 +14,16 @@ import {
 } from "../models/promotion.types";
 import { PLAN_LABELS } from "../billing.plans";
 import { SButton, SPage } from "../components/polaris";
+import { PromotionTypeMark } from "../components/promotions/PromotionTypeMark";
+import styles from "../components/promotions/promotions.module.css";
+
+const TYPE_EXAMPLE: Record<PromotionType, string> = {
+  bogo: "Buy 1, get 1 free",
+  free_gift: "Free gift over $50",
+  mix_match: "Any 3, 15% off",
+  bundle_builder: "Pick a kit, save 10%",
+  fbt: "Add-on 10% off",
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing } = await authenticate.admin(request);
@@ -75,51 +85,47 @@ export default function PromotionsHub() {
 
   return (
     <SPage heading="Promotions">
-      <s-stack direction="block" gap="large">
-        <s-box
-          padding="large"
-          borderWidth="base"
-          borderRadius="base"
-          background="subdued"
-        >
-          <s-text tone="neutral">
-            Grow AOV beyond quantity breaks with BOGO, free gifts, mix & match,
-            bundle builders, and frequently-bought-together upsells.{" "}
-            {total} promotion{total === 1 ? "" : "s"} configured.
-          </s-text>
-        </s-box>
+      <div className={styles.page}>
+        <div className={styles.intro}>
+          <p className={styles.introCopy}>
+            Grow order value beyond quantity breaks. Each type syncs to checkout
+            automatically — shoppers see the deal on the product page after you
+            save the theme embed.
+          </p>
+          <span className={styles.introCount}>
+            {total} promotion{total === 1 ? "" : "s"}
+          </span>
+        </div>
 
-        <s-stack direction="block" gap="base">
+        <div className={styles.grid}>
           {PROMOTION_TYPES.map((type) => {
             const meta = PROMOTION_TYPE_META[type];
+            const count = counts[type];
 
             return (
-              <s-box
-                key={type}
-                padding="large"
-                borderWidth="base"
-                borderRadius="base"
-              >
-                <s-stack direction="block" gap="base">
-                  <s-stack direction="inline" gap="base">
-                    <s-heading>{meta.label}</s-heading>
-                    <s-badge>
-                      {counts[type]} offer{counts[type] === 1 ? "" : "s"}
-                    </s-badge>
-                  </s-stack>
-                  <s-text tone="neutral">{meta.description}</s-text>
-                  <s-stack direction="inline" gap="base">
-                    <SButton variant="primary" href={meta.href}>
-                      Manage {meta.shortLabel}
-                    </SButton>
-                    <Link to={`${meta.href}/new`}>Create new</Link>
-                  </s-stack>
-                </s-stack>
-              </s-box>
+              <article key={type} className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <PromotionTypeMark type={type} />
+                  <span className={count > 0 ? styles.badgeLive : styles.badge}>
+                    {count} live
+                  </span>
+                </div>
+                <h2 className={styles.cardTitle}>{meta.label}</h2>
+                <p className={styles.cardBody}>{meta.description}</p>
+                <p className={styles.example}>{TYPE_EXAMPLE[type]}</p>
+                <div className={styles.actions}>
+                  <SButton variant="primary" href={`${meta.href}/new`}>
+                    Create
+                  </SButton>
+                  <SButton variant="tertiary" href={meta.href}>
+                    {count > 0 ? "Manage" : "View"}
+                  </SButton>
+                </div>
+              </article>
             );
           })}
-        </s-stack>
-      </s-stack>
+        </div>
+      </div>
     </SPage>
   );
 }

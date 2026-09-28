@@ -6,8 +6,6 @@ import type {
 import { redirect, useLoaderData, useParams, useSubmit } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { EmptyState } from "../components/EmptyState";
-import { PromotionCard } from "../components/PromotionCard";
 import {
   deletePromotion,
   deletePromotionsByType,
@@ -20,6 +18,8 @@ import { promotionTypeFromSlug } from "../models/promotion-routes";
 import { PROMOTION_TYPE_META } from "../models/promotion.types";
 import { PLAN_LABELS } from "../billing.plans";
 import { SButton, SPage } from "../components/polaris";
+import { PromotionCard } from "../components/PromotionCard";
+import styles from "../components/promotions/promotions.module.css";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { session, billing } = await authenticate.admin(request);
@@ -136,55 +136,47 @@ export default function PromotionTypeIndex() {
         Create {meta.shortLabel}
       </SButton>
 
-      <s-stack direction="block" gap="large">
-        <s-box
-          padding="large"
-          borderWidth="base"
-          borderRadius="base"
-          background="subdued"
-        >
-          <s-stack direction="inline" gap="base">
-            <s-text tone="neutral">{meta.description}</s-text>
-            {promotions.length > 0 ? (
-              <SButton
-                variant="secondary"
-                tone="critical"
-                command="--show"
-                commandFor="delete-all-promotions-modal"
-              >
-                Delete all
-              </SButton>
-            ) : null}
-          </s-stack>
-        </s-box>
+      <div className={styles.page}>
+        <a className={styles.backLink} href="/app/promotions">
+          ← All promotions
+        </a>
 
-        <s-text tone="neutral">
-          <a href="/app/promotions">← All promotions</a>
-        </s-text>
+        <div className={styles.intro}>
+          <p className={styles.introCopy}>{meta.description}</p>
+          {promotions.length > 0 ? (
+            <SButton
+              variant="tertiary"
+              tone="critical"
+              command="--show"
+              commandFor="delete-all-promotions-modal"
+            >
+              Delete all
+            </SButton>
+          ) : (
+            <span className={styles.introCount}>0 live</span>
+          )}
+        </div>
 
         {promotions.length === 0 ? (
-          <EmptyState
-            heading={`No ${meta.label.toLowerCase()} offers yet`}
-            description={meta.description}
-            actionLabel={`Create ${meta.shortLabel}`}
-            actionHref={`${meta.href}/new`}
-          />
+          <div className={styles.empty}>
+            <p className={styles.emptyTitle}>No {meta.label.toLowerCase()} yet</p>
+            <p className={styles.emptyBody}>{meta.description}</p>
+            <SButton variant="primary" href={`${meta.href}/new`}>
+              Create {meta.shortLabel}
+            </SButton>
+          </div>
         ) : (
-          <s-section
-            heading={`${promotions.length} offer${promotions.length === 1 ? "" : "s"}`}
-          >
-            <s-stack direction="block" gap="base">
-              {promotions.map((promotion) => (
-                <PromotionCard
-                  key={promotion.id}
-                  promotion={promotion}
-                  showDelete
-                />
-              ))}
-            </s-stack>
-          </s-section>
+          <div className={styles.list}>
+            {promotions.map((promotion) => (
+              <PromotionCard
+                key={promotion.id}
+                promotion={promotion}
+                showDelete
+              />
+            ))}
+          </div>
         )}
-      </s-stack>
+      </div>
 
       {promotions.length > 0 ? (
         <s-modal

@@ -6,7 +6,6 @@ import type {
 import { redirect, useLoaderData, useSubmit } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { EmptyState } from "../components/EmptyState";
 import { CouponCard } from "../components/CouponCard";
 import { PLAN_LABELS } from "../billing.plans";
 import { assertCouponsPlanAccess } from "../models/coupon-access.server";
@@ -18,6 +17,7 @@ import {
 } from "../models/coupon.server";
 import { deleteShopifyDiscountCodes } from "../models/discount-code.server";
 import { SButton, SPage } from "../components/polaris";
+import styles from "../components/promotions/promotions.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing } = await authenticate.admin(request);
@@ -112,51 +112,47 @@ export default function CouponsIndex() {
         Create coupon
       </SButton>
 
-      <s-stack direction="block" gap="large">
-        <s-box
-          padding="large"
-          borderWidth="base"
-          borderRadius="base"
-          background="subdued"
-        >
-          <s-stack direction="inline" gap="base">
-            <s-text tone="neutral">
-              Create checkout codes for percentage or fixed-amount discounts.
-              Fixed-amount codes work like gift-card style credits at checkout
-              (Shopify discount codes — not Gift Card balances).
-            </s-text>
-            {coupons.length > 0 ? (
-              <SButton
-                variant="secondary"
-                tone="critical"
-                command="--show"
-                commandFor="delete-all-coupons-modal"
-              >
-                Delete all
-              </SButton>
-            ) : null}
-          </s-stack>
-        </s-box>
+      <div className={styles.page}>
+        <div className={styles.intro}>
+          <p className={styles.introCopy}>
+            Checkout codes for a percentage or a fixed amount off. Shoppers
+            enter the code at checkout — these are Shopify discount codes, not
+            gift-card balances.
+          </p>
+          {coupons.length > 0 ? (
+            <SButton
+              variant="tertiary"
+              tone="critical"
+              command="--show"
+              commandFor="delete-all-coupons-modal"
+            >
+              Delete all
+            </SButton>
+          ) : (
+            <span className={styles.introCount}>No codes yet</span>
+          )}
+        </div>
 
         {coupons.length === 0 ? (
-          <EmptyState
-            heading="No coupons yet"
-            description='Create a code like "SAVE10" for 10% off, or a fixed-amount code for a gift-style checkout credit.'
-            actionLabel="Create coupon"
-            actionHref="/app/coupons/new"
-          />
+          <div className={styles.empty}>
+            <p className={styles.emptyTitle}>Create your first code</p>
+            <p className={styles.emptyBody}>
+              Try something shoppers will remember, like SAVE10 for 10% off, or
+              a fixed amount for a gift-style credit at checkout.
+            </p>
+            <span className={styles.ticket}>SAVE10</span>
+            <SButton variant="primary" href="/app/coupons/new">
+              Create coupon
+            </SButton>
+          </div>
         ) : (
-          <s-section
-            heading={`${coupons.length} coupon${coupons.length === 1 ? "" : "s"}`}
-          >
-            <s-stack direction="block" gap="base">
-              {coupons.map((coupon) => (
-                <CouponCard key={coupon.id} coupon={coupon} showDelete />
-              ))}
-            </s-stack>
-          </s-section>
+          <div className={styles.list}>
+            {coupons.map((coupon) => (
+              <CouponCard key={coupon.id} coupon={coupon} showDelete />
+            ))}
+          </div>
         )}
-      </s-stack>
+      </div>
 
       {coupons.length > 0 ? (
         <s-modal

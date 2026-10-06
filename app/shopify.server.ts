@@ -6,6 +6,7 @@ import {
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { shopifyBillingConfig } from "./billing.shopify";
+import { requestWithoutCursorBotUa } from "./cursor-browser.server";
 import prisma from "./db.server";
 import { seedDefaultOfferIfNeeded } from "./models/onboarding.server";
 
@@ -45,8 +46,13 @@ export {
 export default shopify;
 export const apiVersion = ApiVersion.July26;
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
-export const authenticate = shopify.authenticate;
+export const authenticate = {
+  ...shopify.authenticate,
+  admin: ((request: Request) =>
+    shopify.authenticate.admin(requestWithoutCursorBotUa(request))) as typeof shopify.authenticate.admin,
+};
 export const unauthenticated = shopify.unauthenticated;
-export const login = shopify.login;
+export const login = ((request: Request) =>
+  shopify.login(requestWithoutCursorBotUa(request))) as typeof shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;

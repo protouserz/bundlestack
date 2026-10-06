@@ -3,13 +3,16 @@ import {
   DEFAULT_BOGO_TIERS,
   DEFAULT_BOGO_TITLE,
   DEFAULT_OFFER_TITLE,
+  DEFAULT_WIDGET_LOOK,
   bogoLabel,
   isBogoOffer,
   type DiscountTier,
+  type WidgetLook,
 } from "../../models/offer";
 import { useLeaveWithSaveBar } from "../AdminLink";
 import { ProductPickerField, type SelectedProduct } from "../ProductPickerField";
 import { SButton } from "../polaris";
+import { WidgetLookCard } from "./WidgetLookCard";
 import styles from "./offer-form.module.css";
 
 const OFFER_TYPES = [
@@ -36,6 +39,7 @@ type OfferFormProps = {
   defaultAllProducts?: boolean;
   initialProducts?: SelectedProduct[];
   initialTiers?: DiscountTier[];
+  defaultWidgetLook?: WidgetLook;
   error?: string;
   discountUses?: number;
   discountCount?: number;
@@ -61,6 +65,7 @@ export function OfferForm({
   defaultAllProducts,
   initialProducts = [],
   initialTiers = DEFAULT_TIERS,
+  defaultWidgetLook,
   error,
   discountUses,
   discountCount,
@@ -75,6 +80,9 @@ export function OfferForm({
     defaultAllProducts ?? (mode === "create" || initialProducts.length === 0),
   );
   const [productCount, setProductCount] = useState(initialProducts.length);
+  const [widgetLook, setWidgetLook] = useState<WidgetLook>(
+    defaultWidgetLook ?? DEFAULT_WIDGET_LOOK,
+  );
   const tiersInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -394,6 +402,13 @@ export function OfferForm({
               </>
             )}
           </section>
+
+          <WidgetLookCard
+            look={widgetLook}
+            onChange={setWidgetLook}
+            offerType={offerType}
+            tiers={tiers}
+          />
         </div>
 
         <aside className={styles.sidebar}>

@@ -136,6 +136,7 @@ describe("parseOfferForm", () => {
     );
 
     expect(result.offerType).toBe("bogo");
+    expect(result.widgetLook?.accent).toBe("#059669");
     expect(result.tiers).toEqual([
       {
         minQty: 1,
@@ -159,6 +160,44 @@ describe("parseOfferForm", () => {
         }),
       ),
     ).toThrow(Response);
+  });
+
+  it("parses widget look colors from the edit form", () => {
+    const result = parseOfferForm(
+      form({
+        title: "Styled",
+        status: "active",
+        allProducts: "true",
+        tiers: validTiers,
+        widgetHeading: "Volume deals",
+        widgetAccent: "#c9a227",
+        widgetBackground: "#f8fafc",
+        widgetTextColor: "#0b1b3a",
+        widgetSelectedBackground: "#fff7d6",
+      }),
+    );
+
+    expect(result.widgetLook).toEqual({
+      heading: "Volume deals",
+      accent: "#c9a227",
+      background: "#f8fafc",
+      textColor: "#0b1b3a",
+      selectedBackground: "#fff7d6",
+    });
+  });
+
+  it("falls back to default widget look for invalid colors", () => {
+    const result = parseOfferForm(
+      form({
+        title: "Styled",
+        status: "active",
+        allProducts: "true",
+        tiers: validTiers,
+        widgetAccent: "red",
+      }),
+    );
+
+    expect(result.widgetLook?.accent).toBe("#059669");
   });
 
   it("still rejects unknown offer types", () => {

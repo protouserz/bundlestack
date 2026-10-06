@@ -43,6 +43,8 @@ model BundleOffer {
   discountIds      String   @default("[]")
   discountUses     Int      @default(0)
   revenueGenerated Float    @default(0)
+  /// JSON: heading, accent, background, textColor, selectedBackground
+  widgetLook       String   @default("{}")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

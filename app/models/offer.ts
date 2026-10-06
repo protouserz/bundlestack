@@ -15,12 +15,21 @@ export type DiscountTier = {
   getQty?: number;
 };
 
+export type WidgetLook = {
+  heading: string;
+  accent: string;
+  background: string;
+  textColor: string;
+  selectedBackground: string;
+};
+
 export type BundleOfferInput = {
   title: string;
   offerType?: string;
   status?: string;
   productIds: string[];
   tiers: DiscountTier[];
+  widgetLook?: WidgetLook;
 };
 
 export const DEFAULT_OFFER_TITLE = "Buy more, save more";
@@ -40,6 +49,85 @@ export const DEFAULT_BOGO_TIERS: DiscountTier[] = [
     label: "Buy 1 get 1 free",
   },
 ];
+
+export const DEFAULT_WIDGET_LOOK: WidgetLook = {
+  heading: "Buy more, save more",
+  accent: "#059669",
+  background: "#ffffff",
+  textColor: "#0f172a",
+  selectedBackground: "#ecfdf5",
+};
+
+export const WIDGET_LOOK_PRESETS: { id: string; label: string; look: WidgetLook }[] = [
+  { id: "emerald", label: "Emerald", look: DEFAULT_WIDGET_LOOK },
+  {
+    id: "navy",
+    label: "Navy and gold",
+    look: {
+      heading: "Buy more, save more",
+      accent: "#c9a227",
+      background: "#f8fafc",
+      textColor: "#0b1b3a",
+      selectedBackground: "#fff7d6",
+    },
+  },
+  {
+    id: "rose",
+    label: "Rose and cream",
+    look: {
+      heading: "Buy more, save more",
+      accent: "#be123c",
+      background: "#fff7f4",
+      textColor: "#4a1025",
+      selectedBackground: "#ffe4e6",
+    },
+  },
+  {
+    id: "dark",
+    label: "Dark",
+    look: {
+      heading: "Buy more, save more",
+      accent: "#34d399",
+      background: "#111827",
+      textColor: "#f8fafc",
+      selectedBackground: "#064e3b",
+    },
+  },
+];
+
+const HEX_COLOR = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+function normalizeHex(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  if (!HEX_COLOR.test(trimmed)) return fallback;
+  if (trimmed.length === 4) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`.toLowerCase();
+  }
+  return trimmed.toLowerCase();
+}
+
+export function parseWidgetLook(raw: unknown): WidgetLook {
+  const data =
+    raw && typeof raw === "object" && !Array.isArray(raw)
+      ? (raw as Record<string, unknown>)
+      : {};
+  const heading =
+    typeof data.heading === "string" && data.heading.trim()
+      ? data.heading.trim().slice(0, 80)
+      : DEFAULT_WIDGET_LOOK.heading;
+
+  return {
+    heading,
+    accent: normalizeHex(data.accent, DEFAULT_WIDGET_LOOK.accent),
+    background: normalizeHex(data.background, DEFAULT_WIDGET_LOOK.background),
+    textColor: normalizeHex(data.textColor, DEFAULT_WIDGET_LOOK.textColor),
+    selectedBackground: normalizeHex(
+      data.selectedBackground,
+      DEFAULT_WIDGET_LOOK.selectedBackground,
+    ),
+  };
+}
 
 export function isBogoOffer(offerType: string | undefined) {
   return offerType === OFFER_TYPE_BOGO;

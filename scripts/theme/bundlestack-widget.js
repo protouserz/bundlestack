@@ -575,6 +575,7 @@
 
         showWidget(root);
         const offer = offers[0];
+        window.__bundlestackApplyLook?.(root, offer.widgetLook);
         tiersEl.innerHTML = offer.tiers
           .map((tier) => {
             const minQty = Math.max(1, Math.floor(Number(tier.minQty)) || 1);
@@ -596,21 +597,7 @@
             const badge = isBogo ? "Free" : formatBadge(display);
             const price = renderPrice(priceCents, display, currency);
 
-            return `
-              <button
-                type="button"
-                class="bundlestack-widget__tier"
-                data-min-qty="${cartQty}"
-                aria-pressed="false"
-              >
-                <span class="bundlestack-widget__tier-radio" aria-hidden="true"></span>
-                <span class="bundlestack-widget__tier-label">${escapeHtml(label)}</span>
-                <span class="bundlestack-widget__tier-meta">
-                  <span class="bundlestack-widget__tier-badge">${escapeHtml(badge)}</span>
-                  ${price}
-                </span>
-              </button>
-            `;
+            return `<button type="button" class="bundlestack-widget__tier" data-min-qty="${cartQty}" aria-pressed="false"><span class="bundlestack-widget__tier-radio" aria-hidden="true"></span><span class="bundlestack-widget__tier-label">${escapeHtml(label)}</span><span class="bundlestack-widget__tier-meta"><span class="bundlestack-widget__tier-badge">${escapeHtml(badge)}</span>${price}</span></button>`;
           })
           .join("");
 

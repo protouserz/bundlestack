@@ -109,6 +109,7 @@ export default function EditOffer() {
           defaultAllProducts={offer.productIds.length === 0}
           initialProducts={products}
           initialTiers={offer.tiers}
+          defaultWidgetLook={offer.widgetLook}
           error={actionData?.error}
           discountUses={offer.discountUses}
           discountCount={offer.discountIds.length}

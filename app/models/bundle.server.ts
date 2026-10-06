@@ -11,6 +11,7 @@ import {
   isBogoOffer,
   isCatalogOffer,
   isOfferType,
+  parseWidgetLook,
   type BundleOfferInput,
   type DiscountTier,
   type StorefrontPreviewProduct,
@@ -29,8 +30,9 @@ export {
   isCatalogOffer,
   isOfferType,
   offerDiscountSummary,
+  parseWidgetLook,
 } from "./offer";
-export type { BundleOfferInput, DiscountTier, OfferType } from "./offer";
+export type { BundleOfferInput, DiscountTier, OfferType, WidgetLook } from "./offer";
 
 function parseTiers(raw: string): DiscountTier[] {
   return safeJsonParse<DiscountTier[]>(raw, []);
@@ -51,6 +53,7 @@ export function serializeOffer(offer: {
   discountIds?: string;
   discountUses?: number;
   revenueGenerated: number;
+  widgetLook?: string;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -61,6 +64,7 @@ export function serializeOffer(offer: {
     discountIds: offer.discountIds
       ? safeJsonParse<string[]>(offer.discountIds, [])
       : [],
+    widgetLook: parseWidgetLook(safeJsonParse(offer.widgetLook ?? "{}", {})),
   };
 }
 
@@ -90,6 +94,7 @@ export async function createOffer(shop: string, input: BundleOfferInput) {
       status: input.status ?? "draft",
       productIds: JSON.stringify(input.productIds),
       tiers: JSON.stringify(input.tiers),
+      widgetLook: JSON.stringify(parseWidgetLook(input.widgetLook)),
       discountIds: "[]",
     },
   });
@@ -126,6 +131,9 @@ export async function updateOffer(
         ? { productIds: JSON.stringify(input.productIds) }
         : {}),
       ...(input.tiers !== undefined ? { tiers: JSON.stringify(input.tiers) } : {}),
+      ...(input.widgetLook !== undefined
+        ? { widgetLook: JSON.stringify(parseWidgetLook(input.widgetLook)) }
+        : {}),
     },
   });
 
@@ -500,6 +508,14 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     );
   }
 
+  const widgetLook = parseWidgetLook({
+    heading: formData.get("widgetHeading"),
+    accent: formData.get("widgetAccent"),
+    background: formData.get("widgetBackground"),
+    textColor: formData.get("widgetTextColor"),
+    selectedBackground: formData.get("widgetSelectedBackground"),
+  });
+
   if (offerType === OFFER_TYPE_BOGO) {
     const record = rawTiers[0];
     if (!record || typeof record !== "object") {
@@ -526,6 +542,7 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
       status,
       offerType,
       productIds,
+      widgetLook,
       tiers: [
         {
           minQty: buyQty,
@@ -593,7 +610,7 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
     };
   });
 
-  return { title, status, offerType, productIds, tiers };
+  return { title, status, offerType, productIds, tiers, widgetLook };
 }
 
 export async function cleanupShopData(shop: string) {

@@ -27,7 +27,6 @@ import {
   ensureShopSettings,
   fetchOfferThumbnails,
   fetchPreviewProduct,
-  getShopSettings,
   getShopStats,
   listOffers,
   resolveCurrentBillingPlan,
@@ -123,22 +122,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session, billing } = await authenticate.admin(request);
   const shop = session.shop;
 
-  await ensureShopSettings(shop);
+  const settings = await ensureShopSettings(shop);
+  const firstRun = !settings.onboardingDone;
 
   const offers = await listOffers(shop);
   const previewOffer =
     offers.find((offer) => offer.status === "active") ?? offers[0] ?? null;
 
-  // Resolve all dashboard data together. Streaming these Admin API requests
-  // left embedded-app Suspense fallbacks pending indefinitely in production.
-  const [settings, stats, health, offerThumbnails, previewProduct] =
-    await Promise.all([
-      getShopSettings(shop),
-      getShopStats(shop, offers),
-      getShopHealth(admin, shop, offers),
-      fetchOfferThumbnails(admin, offers),
-      fetchPreviewProduct(admin, shop, previewOffer?.productIds ?? []),
-    ]);
+  // Skip health GraphQL on first run so the live-at-checkout screen paints
+  // before merchants bounce. Streaming these requests left Suspense pending.
+  const [stats, health, offerThumbnails, previewProduct] = await Promise.all([
+    getShopStats(shop, offers),
+    firstRun
+      ? Promise.resolve({
+          checks: [],
+          overall: "healthy" as const,
+          themeEditorUrl: themeEditorUrlForShop(shop),
+        })
+      : getShopHealth(admin, shop, offers),
+    firstRun ? Promise.resolve({}) : fetchOfferThumbnails(admin, offers),
+    fetchPreviewProduct(admin, shop, previewOffer?.productIds ?? []),
+  ]);
 
   const requestUrl = new URL(request.url);
   const hasBillingCallback =
@@ -357,16 +361,29 @@ export default function Dashboard() {
   }, [fixResult, shopify, syncFeedback]);
 
   return (
-    <SPage heading="Dashboard">
-      <SButton slot="primary-action" variant="primary" href="/app/offers/new">
-        Create offer
-      </SButton>
-      <SButton slot="secondary-actions" variant="secondary" href="/app/promotions">
-        Promotions
-      </SButton>
-      <SButton slot="secondary-actions" variant="secondary" href="/app/coupons">
-        Coupons
-      </SButton>
+    <SPage heading={showSetupGuide ? "You're live at checkout" : "Dashboard"}>
+      {showSetupGuide ? (
+        <SButton
+          slot="primary-action"
+          variant="primary"
+          href={toShopifyAdminProtocol(themeEditorUrl)}
+          target="_top"
+        >
+          Show on product pages
+        </SButton>
+      ) : (
+        <>
+          <SButton slot="primary-action" variant="primary" href="/app/offers/new">
+            Create offer
+          </SButton>
+          <SButton slot="secondary-actions" variant="secondary" href="/app/promotions">
+            Promotions
+          </SButton>
+          <SButton slot="secondary-actions" variant="secondary" href="/app/coupons">
+            Coupons
+          </SButton>
+        </>
+      )}
 
       <div className={styles.dashboard}>
         {fixResult ? (
@@ -377,9 +394,11 @@ export default function Dashboard() {
           </div>
         ) : null}
 
-        <s-text tone="neutral">
-          Reporting period: {formatDateRange()}
-        </s-text>
+        {showSetupGuide ? null : (
+          <s-text tone="neutral">
+            Reporting period: {formatDateRange()}
+          </s-text>
+        )}
 
         <ThemeWidgetStatus
           themeEditorUrl={themeEditorUrl}
@@ -399,36 +418,40 @@ export default function Dashboard() {
           />
         )}
 
-        <DashboardMetrics
-          activeOffers={stats.activeOffers}
-          totalOffers={stats.totalOffers}
-          discountUses={stats.totalDiscountUses}
-          health={health}
-        />
+        {showSetupGuide ? null : (
+          <>
+            <DashboardMetrics
+              activeOffers={stats.activeOffers}
+              totalOffers={stats.totalOffers}
+              discountUses={stats.totalDiscountUses}
+              health={health}
+            />
 
-        <s-section heading="Promotions and coupons">
-          <s-stack direction="block" gap="base">
-            <s-paragraph>
-              {isPaidPlan(billing.plan)
-                ? "Free gifts, mix and match, bundle builders, frequently bought together, and checkout discount codes."
-                : "Frequently bought together (upsell and cross-sell) is included. Free gifts, mix and match, builders, and coupons unlock on Pro."}
-            </s-paragraph>
-            <s-stack direction="inline" gap="base">
-              <SButton href="/app/promotions" variant="primary">
-                Promotions
-              </SButton>
-              {isPaidPlan(billing.plan) ? (
-                <SButton href="/app/coupons" variant="secondary">
-                  Coupons
-                </SButton>
-              ) : (
-                <SButton href="/app/billing" variant="secondary">
-                  Upgrade to Pro
-                </SButton>
-              )}
-            </s-stack>
-          </s-stack>
-        </s-section>
+            <s-section heading="Promotions and coupons">
+              <s-stack direction="block" gap="base">
+                <s-paragraph>
+                  {isPaidPlan(billing.plan)
+                    ? "Free gifts, mix and match, bundle builders, frequently bought together, and checkout discount codes."
+                    : "Frequently bought together (upsell and cross-sell) is included. Free gifts, mix and match, builders, and coupons unlock on Pro."}
+                </s-paragraph>
+                <s-stack direction="inline" gap="base">
+                  <SButton href="/app/promotions" variant="primary">
+                    Promotions
+                  </SButton>
+                  {isPaidPlan(billing.plan) ? (
+                    <SButton href="/app/coupons" variant="secondary">
+                      Coupons
+                    </SButton>
+                  ) : (
+                    <SButton href="/app/billing" variant="secondary">
+                      Upgrade to Pro
+                    </SButton>
+                  )}
+                </s-stack>
+              </s-stack>
+            </s-section>
+          </>
+        )}
 
         {stats.totalDiscountUses > 0 ? (
           <>
@@ -451,18 +474,22 @@ export default function Dashboard() {
 
         <OffersTable offers={offers} thumbnails={offerThumbnails} />
 
-        <HealthChecksPanel health={health} fixFetcher={fixFetcher} />
+        {showSetupGuide ? null : (
+          <>
+            <HealthChecksPanel health={health} fixFetcher={fixFetcher} />
 
-        <p className={styles.metricSubtext}>
-          Current plan: <strong>{billing.planLabel}</strong>
-          {billing.monthlyPrice > 0
-            ? ` · $${billing.monthlyPrice.toFixed(2)}/mo`
-            : " · Free tier"}
-          {" · "}
-          <Link className={styles.panelLink} to="/app/billing">
-            View billing details
-          </Link>
-        </p>
+            <p className={styles.metricSubtext}>
+              Current plan: <strong>{billing.planLabel}</strong>
+              {billing.monthlyPrice > 0
+                ? ` · $${billing.monthlyPrice.toFixed(2)}/mo`
+                : " · Free tier"}
+              {" · "}
+              <Link className={styles.panelLink} to="/app/billing">
+                View billing details
+              </Link>
+            </p>
+          </>
+        )}
       </div>
     </SPage>
   );

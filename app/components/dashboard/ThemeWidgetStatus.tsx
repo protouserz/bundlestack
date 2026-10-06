@@ -117,20 +117,18 @@ export function ThemeWidgetStatus({
   return (
     <s-section
       heading={
-        embedOn ? "Live on product pages" : "Shoppers cannot see this yet"
+        embedOn
+          ? "Live on product pages"
+          : "Quantity breaks are live at checkout"
       }
     >
       <s-stack direction="block" gap="base">
-        {status === "loading" ? (
-          <s-banner tone="info">
-            <s-text>Checking whether the theme widget is on…</s-text>
-          </s-banner>
-        ) : embedOn ? (
+        {embedOn ? (
           <s-banner tone="success">
             <s-stack direction="block" gap="base">
               <s-text>
                 <strong>{blockName}</strong> is active on your published theme.
-                This is what shoppers see on product pages.
+                Checkout discounts and the product-page widget are both on.
               </s-text>
               {previewProduct?.storefrontUrl ? (
                 <ExternalLinkButton href={previewProduct.storefrontUrl}>
@@ -140,19 +138,26 @@ export function ThemeWidgetStatus({
             </s-stack>
           </s-banner>
         ) : (
-          <s-banner tone="warning">
-            <s-stack direction="block" gap="base">
+          <>
+            <s-banner tone="success">
               <s-text>
-                Quantity breaks already apply at checkout, but the product-page
-                widget stays hidden until you enable <strong>{blockName}</strong>{" "}
-                in the theme editor and click Save. That is the step most
-                merchants skip.
+                Buy 2 save 10% and Buy 3 save 15% already apply at checkout on
+                every product. Shoppers do not enter a code.
               </s-text>
-              <AdminDeepLinkButton href={themeEditorUrl}>
-                Show on product pages
-              </AdminDeepLinkButton>
-            </s-stack>
-          </s-banner>
+            </s-banner>
+            <s-banner tone="info">
+              <s-stack direction="block" gap="base">
+                <s-text>
+                  Optional: show the same offer on product pages. Enable{" "}
+                  <strong>{blockName}</strong> in the theme editor and click
+                  Save — about 15 seconds.
+                </s-text>
+                <AdminDeepLinkButton href={themeEditorUrl}>
+                  Show on product pages
+                </AdminDeepLinkButton>
+              </s-stack>
+            </s-banner>
+          </>
         )}
 
         <p className={styles.storefrontPreviewCaption}>
@@ -161,8 +166,8 @@ export function ThemeWidgetStatus({
               ? `Preview of ${previewProduct.title} on a product page.`
               : "Preview of the live product-page widget."
             : previewProduct?.title
-              ? `Preview using ${previewProduct.title} — works before the theme embed is on.`
-              : "Preview inside the app — works before the theme embed is on."}
+              ? `Preview of ${previewProduct.title} — this is already what checkout will discount.`
+              : "Preview inside the app. Checkout already uses these tiers."}
         </p>
         <OfferStorefrontPreview offer={previewOffer} product={previewProduct} />
       </s-stack>

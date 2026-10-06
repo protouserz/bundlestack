@@ -30,15 +30,15 @@ export function SetupGuide({
         {
           id: "offer",
           done: true,
-          title: "A catalog offer is ready",
-          body: "Buy 2 / Buy 3 quantity breaks apply to all products. Add a buy-one-get-one-free offer anytime.",
+          title: "Checkout discounts are on",
+          body: "Buy 2 save 10% and Buy 3 save 15% already apply at checkout on every product. Add a buy-one-get-one-free offer anytime.",
           action: null,
         },
         {
           id: "theme",
           done: false,
           title: "Show this on product pages",
-          body: "The preview above is only in the app. Open the theme editor, enable BundleStack qty breaks, and click Save. Shoppers will not see anything until that save.",
+          body: "Checkout already works. One Save in the theme editor puts the same widget above Add to cart.",
           action: (
             <AdminDeepLinkButton href={themeEditorUrl} variant="primary">
               Show on product pages
@@ -79,7 +79,7 @@ export function SetupGuide({
           id: "theme",
           done: false,
           title: "Show offers on product pages",
-          body: "Open the theme editor, enable BundleStack qty breaks, and click Save. The preview above will not appear in your store until then.",
+          body: "Checkout already works once an offer is active. One Save in the theme editor puts the widget on product pages.",
           action: (
             <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
               Show on product pages
@@ -89,10 +89,11 @@ export function SetupGuide({
       ];
 
   return (
-    <s-section heading="Get your first discount live">
+    <s-section heading="Optional: show it on product pages">
       <div className={styles.setupGuideHeader}>
         <p className={styles.setupGuideSubtitle}>
-          One theme save is what most merchants miss. Turn on the widget preview above for shoppers before you leave.
+          Checkout already has Buy 2 / Buy 3. Save the theme embed if you want
+          the widget on product pages before you leave.
         </p>
         <dismissFetcher.Form method="post">
           <input type="hidden" name="intent" value="dismiss-onboarding" />

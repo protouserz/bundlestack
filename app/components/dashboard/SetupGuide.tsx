@@ -5,6 +5,7 @@ import styles from "./dashboard.module.css";
 
 type SetupGuideProps = {
   hasOffers: boolean;
+  customizeOfferHref: string;
   themeEditorUrl: string;
   storefrontProductUrl?: string | null;
   productTitle?: string | null;
@@ -20,6 +21,7 @@ type SetupGuideProps = {
  */
 export function SetupGuide({
   hasOffers,
+  customizeOfferHref,
   themeEditorUrl,
   storefrontProductUrl,
   productTitle,
@@ -29,18 +31,22 @@ export function SetupGuide({
     ? [
         {
           id: "offer",
-          done: true,
-          title: "Checkout discounts are on",
-          body: "Buy 2 save 10% and Buy 3 save 15% already apply at checkout on every product. Add a buy-one-get-one-free offer anytime.",
-          action: null,
+          done: false,
+          title: "Change products and discounts",
+          body: "Checkout already runs Buy 2 save 10% and Buy 3 save 15% on every product. Pick specific products, change the percents, or switch to BOGO.",
+          action: (
+            <SButton href={customizeOfferHref} variant="primary">
+              Customize offer
+            </SButton>
+          ),
         },
         {
           id: "theme",
           done: false,
           title: "Show this on product pages",
-          body: "Checkout already works. One Save in the theme editor puts the same widget above Add to cart.",
+          body: "Checkout already works. One Save in the theme editor puts the widget above Add to cart. Heading and colors are in the block settings.",
           action: (
-            <AdminDeepLinkButton href={themeEditorUrl} variant="primary">
+            <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
               Show on product pages
             </AdminDeepLinkButton>
           ),
@@ -89,11 +95,11 @@ export function SetupGuide({
       ];
 
   return (
-    <s-section heading="Optional: show it on product pages">
+    <s-section heading="Make it yours">
       <div className={styles.setupGuideHeader}>
         <p className={styles.setupGuideSubtitle}>
-          Checkout already has Buy 2 / Buy 3. Save the theme embed if you want
-          the widget on product pages before you leave.
+          The default offer is already live at checkout. Change products and
+          percents first, then optionally show the widget on product pages.
         </p>
         <dismissFetcher.Form method="post">
           <input type="hidden" name="intent" value="dismiss-onboarding" />

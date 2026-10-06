@@ -11,7 +11,7 @@
   <div
     id="bundlestack-widget-embed"
     class="bundlestack-widget bundlestack-widget--embed bundlestack-widget--pending bundlestack-widget--hidden"
-    style="display:none!important"
+    style="display:none!important;--bs-navy:{{ block.settings.text_color }};--bs-surface:{{ block.settings.background }};--bs-emerald:{{ block.settings.accent }};--bs-emerald-soft:{{ block.settings.selected_background }};--bs-emerald-border:{{ block.settings.accent }};"
     hidden
     data-product-id="gid://shopify/Product/{{ product.id }}"
     data-price-cents="{{ product.selected_or_first_available_variant.price }}"
@@ -62,6 +62,34 @@
       "id": "heading",
       "label": "Heading",
       "default": "Buy more, save more"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "accent",
+      "label": "Accent",
+      "default": "#059669"
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#0f172a"
+    },
+    {
+      "type": "color",
+      "id": "selected_background",
+      "label": "Selected tier background",
+      "default": "#ecfdf5"
     }
   ]
 }

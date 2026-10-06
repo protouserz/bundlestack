@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { AdminDeepLinkButton, ExternalLinkButton } from "../AdminLink";
+import { SButton } from "../polaris";
 import { OfferStorefrontPreview } from "./OfferStorefrontPreview";
 import type { DiscountTier, StorefrontPreviewProduct } from "../../models/offer";
 import styles from "./dashboard.module.css";
@@ -67,10 +68,12 @@ function pickPrimaryBlock(activations: ThemeExtensionActivation[]) {
 
 export function ThemeWidgetStatus({
   themeEditorUrl,
+  customizeOfferHref,
   previewOffer,
   previewProduct,
 }: {
   themeEditorUrl: string;
+  customizeOfferHref: string;
   previewOffer?: PreviewOffer | null;
   previewProduct?: StorefrontPreviewProduct | null;
 }) {
@@ -129,28 +132,40 @@ export function ThemeWidgetStatus({
               <s-text>
                 <strong>{blockName}</strong> is active on your published theme.
                 Checkout discounts and the product-page widget are both on.
+                Change products, percents, or widget colors anytime.
               </s-text>
-              {previewProduct?.storefrontUrl ? (
-                <ExternalLinkButton href={previewProduct.storefrontUrl}>
-                  Open live product
-                </ExternalLinkButton>
-              ) : null}
+              <s-stack direction="inline" gap="base">
+                <SButton href={customizeOfferHref} variant="primary">
+                  Customize offer
+                </SButton>
+                {previewProduct?.storefrontUrl ? (
+                  <ExternalLinkButton href={previewProduct.storefrontUrl}>
+                    Open live product
+                  </ExternalLinkButton>
+                ) : null}
+              </s-stack>
             </s-stack>
           </s-banner>
         ) : (
           <>
             <s-banner tone="success">
-              <s-text>
-                Buy 2 save 10% and Buy 3 save 15% already apply at checkout on
-                every product. Shoppers do not enter a code.
-              </s-text>
+              <s-stack direction="block" gap="base">
+                <s-text>
+                  Buy 2 save 10% and Buy 3 save 15% already apply at checkout on
+                  every product. Shoppers do not enter a code. Change products
+                  or percents anytime.
+                </s-text>
+                <SButton href={customizeOfferHref} variant="primary">
+                  Customize offer
+                </SButton>
+              </s-stack>
             </s-banner>
             <s-banner tone="info">
               <s-stack direction="block" gap="base">
                 <s-text>
                   Optional: show the same offer on product pages. Enable{" "}
-                  <strong>{blockName}</strong> in the theme editor and click
-                  Save — about 15 seconds.
+                  <strong>{blockName}</strong> in the theme editor to set
+                  heading and colors, then click Save.
                 </s-text>
                 <AdminDeepLinkButton href={themeEditorUrl}>
                   Show on product pages

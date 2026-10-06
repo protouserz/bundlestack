@@ -335,6 +335,11 @@ export default function Dashboard() {
   const lastToastKey = useRef<string | null>(null);
   const fixResult = syncFeedback;
   const showSetupGuide = !onboardingDone;
+  const seededOffer =
+    offers.find((offer) => offer.status === "active") ?? offers[0] ?? null;
+  const customizeOfferHref = seededOffer
+    ? `/app/offers/${seededOffer.id}`
+    : "/app/offers/new";
 
   useEffect(() => {
     if (!fixResult) return;
@@ -361,16 +366,25 @@ export default function Dashboard() {
   }, [fixResult, shopify, syncFeedback]);
 
   return (
-    <SPage heading={showSetupGuide ? "You're live at checkout" : "Dashboard"}>
+    <SPage heading={showSetupGuide ? "Your offer is live" : "Dashboard"}>
       {showSetupGuide ? (
-        <SButton
-          slot="primary-action"
-          variant="primary"
-          href={toShopifyAdminProtocol(themeEditorUrl)}
-          target="_top"
-        >
-          Show on product pages
-        </SButton>
+        <>
+          <SButton
+            slot="primary-action"
+            variant="primary"
+            href={customizeOfferHref}
+          >
+            {seededOffer ? "Customize offer" : "Create offer"}
+          </SButton>
+          <SButton
+            slot="secondary-actions"
+            variant="secondary"
+            href={toShopifyAdminProtocol(themeEditorUrl)}
+            target="_top"
+          >
+            Show on product pages
+          </SButton>
+        </>
       ) : (
         <>
           <SButton slot="primary-action" variant="primary" href="/app/offers/new">
@@ -402,15 +416,15 @@ export default function Dashboard() {
 
         <ThemeWidgetStatus
           themeEditorUrl={themeEditorUrl}
-          previewOffer={
-            offers.find((offer) => offer.status === "active") ?? offers[0] ?? null
-          }
+          customizeOfferHref={customizeOfferHref}
+          previewOffer={seededOffer}
           previewProduct={previewProduct}
         />
 
         {showSetupGuide && (
           <SetupGuide
             hasOffers={stats.totalOffers > 0}
+            customizeOfferHref={customizeOfferHref}
             themeEditorUrl={themeEditorUrl}
             storefrontProductUrl={previewProduct?.storefrontUrl}
             productTitle={previewProduct?.title}

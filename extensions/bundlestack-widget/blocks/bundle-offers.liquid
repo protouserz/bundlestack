@@ -48,6 +48,7 @@
           return;
         }
         if (!look) return;
+        if (look.matchTheme === true || look.matchTheme === "true") return;
         var title = root.querySelector(".bundlestack-widget__title");
         if (title && look.heading) title.textContent = look.heading;
         if (look.textColor) root.style.setProperty("--bs-navy", look.textColor);

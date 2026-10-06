@@ -2,6 +2,7 @@ import {
   DEFAULT_WIDGET_LOOK,
   WIDGET_LOOK_PRESETS,
   isBogoOffer,
+  isThemeLook,
   type DiscountTier,
   type WidgetLook,
 } from "../../models/offer";
@@ -30,6 +31,20 @@ function previewBadge(tier: DiscountTier, offerType: string) {
   return `Save ${tier.discountValue}%`;
 }
 
+function presetSelected(
+  preset: (typeof WIDGET_LOOK_PRESETS)[number],
+  look: WidgetLook,
+) {
+  if (preset.id === "theme") return isThemeLook(look);
+  if (isThemeLook(look)) return false;
+  return (
+    preset.look.accent === look.accent &&
+    preset.look.background === look.background &&
+    preset.look.textColor === look.textColor &&
+    preset.look.selectedBackground === look.selectedBackground
+  );
+}
+
 export function WidgetLookCard({
   look,
   onChange,
@@ -38,35 +53,42 @@ export function WidgetLookCard({
 }: WidgetLookCardProps) {
   const rows = tiers;
   const selectedIndex = Math.min(1, Math.max(0, rows.length - 1));
+  const matchingTheme = isThemeLook(look);
 
   const setField = <K extends keyof WidgetLook>(field: K, value: WidgetLook[K]) => {
-    onChange({ ...look, [field]: value });
+    onChange({ ...look, matchTheme: false, [field]: value });
   };
 
   return (
     <section className={styles.card}>
       <h2 className={styles.cardTitle}>Widget look</h2>
       <p className={styles.cardDescription}>
-        Heading and colors for the product-page widget. Checkout discounts stay
-        the same. Save to apply on the live store.
+        Heading and colors for the product-page widget. Match theme uses your
+        store’s buttons and text. Checkout discounts stay the same.
       </p>
 
       <div className={styles.lookPresets} role="group" aria-label="Look presets">
-        {WIDGET_LOOK_PRESETS.map((preset) => (
-          <button
-            key={preset.id}
-            type="button"
-            className={styles.lookPreset}
-            onClick={() =>
-              onChange({
-                ...preset.look,
-                heading: look.heading || preset.look.heading,
-              })
-            }
-          >
-            {preset.label}
-          </button>
-        ))}
+        {WIDGET_LOOK_PRESETS.map((preset) => {
+          const selected = presetSelected(preset, look);
+          return (
+            <button
+              key={preset.id}
+              type="button"
+              className={
+                selected ? styles.lookPresetSelected : styles.lookPreset
+              }
+              aria-pressed={selected}
+              onClick={() =>
+                onChange({
+                  ...preset.look,
+                  heading: look.heading || preset.look.heading,
+                })
+              }
+            >
+              {preset.label}
+            </button>
+          );
+        })}
       </div>
 
       <label className={styles.field}>
@@ -76,46 +98,61 @@ export function WidgetLookCard({
           name="widgetHeading"
           maxLength={80}
           value={look.heading}
-          onChange={(event) => setField("heading", event.target.value)}
+          onChange={(event) =>
+            onChange({ ...look, heading: event.target.value })
+          }
         />
       </label>
 
-      <div className={styles.lookColors}>
-        {(
-          [
-            ["accent", "Accent", look.accent],
-            ["background", "Background", look.background],
-            ["textColor", "Text", look.textColor],
-            ["selectedBackground", "Selected row", look.selectedBackground],
-          ] as const
-        ).map(([field, label, value]) => (
-          <label key={field} className={styles.colorField}>
-            <span className={styles.fieldLabel}>{label}</span>
-            <span className={styles.colorRow}>
-              <input
-                type="color"
-                value={value}
-                aria-label={`${label} color`}
-                onChange={(event) => setField(field, event.target.value)}
-              />
-              <input
-                className={styles.input}
-                name={
-                  field === "textColor"
-                    ? "widgetTextColor"
-                    : field === "selectedBackground"
-                      ? "widgetSelectedBackground"
-                      : field === "background"
-                        ? "widgetBackground"
-                        : "widgetAccent"
-                }
-                value={value}
-                onChange={(event) => setField(field, event.target.value)}
-              />
-            </span>
-          </label>
-        ))}
-      </div>
+      <input
+        type="hidden"
+        name="widgetMatchTheme"
+        value={matchingTheme ? "true" : "false"}
+      />
+
+      {matchingTheme ? (
+        <p className={styles.cardDescription}>
+          Live product pages use Add to cart and text colors from your theme.
+          The preview below is an example.
+        </p>
+      ) : (
+        <div className={styles.lookColors}>
+          {(
+            [
+              ["accent", "Accent", look.accent],
+              ["background", "Background", look.background],
+              ["textColor", "Text", look.textColor],
+              ["selectedBackground", "Selected row", look.selectedBackground],
+            ] as const
+          ).map(([field, label, value]) => (
+            <label key={field} className={styles.colorField}>
+              <span className={styles.fieldLabel}>{label}</span>
+              <span className={styles.colorRow}>
+                <input
+                  type="color"
+                  value={value}
+                  aria-label={`${label} color`}
+                  onChange={(event) => setField(field, event.target.value)}
+                />
+                <input
+                  className={styles.input}
+                  name={
+                    field === "textColor"
+                      ? "widgetTextColor"
+                      : field === "selectedBackground"
+                        ? "widgetSelectedBackground"
+                        : field === "background"
+                          ? "widgetBackground"
+                          : "widgetAccent"
+                  }
+                  value={value}
+                  onChange={(event) => setField(field, event.target.value)}
+                />
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
 
       <p className={styles.cardDescription}>Preview</p>
       <div

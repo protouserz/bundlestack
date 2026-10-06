@@ -365,6 +365,18 @@
   border-color: var(--offer-accent);
 }
 
+.lookPresetSelected {
+  border: 1px solid var(--offer-accent);
+  background: #edf4fc;
+  border-radius: 999px;
+  padding: 0.375rem 0.75rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--offer-text);
+  cursor: pointer;
+}
+
 .lookColors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

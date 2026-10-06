@@ -510,6 +510,7 @@ export function parseOfferForm(formData: FormData): BundleOfferInput {
 
   const widgetLook = parseWidgetLook({
     heading: formData.get("widgetHeading"),
+    matchTheme: formData.get("widgetMatchTheme"),
     accent: formData.get("widgetAccent"),
     background: formData.get("widgetBackground"),
     textColor: formData.get("widgetTextColor"),

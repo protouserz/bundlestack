@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   DEFAULT_WIDGET_LOOK,
+  isThemeLook,
   storefrontPreviewModel,
   type DiscountTier,
   type StorefrontPreviewProduct,
@@ -27,6 +28,7 @@ export function OfferStorefrontPreview({
     currencyCode: product?.currencyCode,
   });
   const look = offer?.widgetLook ?? DEFAULT_WIDGET_LOOK;
+  const matchingTheme = isThemeLook(look);
   const defaultKey =
     model.rows.find((row) => row.defaultSelected)?.key ?? null;
   const [selectedKey, setSelectedKey] = useState<string | null>(defaultKey);
@@ -63,6 +65,11 @@ export function OfferStorefrontPreview({
         <p className={styles.storefrontPreviewWidgetTitle}>
           {look.heading || model.title}
         </p>
+        {matchingTheme ? (
+          <p className={styles.storefrontPreviewThemeNote}>
+            Colors follow your live theme.
+          </p>
+        ) : null}
         <div
           className={styles.storefrontPreviewTiers}
           role="group"

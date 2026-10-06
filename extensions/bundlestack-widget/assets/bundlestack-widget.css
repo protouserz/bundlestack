@@ -6,11 +6,11 @@
 }
 
 .bundlestack-widget {
-  --bs-navy: #0f172a;
-  --bs-emerald: #059669;
-  --bs-emerald-light: #34d399;
-  --bs-emerald-soft: #ecfdf5;
-  --bs-emerald-border: #6ee7b7;
+  --bs-navy: #121212;
+  --bs-emerald: #121212;
+  --bs-emerald-light: #121212;
+  --bs-emerald-soft: #f3f3f3;
+  --bs-emerald-border: #121212;
   --bs-surface: #ffffff;
   --bs-border: #e2e8f0;
   --bs-text-muted: #64748b;

@@ -469,11 +469,17 @@
   color: var(--dash-muted);
 }
 
+.storefrontPreviewThemeNote {
+  margin: -0.35rem 0 0.75rem;
+  font-size: 0.75rem;
+  color: var(--dash-muted);
+}
+
 .storefrontPreview {
-  --preview-accent: #059669;
-  --preview-soft: #ecfdf5;
+  --preview-accent: #121212;
+  --preview-soft: #f3f3f3;
   --preview-surface: #ffffff;
-  --preview-text: #0f172a;
+  --preview-text: #121212;
   display: grid;
   grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
   gap: 1rem;

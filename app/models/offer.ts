@@ -17,6 +17,7 @@ export type DiscountTier = {
 
 export type WidgetLook = {
   heading: string;
+  matchTheme: boolean;
   accent: string;
   background: string;
   textColor: string;
@@ -50,21 +51,38 @@ export const DEFAULT_BOGO_TIERS: DiscountTier[] = [
   },
 ];
 
-export const DEFAULT_WIDGET_LOOK: WidgetLook = {
+/** Admin/preview fallbacks when the widget inherits the live store theme. */
+const THEME_LOOK_FALLBACK = {
+  accent: "#121212",
+  background: "#ffffff",
+  textColor: "#121212",
+  selectedBackground: "#f3f3f3",
+};
+
+export const CUSTOM_EMERALD_LOOK: WidgetLook = {
   heading: "Buy more, save more",
+  matchTheme: false,
   accent: "#059669",
   background: "#ffffff",
   textColor: "#0f172a",
   selectedBackground: "#ecfdf5",
 };
 
+export const DEFAULT_WIDGET_LOOK: WidgetLook = {
+  heading: "Buy more, save more",
+  matchTheme: true,
+  ...THEME_LOOK_FALLBACK,
+};
+
 export const WIDGET_LOOK_PRESETS: { id: string; label: string; look: WidgetLook }[] = [
-  { id: "emerald", label: "Emerald", look: DEFAULT_WIDGET_LOOK },
+  { id: "theme", label: "Match theme", look: DEFAULT_WIDGET_LOOK },
+  { id: "emerald", label: "Emerald", look: CUSTOM_EMERALD_LOOK },
   {
     id: "navy",
     label: "Navy and gold",
     look: {
       heading: "Buy more, save more",
+      matchTheme: false,
       accent: "#c9a227",
       background: "#f8fafc",
       textColor: "#0b1b3a",
@@ -76,6 +94,7 @@ export const WIDGET_LOOK_PRESETS: { id: string; label: string; look: WidgetLook 
     label: "Rose and cream",
     look: {
       heading: "Buy more, save more",
+      matchTheme: false,
       accent: "#be123c",
       background: "#fff7f4",
       textColor: "#4a1025",
@@ -87,6 +106,7 @@ export const WIDGET_LOOK_PRESETS: { id: string; label: string; look: WidgetLook 
     label: "Dark",
     look: {
       heading: "Buy more, save more",
+      matchTheme: false,
       accent: "#34d399",
       background: "#111827",
       textColor: "#f8fafc",
@@ -107,6 +127,26 @@ function normalizeHex(value: unknown, fallback: string): string {
   return trimmed.toLowerCase();
 }
 
+function hasCustomHex(data: Record<string, unknown>) {
+  return (
+    HEX_COLOR.test(String(data.accent ?? "").trim()) ||
+    HEX_COLOR.test(String(data.background ?? "").trim()) ||
+    HEX_COLOR.test(String(data.textColor ?? "").trim()) ||
+    HEX_COLOR.test(String(data.selectedBackground ?? "").trim())
+  );
+}
+
+function parseMatchTheme(data: Record<string, unknown>) {
+  const raw = data.matchTheme;
+  if (raw === true || raw === "true" || raw === "1") return true;
+  if (raw === false || raw === "false" || raw === "0") return false;
+  return !hasCustomHex(data);
+}
+
+export function isThemeLook(look: WidgetLook | null | undefined) {
+  return Boolean(look?.matchTheme);
+}
+
 export function parseWidgetLook(raw: unknown): WidgetLook {
   const data =
     raw && typeof raw === "object" && !Array.isArray(raw)
@@ -116,15 +156,18 @@ export function parseWidgetLook(raw: unknown): WidgetLook {
     typeof data.heading === "string" && data.heading.trim()
       ? data.heading.trim().slice(0, 80)
       : DEFAULT_WIDGET_LOOK.heading;
+  const matchTheme = parseMatchTheme(data);
+  const fallback = matchTheme ? DEFAULT_WIDGET_LOOK : CUSTOM_EMERALD_LOOK;
 
   return {
     heading,
-    accent: normalizeHex(data.accent, DEFAULT_WIDGET_LOOK.accent),
-    background: normalizeHex(data.background, DEFAULT_WIDGET_LOOK.background),
-    textColor: normalizeHex(data.textColor, DEFAULT_WIDGET_LOOK.textColor),
+    matchTheme,
+    accent: normalizeHex(data.accent, fallback.accent),
+    background: normalizeHex(data.background, fallback.background),
+    textColor: normalizeHex(data.textColor, fallback.textColor),
     selectedBackground: normalizeHex(
       data.selectedBackground,
-      DEFAULT_WIDGET_LOOK.selectedBackground,
+      fallback.selectedBackground,
     ),
   };
 }

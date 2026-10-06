@@ -136,7 +136,10 @@ describe("parseOfferForm", () => {
     );
 
     expect(result.offerType).toBe("bogo");
-    expect(result.widgetLook?.accent).toBe("#059669");
+    expect(result.widgetLook).toMatchObject({
+      matchTheme: true,
+      accent: "#121212",
+    });
     expect(result.tiers).toEqual([
       {
         minQty: 1,
@@ -169,6 +172,7 @@ describe("parseOfferForm", () => {
         status: "active",
         allProducts: "true",
         tiers: validTiers,
+        widgetMatchTheme: "false",
         widgetHeading: "Volume deals",
         widgetAccent: "#c9a227",
         widgetBackground: "#f8fafc",
@@ -179,6 +183,7 @@ describe("parseOfferForm", () => {
 
     expect(result.widgetLook).toEqual({
       heading: "Volume deals",
+      matchTheme: false,
       accent: "#c9a227",
       background: "#f8fafc",
       textColor: "#0b1b3a",
@@ -186,17 +191,37 @@ describe("parseOfferForm", () => {
     });
   });
 
-  it("falls back to default widget look for invalid colors", () => {
+  it("defaults widget look to match the live theme", () => {
     const result = parseOfferForm(
       form({
         title: "Styled",
         status: "active",
         allProducts: "true",
         tiers: validTiers,
+      }),
+    );
+
+    expect(result.widgetLook).toMatchObject({
+      matchTheme: true,
+      accent: "#121212",
+      background: "#ffffff",
+      textColor: "#121212",
+    });
+  });
+
+  it("falls back to emerald when custom colors are invalid", () => {
+    const result = parseOfferForm(
+      form({
+        title: "Styled",
+        status: "active",
+        allProducts: "true",
+        tiers: validTiers,
+        widgetMatchTheme: "false",
         widgetAccent: "red",
       }),
     );
 
+    expect(result.widgetLook?.matchTheme).toBe(false);
     expect(result.widgetLook?.accent).toBe("#059669");
   });
 

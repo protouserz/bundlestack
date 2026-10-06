@@ -470,6 +470,10 @@
 }
 
 .storefrontPreview {
+  --preview-accent: #059669;
+  --preview-soft: #ecfdf5;
+  --preview-surface: #ffffff;
+  --preview-text: #0f172a;
   display: grid;
   grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
   gap: 1rem;
@@ -530,7 +534,7 @@
   max-width: calc(100% - 24px);
   padding: 8px 12px;
   border-radius: 12px;
-  background: #059669;
+  background: var(--preview-accent);
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -542,14 +546,14 @@
   padding: 1rem 1.125rem;
   border: 1px solid var(--dash-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--preview-surface);
 }
 
 .storefrontPreviewWidgetTitle {
   margin: 0 0 0.75rem;
   font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--dash-text);
+  color: var(--preview-text);
 }
 
 .storefrontPreviewTiers {
@@ -569,7 +573,7 @@
   margin: 0;
   border: 2px solid #e2e8f0;
   border-radius: 10px;
-  background: #fff;
+  background: var(--preview-surface);
   cursor: pointer;
   text-align: left;
   font: inherit;
@@ -578,8 +582,8 @@
 
 .storefrontPreviewTier:hover,
 .storefrontPreviewTierSelected {
-  border-color: #34d399;
-  background: #ecfdf5;
+  border-color: var(--preview-accent);
+  background: var(--preview-soft);
 }
 
 .storefrontPreviewRadio {
@@ -591,15 +595,15 @@
 }
 
 .storefrontPreviewTierSelected .storefrontPreviewRadio {
-  border-color: #059669;
-  background: #059669;
+  border-color: var(--preview-accent);
+  background: var(--preview-accent);
   box-shadow: inset 0 0 0 3px #fff;
 }
 
 .storefrontPreviewTierLabel {
   font-weight: 700;
   font-size: 0.9375rem;
-  color: var(--dash-text);
+  color: var(--preview-text);
 }
 
 .storefrontPreviewTierMeta {
@@ -612,7 +616,7 @@
 .storefrontPreviewTierBadge {
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: #059669;
+  background: var(--preview-accent);
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;
@@ -621,5 +625,5 @@
 .storefrontPreviewPrice {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--dash-text);
+  color: var(--preview-accent);
 }

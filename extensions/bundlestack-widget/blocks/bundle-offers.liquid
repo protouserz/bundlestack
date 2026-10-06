@@ -25,6 +25,44 @@
   </div>
   <div class="bundlestack-widget__tiers" role="group" aria-label="{{ block.settings.heading }}" aria-live="polite"></div>
 </div>
+<script>
+  (function () {
+    var root = document.getElementById("bundlestack-widget-{{ block.id }}");
+    if (!root || !root.dataset.productId || !root.dataset.proxyPath) return;
+    var load =
+      window.__bundlestackFetchJson ||
+      function (path) {
+        return fetch(path).then(function (res) {
+          return res.json();
+        });
+      };
+    load(
+      root.dataset.proxyPath +
+        "?product_id=" +
+        encodeURIComponent(root.dataset.productId),
+    )
+      .then(function (data) {
+        var look = ((data.offers || [])[0] || {}).widgetLook;
+        if (window.__bundlestackApplyLook) {
+          window.__bundlestackApplyLook(root, look);
+          return;
+        }
+        if (!look) return;
+        var title = root.querySelector(".bundlestack-widget__title");
+        if (title && look.heading) title.textContent = look.heading;
+        if (look.textColor) root.style.setProperty("--bs-navy", look.textColor);
+        if (look.background) root.style.setProperty("--bs-surface", look.background);
+        if (look.accent) {
+          root.style.setProperty("--bs-emerald", look.accent);
+          root.style.setProperty("--bs-emerald-border", look.accent);
+        }
+        if (look.selectedBackground) {
+          root.style.setProperty("--bs-emerald-soft", look.selectedBackground);
+        }
+      })
+      .catch(function () {});
+  })();
+</script>
 
 {% schema %}
 {

@@ -2,6 +2,7 @@
   App embed: quantity-break widget on product pages without placing a
   section block. Inactive until the merchant saves it in Theme settings.
   Deep-linked from the admin dashboard after install.
+  Look: apply saved offer colors from /apps/bundlestack/offers.
 {% endcomment %}
 
 {% if request.page_type == 'product' and product %}
@@ -46,6 +47,46 @@
         document.querySelector("product-form") ||
         document.querySelector('form[action*="/cart/add"]');
       if (host && host.parentNode) host.parentNode.insertBefore(root, host);
+    })();
+  </script>
+  <script>
+    (function () {
+      var root = document.getElementById("bundlestack-widget-embed");
+      if (!root || !root.dataset.productId || !root.dataset.proxyPath) return;
+      var url =
+        root.dataset.proxyPath +
+        "?product_id=" +
+        encodeURIComponent(root.dataset.productId);
+      var load =
+        window.__bundlestackFetchJson ||
+        function (path) {
+          return fetch(path).then(function (res) {
+            return res.json();
+          });
+        };
+      load(url)
+        .then(function (data) {
+          var offer = (data.offers || [])[0];
+          if (window.__bundlestackApplyLook) {
+            window.__bundlestackApplyLook(root, offer && offer.widgetLook);
+            return;
+          }
+          var look = offer && offer.widgetLook;
+          if (!look) return;
+          var title = root.querySelector(".bundlestack-widget__title");
+          if (title && look.heading) title.textContent = look.heading;
+          if (look.textColor) root.style.setProperty("--bs-navy", look.textColor);
+          if (look.background)
+            root.style.setProperty("--bs-surface", look.background);
+          if (look.accent) {
+            root.style.setProperty("--bs-emerald", look.accent);
+            root.style.setProperty("--bs-emerald-border", look.accent);
+          }
+          if (look.selectedBackground) {
+            root.style.setProperty("--bs-emerald-soft", look.selectedBackground);
+          }
+        })
+        .catch(function () {});
     })();
   </script>
 {% endif %}

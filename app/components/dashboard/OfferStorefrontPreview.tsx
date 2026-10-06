@@ -1,8 +1,10 @@
 import { useState } from "react";
 import {
+  DEFAULT_WIDGET_LOOK,
   storefrontPreviewModel,
   type DiscountTier,
   type StorefrontPreviewProduct,
+  type WidgetLook,
 } from "../../models/offer";
 import styles from "./dashboard.module.css";
 
@@ -10,6 +12,7 @@ type PreviewOffer = {
   offerType: string;
   title?: string;
   tiers: DiscountTier[];
+  widgetLook?: WidgetLook;
 };
 
 export function OfferStorefrontPreview({
@@ -23,12 +26,21 @@ export function OfferStorefrontPreview({
     exampleAmount: product?.exampleAmount,
     currencyCode: product?.currencyCode,
   });
+  const look = offer?.widgetLook ?? DEFAULT_WIDGET_LOOK;
   const defaultKey =
     model.rows.find((row) => row.defaultSelected)?.key ?? null;
   const [selectedKey, setSelectedKey] = useState<string | null>(defaultKey);
 
   return (
-    <div className={styles.storefrontPreview}>
+    <div
+      className={styles.storefrontPreview}
+      style={{
+        ["--preview-accent" as string]: look.accent,
+        ["--preview-soft" as string]: look.selectedBackground,
+        ["--preview-surface" as string]: look.background,
+        ["--preview-text" as string]: look.textColor,
+      }}
+    >
       <div className={styles.storefrontPreviewCard}>
         <span className={styles.storefrontPreviewBadge}>{model.overlay}</span>
         {product?.imageUrl ? (
@@ -48,7 +60,9 @@ export function OfferStorefrontPreview({
       </div>
 
       <div className={styles.storefrontPreviewWidget}>
-        <p className={styles.storefrontPreviewWidgetTitle}>{model.title}</p>
+        <p className={styles.storefrontPreviewWidgetTitle}>
+          {look.heading || model.title}
+        </p>
         <div
           className={styles.storefrontPreviewTiers}
           role="group"

@@ -550,7 +550,7 @@
     if (!productId || !proxyPath || !tiersEl) {
       if (tiersEl && !productId) {
         tiersEl.innerHTML =
-          '<p class="bundlestack-widget__empty">Save the theme, then preview the live store (not the editor).</p>';
+          '<p class="bundlestack-widget__empty">Preview the live store.</p>';
       }
       hideWidget(root);
       return;
@@ -597,7 +597,7 @@
             const badge = isBogo ? "Free" : formatBadge(display);
             const price = renderPrice(priceCents, display, currency);
 
-            return `<button type="button" class="bundlestack-widget__tier" data-min-qty="${cartQty}" aria-pressed="false"><span class="bundlestack-widget__tier-radio" aria-hidden="true"></span><span class="bundlestack-widget__tier-label">${escapeHtml(label)}</span><span class="bundlestack-widget__tier-meta"><span class="bundlestack-widget__tier-badge">${escapeHtml(badge)}</span>${price}</span></button>`;
+            return `<button type="button" class="bundlestack-widget__tier" data-min-qty="${cartQty}"><span class="bundlestack-widget__tier-radio" aria-hidden="true"></span><span class="bundlestack-widget__tier-label">${escapeHtml(label)}</span><span class="bundlestack-widget__tier-meta"><span class="bundlestack-widget__tier-badge">${escapeHtml(badge)}</span>${price}</span></button>`;
           })
           .join("");
 

@@ -3,7 +3,7 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import { AdminDeepLinkButton, ExternalLinkButton } from "../AdminLink";
 import { SButton } from "../polaris";
 import { OfferStorefrontPreview } from "./OfferStorefrontPreview";
-import type { DiscountTier, StorefrontPreviewProduct } from "../../models/offer";
+import type { DiscountTier, StorefrontPreviewProduct, WidgetLook } from "../../models/offer";
 import styles from "./dashboard.module.css";
 
 type BlockStatus = "loading" | "active" | "available" | "unavailable" | "unknown";
@@ -29,6 +29,7 @@ type PreviewOffer = {
   offerType: string;
   title?: string;
   tiers: DiscountTier[];
+  widgetLook?: WidgetLook;
 };
 
 /** Product-page widget handles. Overlay/badge embeds do not count as the widget. */

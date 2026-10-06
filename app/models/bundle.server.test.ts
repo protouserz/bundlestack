@@ -209,6 +209,26 @@ describe("parseOfferForm", () => {
     });
   });
 
+  it("treats older saved palettes without matchTheme as match theme", () => {
+    const result = parseOfferForm(
+      form({
+        title: "Styled",
+        status: "active",
+        allProducts: "true",
+        tiers: validTiers,
+        widgetAccent: "#c9a227",
+        widgetBackground: "#f8fafc",
+        widgetTextColor: "#0b1b3a",
+        widgetSelectedBackground: "#fff7d6",
+      }),
+    );
+
+    expect(result.widgetLook).toMatchObject({
+      matchTheme: true,
+      accent: "#121212",
+    });
+  });
+
   it("falls back to emerald when custom colors are invalid", () => {
     const result = parseOfferForm(
       form({

@@ -24,26 +24,24 @@
   }
 
   function sampleThemeColors(root) {
+    var host =
+      document.querySelector(".color-scheme-1, .gradient") || document.body;
+    var accent = varColor(host, [
+      "--color-button",
+      "--color-base-accent-1",
+      "--color-primary",
+    ]);
     var btn =
+      document.querySelector(".shopify-payment-button__button--unbranded") ||
+      document.querySelector(".shopify-payment-button__button") ||
       document.querySelector('form[action*="/cart/add"] button[name="add"]') ||
-      document.querySelector(".product-form__submit") ||
-      document.querySelector("product-form button[type=\"submit\"]");
-    var accent = "";
-    if (btn) {
+      document.querySelector(".product-form__submit");
+    if ((!accent || accent === "rgb(255, 255, 255)") && btn) {
       var buttonStyles = getComputedStyle(btn);
       accent =
         solidColor(buttonStyles.backgroundColor) ||
-        solidColor(buttonStyles.borderColor) ||
         solidColor(buttonStyles.color);
     }
-    var host = document.body;
-    accent =
-      accent ||
-      varColor(host, [
-        "--color-button",
-        "--color-base-accent-1",
-        "--color-primary",
-      ]);
     var text =
       varColor(host, ["--color-foreground", "--color-base-text"]) ||
       solidColor(getComputedStyle(host).color);
@@ -107,7 +105,7 @@
   global.__bundlestackFetchJson = function (url, options) {
     if (cache[url]) return cache[url];
 
-    var promise = fetch(url, options || {})
+    var promise = fetch(url, Object.assign({ cache: "no-store" }, options || {}))
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();

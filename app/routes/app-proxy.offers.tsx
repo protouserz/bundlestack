@@ -100,7 +100,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return new Response(JSON.stringify({ offers, promotions }), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "private, max-age=120",
+      "Cache-Control": "private, no-store",
       Vary: "Cookie",
     },
   });

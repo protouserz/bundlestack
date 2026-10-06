@@ -127,20 +127,11 @@ function normalizeHex(value: unknown, fallback: string): string {
   return trimmed.toLowerCase();
 }
 
-function hasCustomHex(data: Record<string, unknown>) {
-  return (
-    HEX_COLOR.test(String(data.accent ?? "").trim()) ||
-    HEX_COLOR.test(String(data.background ?? "").trim()) ||
-    HEX_COLOR.test(String(data.textColor ?? "").trim()) ||
-    HEX_COLOR.test(String(data.selectedBackground ?? "").trim())
-  );
-}
-
 function parseMatchTheme(data: Record<string, unknown>) {
   const raw = data.matchTheme;
   if (raw === true || raw === "true" || raw === "1") return true;
   if (raw === false || raw === "false" || raw === "0") return false;
-  return !hasCustomHex(data);
+  return true;
 }
 
 export function isThemeLook(look: WidgetLook | null | undefined) {
@@ -157,17 +148,20 @@ export function parseWidgetLook(raw: unknown): WidgetLook {
       ? data.heading.trim().slice(0, 80)
       : DEFAULT_WIDGET_LOOK.heading;
   const matchTheme = parseMatchTheme(data);
-  const fallback = matchTheme ? DEFAULT_WIDGET_LOOK : CUSTOM_EMERALD_LOOK;
+
+  if (matchTheme) {
+    return { ...DEFAULT_WIDGET_LOOK, heading };
+  }
 
   return {
     heading,
-    matchTheme,
-    accent: normalizeHex(data.accent, fallback.accent),
-    background: normalizeHex(data.background, fallback.background),
-    textColor: normalizeHex(data.textColor, fallback.textColor),
+    matchTheme: false,
+    accent: normalizeHex(data.accent, CUSTOM_EMERALD_LOOK.accent),
+    background: normalizeHex(data.background, CUSTOM_EMERALD_LOOK.background),
+    textColor: normalizeHex(data.textColor, CUSTOM_EMERALD_LOOK.textColor),
     selectedBackground: normalizeHex(
       data.selectedBackground,
-      fallback.selectedBackground,
+      CUSTOM_EMERALD_LOOK.selectedBackground,
     ),
   };
 }

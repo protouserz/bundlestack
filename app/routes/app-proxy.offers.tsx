@@ -64,7 +64,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         headers: {
           "Content-Type": "application/json",
           // Shop-scoped config — avoid shared public caches that key poorly.
-          "Cache-Control": "private, max-age=60",
+          "Cache-Control": "private, no-store",
           Vary: "Cookie",
         },
       });

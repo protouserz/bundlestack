@@ -110,6 +110,22 @@
 
         textEl.textContent = text;
         showBadge();
+        if (window.__bundlestackApplyLook) {
+          window.__bundlestackApplyLook(root, offer.widgetLook);
+        } else if (
+          offer.widgetLook?.accent &&
+          offer.widgetLook.matchTheme !== true &&
+          offer.widgetLook.matchTheme !== "true"
+        ) {
+          root.style.setProperty("--bs-emerald", offer.widgetLook.accent);
+          root.style.setProperty("--bs-emerald-border", offer.widgetLook.accent);
+          if (offer.widgetLook.selectedBackground) {
+            root.style.setProperty(
+              "--bs-emerald-soft",
+              offer.widgetLook.selectedBackground,
+            );
+          }
+        }
 
         // Widget may still be fetching; retry briefly so the badge can
         // become a scroll-to-offer shortcut once tiers are rendered.
@@ -131,6 +147,12 @@
 
   if (!window.__bundlestackBadgeInit) {
     window.__bundlestackBadgeInit = true;
-    document.querySelectorAll(".bundlestack-badge").forEach(loadBadge);
+    document.querySelectorAll(".bundlestack-badge").forEach((root) => {
+      if (!root.closest(".product__info-wrapper, product-info")) {
+        root.remove();
+        return;
+      }
+      loadBadge(root);
+    });
   }
 })();

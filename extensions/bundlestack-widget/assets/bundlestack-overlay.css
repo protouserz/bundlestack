@@ -9,7 +9,7 @@
   max-width: calc(100% - 24px);
   padding: 10px 18px !important;
   border-radius: 14px !important;
-  background: #059669 !important;
+  background: var(--bs-emerald, #121212) !important;
   color: #ffffff !important;
   font-family: inherit !important;
   font-size: 18px !important;

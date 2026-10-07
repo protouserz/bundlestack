@@ -9,6 +9,10 @@
 <div
   class="bundlestack-overlay-config"
   data-proxy-path="/apps/bundlestack/offers"
+  {% if request.page_type == 'product' and product %}
+    data-product-handle="{{ product.handle }}"
+    data-product-id="{{ product.id }}"
+  {% endif %}
   hidden
 ></div>
 

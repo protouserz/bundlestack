@@ -28,7 +28,17 @@
 <script>
   (function () {
     var root = document.getElementById("bundlestack-widget-{{ block.id }}");
-    if (!root || !root.dataset.productId || !root.dataset.proxyPath) return;
+    if (!root) return;
+    if (!root.closest(".product__info-wrapper, product-info")) {
+      var preferred = document.querySelector(
+        ".product__info-wrapper .bundlestack-widget, product-info .bundlestack-widget",
+      );
+      if (preferred && preferred !== root) {
+        root.remove();
+        return;
+      }
+    }
+    if (!root.dataset.productId || !root.dataset.proxyPath) return;
     var load =
       window.__bundlestackFetchJson ||
       function (path) {

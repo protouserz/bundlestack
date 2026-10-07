@@ -35,18 +35,13 @@
     (function () {
       var root = document.getElementById("bundlestack-widget-embed");
       if (!root) return;
-      if (
-        document.querySelector(
-          ".bundlestack-widget:not(.bundlestack-widget--embed)",
-        )
-      ) {
-        root.remove();
-        return;
-      }
       var host =
         document.querySelector("product-form") ||
         document.querySelector('form[action*="/cart/add"]');
       if (host && host.parentNode) host.parentNode.insertBefore(root, host);
+      document.querySelectorAll(".bundlestack-widget").forEach(function (el) {
+        if (el !== root) el.remove();
+      });
     })();
   </script>
   <script>

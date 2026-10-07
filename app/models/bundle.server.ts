@@ -15,6 +15,7 @@ import {
   type BundleOfferInput,
   type DiscountTier,
   type StorefrontPreviewProduct,
+  type WidgetLook,
 } from "./offer";
 
 export {
@@ -182,6 +183,7 @@ type OfferBadgeFields = {
   discountValue: number;
   offerType: string;
   getQty?: number;
+  widgetLook?: WidgetLook;
 };
 
 export type OfferBadge = OfferBadgeFields & {
@@ -198,6 +200,7 @@ function numericProductId(gid: string): string | null {
 function badgeFieldsFromOffer(offer: {
   offerType: string;
   tiers: DiscountTier[];
+  widgetLook?: WidgetLook;
 }): OfferBadgeFields | null {
   const bogo = isBogoOffer(offer.offerType);
   const tiers = [...offer.tiers].sort((a, b) => a.minQty - b.minQty);
@@ -216,6 +219,7 @@ function badgeFieldsFromOffer(offer: {
     discountType: best.discountType,
     discountValue: best.discountValue,
     offerType: offer.offerType,
+    widgetLook: offer.widgetLook,
     ...(bogo || Number(startingTier.getQty) > 0
       ? { getQty: Math.max(1, Math.floor(Number(startingTier.getQty)) || 1) }
       : {}),
@@ -236,7 +240,12 @@ function preferBadge(
 
 /** Pick overlay copy for catalog-wide vs product-assigned offers. */
 export function selectStorefrontBadges(
-  offers: Array<{ offerType: string; productIds: string[]; tiers: DiscountTier[] }>,
+  offers: Array<{
+    offerType: string;
+    productIds: string[];
+    tiers: DiscountTier[];
+    widgetLook?: WidgetLook;
+  }>,
 ): { catalog: OfferBadgeFields | null; byProductId: Map<string, OfferBadgeFields> } {
   let catalog: OfferBadgeFields | null = null;
   const byProductId = new Map<string, OfferBadgeFields>();

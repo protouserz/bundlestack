@@ -49,25 +49,47 @@
   }
 
   function findImageContainer(anchor) {
-    // Direct image inside the product link (Dawn-style cards).
     const nestedImg = anchor.querySelector("img");
     if (nestedImg?.parentElement) return nestedImg.parentElement;
-
-    // Horizon and similar themes use an overlay <a> with the image as a
-    // sibling inside the product card — climb to the card, then find media.
     const card = findCard(anchor);
     if (!card) return null;
-
-    const media =
+    return (
       card.querySelector(
         ".product-card__media, .card__media, .media, .card-media, .product-card-media",
-      ) || card.querySelector("img")?.parentElement;
-
-    return media || null;
+      ) ||
+      card.querySelector("img")?.parentElement ||
+      null
+    );
   }
 
-  function applyBadge(anchor, badge) {
-    const container = findImageContainer(anchor);
+  function paintLook(el, look) {
+    if (window.__bundlestackApplyLook && look && typeof look === "object") {
+      window.__bundlestackApplyLook(el, look);
+    }
+    let accent =
+      el.style.getPropertyValue("--bs-emerald").trim() ||
+      (look && look.accent) ||
+      "";
+    const widgets = document.getElementsByClassName("bundlestack-widget");
+    for (let i = 0; i < widgets.length; i++) {
+      if (widgets[i].classList.contains("bundlestack-widget--pending")) continue;
+      const next = getComputedStyle(widgets[i])
+        .getPropertyValue("--bs-emerald")
+        .trim();
+      if (next) {
+        accent = next;
+        el.style.setProperty("--bs-emerald", next);
+        break;
+      }
+    }
+    if (accent) {
+      el.style.setProperty("background", accent, "important");
+      return true;
+    }
+    return false;
+  }
+
+  function applyToContainer(container, badge) {
     if (!container || container.hasAttribute(PROCESSED_ATTR)) return false;
     container.setAttribute(PROCESSED_ATTR, "true");
 
@@ -92,8 +114,15 @@
       pill.appendChild(secondary);
     }
 
+    paintLook(pill, badge.widgetLook);
+    setTimeout(() => paintLook(pill, badge.widgetLook), 400);
+
     container.appendChild(pill);
     return true;
+  }
+
+  function applyBadge(anchor, badge) {
+    return applyToContainer(findImageContainer(anchor), badge);
   }
 
   function badgeForAnchor(anchor, byHandle, byProductId, catalog) {
@@ -111,9 +140,25 @@
     return catalog || null;
   }
 
-  function scan(byHandle, byProductId, catalog) {
-    const seenCards = new WeakSet();
+  function featuredMedia() {
+    return document.querySelector(
+      ".product__media-item.is-active .product-media-container, .product-media-container, .product__media",
+    );
+  }
 
+  function scan(byHandle, byProductId, catalog) {
+    const config = document.querySelector(".bundlestack-overlay-config");
+    const handle = config?.dataset.productHandle;
+    if (handle) {
+      const pageBadge =
+        byHandle.get(handle) ||
+        byProductId.get(config.dataset.productId) ||
+        catalog;
+      if (pageBadge) applyToContainer(featuredMedia(), pageBadge);
+      return;
+    }
+
+    const seenCards = new WeakSet();
     document.querySelectorAll('a[href*="/products/"]').forEach((anchor) => {
       if (anchor.closest(".bundlestack-widget, .bundlestack-badge")) return;
 
@@ -167,6 +212,38 @@
             .map((badge) => [String(badge.productId), badge]),
         );
 
+        function offerLook(offers) {
+          const list = offers || [];
+          return (
+            list.find((item) => item.offerType === "bogo") || list[0] || {}
+          ).widgetLook;
+        }
+
+        function attachLook(look) {
+          if (!look) return;
+          badges.forEach((badge) => {
+            if (!badge.widgetLook) badge.widgetLook = look;
+          });
+          if (catalog && !catalog.widgetLook) catalog.widgetLook = look;
+        }
+
+        const known = badges.find((badge) => badge.widgetLook)?.widgetLook;
+        const sampleId = badges.find((badge) => badge.productId)?.productId;
+        const lookReady = known
+          ? Promise.resolve(attachLook(known))
+          : sampleId
+            ? fetchJson(
+                `${proxyPath}?product_id=${encodeURIComponent(
+                  String(sampleId).indexOf("gid://") === 0
+                    ? sampleId
+                    : `gid://shopify/Product/${sampleId}`,
+                )}`,
+              )
+                .then((payload) => attachLook(offerLook(payload.offers)))
+                .catch(() => {})
+            : Promise.resolve();
+
+        lookReady.then(() => {
         scan(byHandle, byProductId, catalog);
 
         let timer = null;
@@ -207,6 +284,7 @@
         });
         observer.observe(document.body, { childList: true, subtree: true });
         scheduleDisconnect(observer);
+        });
       })
       .catch(() => {});
   }

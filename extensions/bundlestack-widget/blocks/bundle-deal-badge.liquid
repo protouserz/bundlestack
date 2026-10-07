@@ -19,6 +19,15 @@
   <span class="bundlestack-badge__text"></span>
 </div>
 
+<script>
+  (function () {
+    var root = document.getElementById("bundlestack-badge-{{ block.id }}");
+    if (root && !root.closest(".product__info-wrapper, product-info")) {
+      root.remove();
+    }
+  })();
+</script>
+
 {% schema %}
 {
   "name": "BundleStack deal badge",

@@ -324,6 +324,19 @@ describe("selectStorefrontBadges", () => {
     expect(catalog?.offerType).toBe("quantity_break");
     expect(byProductId.get("gid://shopify/Product/1")?.offerType).toBe("bogo");
   });
+
+  it("carries widgetLook onto overlay badge copy", () => {
+    const widgetLook = {
+      heading: "Buy more, save more",
+      matchTheme: false,
+      accent: "#be123c",
+      background: "#fff7f4",
+      textColor: "#4a1025",
+      selectedBackground: "#ffe4e6",
+    };
+    const { catalog } = selectStorefrontBadges([{ ...bogo, widgetLook }]);
+    expect(catalog?.widgetLook).toEqual(widgetLook);
+  });
 });
 
 describe("storefront preview", () => {

@@ -2,7 +2,7 @@
 
 client_id = "4aade1f433c3c5bd867c99cce348cede"
 name = "BundleStack"
-application_url = "https://bundlestack-pfee.onrender.com"
+application_url = "https://bundlestack.jitechnologysolutions.com"
 embedded = true
 handle = "bundlestack"
 
@@ -44,11 +44,11 @@ embedded = false
 
 [auth]
 redirect_urls = [
-  "https://bundlestack-pfee.onrender.com/auth/callback",
-  "https://bundlestack-pfee.onrender.com/auth/shopify/callback"
+  "https://bundlestack.jitechnologysolutions.com/auth/callback",
+  "https://bundlestack.jitechnologysolutions.com/auth/shopify/callback"
 ]
 
 [app_proxy]
-url = "https://bundlestack-pfee.onrender.com/app-proxy"
+url = "https://bundlestack.jitechnologysolutions.com/app-proxy"
 subpath = "bundlestack"
 prefix = "apps"

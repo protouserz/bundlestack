@@ -260,6 +260,96 @@
   margin: 0;
 }
 
+.pricing {
+  background: #fff;
+  color: #0f172a;
+  padding: 4rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.pricingInner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pricingCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.75rem;
+}
+
+.pricingName {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #047857;
+}
+
+.pricingPrice {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.pricingPrice span {
+  margin-left: 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.pricingBlurb {
+  margin: 0 0 1rem;
+  color: #64748b;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.pricingFeatures {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  color: #334155;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.pricingFeatures li {
+  padding-left: 1.15rem;
+  position: relative;
+}
+
+.pricingFeatures li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #047857;
+  font-weight: 700;
+}
+
 .compare {
   background: #f1f5f9;
   color: #0f172a;

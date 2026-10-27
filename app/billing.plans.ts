@@ -26,36 +26,36 @@ export const PLAN_LABELS: Record<BillingPlan, string> = {
 };
 
 export const PLAN_REVENUE_CAPS: Record<BillingPlan, string> = {
-  free: "Quantity breaks, BOGO, and product-page upsells",
-  starter: "Gifts, mix & match, builders, coupons, and email support",
-  scale: "Gifts, mix & match, builders, coupons, and email support",
-  pro: "Gifts, mix & match, builders, coupons, and email support",
+  free: "Quantity breaks, simple BOGO, and product-page upsells",
+  starter: "Extra BOGO types, gifts, mix & match, builders, coupons, and email support",
+  scale: "Extra BOGO types, gifts, mix & match, builders, coupons, and email support",
+  pro: "Extra BOGO types, gifts, mix & match, builders, coupons, and email support",
 };
 
 export const PLAN_FEATURES: Record<BillingPlan, string[]> = {
   free: [
-    "Unlimited quantity-break and BOGO offers",
-    "Product-page upsells and cross-sells",
-    "Product-page theme widget",
+    "Unlimited quantity-break and simple BOGO offers",
+    "Product-page upsells (frequently bought together)",
+    "Product-page theme widget and photo tags",
     "Automatic Shopify discount sync",
     "Product picker — no manual IDs",
     "Store health monitor",
   ],
   starter: [
     "Everything in Free",
-    "Free gifts, mix & match, and bundle builders",
+    "Extra BOGO types, free gifts, mix & match, and bundle builders",
     "Discount codes (coupons)",
     "Email customer support",
   ],
   scale: [
     "Everything in Free",
-    "Free gifts, mix & match, and bundle builders",
+    "Extra BOGO types, free gifts, mix & match, and bundle builders",
     "Discount codes (coupons)",
     "Email customer support",
   ],
   pro: [
     "Everything in Free",
-    "Free gifts, mix & match, and bundle builders",
+    "Extra BOGO types, free gifts, mix & match, and bundle builders",
     "Discount codes (coupons)",
     "Email customer support",
   ],

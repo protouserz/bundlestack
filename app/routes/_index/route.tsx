@@ -1,6 +1,12 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { redirect } from "react-router";
 
+import {
+  PLAN_FEATURES,
+  PLAN_LABELS,
+  PLAN_PRICES,
+  SUPPORT_PLAN,
+} from "../../billing.plans";
 import styles from "./styles.module.css";
 
 const APP_STORE_URL = "https://apps.shopify.com/bundlestack";
@@ -18,18 +24,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 const FEATURES = [
   {
     icon: "📦",
-    title: "Quantity break offers",
-    text: "Create tiered discounts like Buy 2 save 10%, Buy 3 save 15% — synced automatically as Shopify discounts at checkout.",
+    title: "Quantity breaks & simple BOGO",
+    text: "Tiered discounts like Buy 2 save 10% or Buy 1 get 1 — unlimited on Free, synced as Shopify Function discounts at checkout.",
   },
   {
     icon: "🎨",
-    title: "Theme-native widget",
-    text: "Drop the BundleStack block on your product page. Shoppers see offers instantly and pick a tier with one click.",
+    title: "Widget and photo tags",
+    text: "Drop the BundleStack block on the product page. Shoppers pick a tier in one click; collection and PDP photos can show offer tags.",
   },
   {
-    icon: "💰",
-    title: "Simple pricing",
-    text: "Free includes unlimited quantity breaks, BOGO, and product-page upsells. Pro is $2/month for extra offer types and email support.",
+    icon: "🛒",
+    title: "Product-page upsells",
+    text: "Frequently bought together stays on Free. Pro unlocks extra BOGO types, gifts, mix & match, builders, and coupons.",
   },
 ];
 
@@ -57,13 +63,13 @@ const COMPARE_ROWS = [
   },
   {
     label: "Quantity breaks",
-    us: "Unlimited, no revenue cap",
+    us: "Unlimited on Free, no revenue cap",
     specialists: "Yes — this is the core product",
     suites: "Yes, plus many other offer types",
   },
   {
     label: "BOGO",
-    us: "Included on Free",
+    us: "Simple same-product BOGO on Free; extra BOGO types on Pro",
     specialists: "Usually on a paid plan",
     suites: "Usually included",
   },
@@ -87,9 +93,15 @@ const COMPARE_ROWS = [
   },
   {
     label: "Product-page widget",
-    us: "Theme block + app embed",
+    us: "Theme block, app embed, and photo tags",
     specialists: "Usually",
     suites: "Usually, often more templates",
+  },
+  {
+    label: "Email support",
+    us: "Pro",
+    specialists: "Usually paid",
+    suites: "Usually on higher tiers",
   },
   {
     label: "Reviews and installs",
@@ -100,8 +112,8 @@ const COMPARE_ROWS = [
 ];
 
 const PROS = [
-  "No revenue cap on Free for quantity breaks, BOGO, and product-page upsells.",
-  "Pro is $2/month — extra offer types plus email support — instead of a $10–30 plan.",
+  "No revenue cap on Free for quantity breaks, simple BOGO, and product-page upsells.",
+  "Pro is $2/month for extra BOGO types, gifts, mix & match, builders, coupons, and email support.",
   "Discounts apply at checkout through a Shopify Function, not a code shoppers have to enter.",
   "Uninstall removes the discounts BundleStack created.",
   "Admin stays small: pick products, set tiers, go live.",
@@ -110,9 +122,20 @@ const PROS = [
 const CONS = [
   "Fewer public reviews and installs than Bundler, Kaching, Bold, or Rebuy, so social proof is weaker.",
   "The theme embed still needs a Save in the theme editor before the widget shows on the live store.",
-  "Mix & match, free gifts, bundle builders, and coupons are Pro-only.",
+  "Extra BOGO types, mix & match, free gifts, bundle builders, and coupons are Pro-only.",
   "Not a merchandising platform — no email flows, A/B tests, or cart-drawer ecosystem.",
   "Free-gift discounts only apply when the gift is already in the cart.",
+];
+
+const PRICING_PLANS = [
+  {
+    id: "free" as const,
+    blurb: "Core offers with no monthly fee and no revenue cap.",
+  },
+  {
+    id: SUPPORT_PLAN,
+    blurb: "Unlock extra AOV tools and email support.",
+  },
 ];
 
 export default function App() {
@@ -131,23 +154,23 @@ export default function App() {
           </h1>
 
           <p className={styles.text}>
-            Quantity breaks and volume discounts that grow order value — Buy 2
-            save 10%, Buy 3 save 15% — with a product-page widget and automatic
-            Shopify discount sync. No code required.
+            Quantity breaks, simple BOGO, and product-page upsells on Free —
+            Buy 2 save 10%, Buy 3 save 15% — with a product-page widget, photo
+            tags, and automatic Shopify discount sync. Pro is $2/month.
           </p>
 
           <div className={styles.stats}>
             <div className={styles.stat}>
               <span className={styles.statValue}>Free</span>
-              <span className={styles.statLabel}>to get started</span>
+              <span className={styles.statLabel}>core offers, no cap</span>
             </div>
             <div className={styles.stat}>
-              <span className={styles.statValue}>3 steps</span>
-              <span className={styles.statLabel}>guided setup</span>
+              <span className={styles.statValue}>Pro $2</span>
+              <span className={styles.statLabel}>gifts, builders, email</span>
             </div>
             <div className={styles.stat}>
               <span className={styles.statValue}>Unlimited</span>
-              <span className={styles.statLabel}>offers included</span>
+              <span className={styles.statLabel}>quantity-break offers</span>
             </div>
           </div>
         </div>
@@ -170,9 +193,9 @@ export default function App() {
             Everything you need to grow AOV
           </h2>
           <p className={styles.featuresSubheading}>
-            BundleStack focuses on quantity breaks done right — fast setup,
-            a product-page widget, and pricing that does not scale with your
-            revenue.
+            BundleStack keeps quantity breaks, simple BOGO, and frequently
+            bought together on Free. Extra AOV types are $2/month, not a
+            revenue-capped plan.
           </p>
           <ul className={styles.featureGrid}>
             {FEATURES.map((feature) => (
@@ -186,6 +209,38 @@ export default function App() {
         </div>
       </section>
 
+      <section className={styles.pricing} aria-labelledby="pricing-heading">
+        <div className={styles.pricingInner}>
+          <h2 id="pricing-heading" className={styles.featuresHeading}>
+            Pricing
+          </h2>
+          <p className={styles.featuresSubheading}>
+            Start on Free. Upgrade to {PLAN_LABELS[SUPPORT_PLAN]} only if you
+            need extra offer types or email support.
+          </p>
+          <ul className={styles.pricingGrid}>
+            {PRICING_PLANS.map((plan) => {
+              const price = PLAN_PRICES[plan.id];
+              return (
+                <li key={plan.id} className={styles.pricingCard}>
+                  <p className={styles.pricingName}>{PLAN_LABELS[plan.id]}</p>
+                  <p className={styles.pricingPrice}>
+                    {price === 0 ? "$0" : `$${price}`}
+                    <span>/{price === 0 ? "forever" : "month"}</span>
+                  </p>
+                  <p className={styles.pricingBlurb}>{plan.blurb}</p>
+                  <ul className={styles.pricingFeatures}>
+                    {PLAN_FEATURES[plan.id].map((feature) => (
+                      <li key={feature}>{feature}</li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+
       <section className={styles.compare} aria-labelledby="compare-heading">
         <div className={styles.compareInner}>
           <h2 id="compare-heading" className={styles.compareHeading}>
@@ -194,7 +249,7 @@ export default function App() {
           <p className={styles.compareSubheading}>
             Most quantity-break apps charge $7–30/month or cap the free plan by
             revenue. All-in-one AOV suites cost more and take longer to set up.
-            BundleStack keeps the core offers free.
+            BundleStack keeps quantity breaks, simple BOGO, and FBT free.
           </p>
 
           <div className={styles.tableWrap}>
@@ -263,8 +318,8 @@ export default function App() {
 
       <footer className={styles.footer}>
         <p>
-          <strong>BundleStack</strong> · Quantity breaks for Shopify · Built for
-          merchants who want results, not bloat
+          <strong>BundleStack</strong> · Quantity breaks, simple BOGO, and
+          upsells for Shopify · Free to start, Pro $2/month
         </p>
         <p>
           <a href={APP_STORE_URL} className={styles.footerLink}>

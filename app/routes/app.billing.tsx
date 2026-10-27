@@ -527,14 +527,15 @@ export default function BillingPage() {
                 <s-heading>How billing works</s-heading>
                 <s-unordered-list>
                   <s-list-item>
-                    Free includes unlimited quantity-break and BOGO offers,
-                    product-page upsells and cross-sells, the theme widget, and
-                    automatic Shopify discounts
+                    Free includes unlimited quantity-break and simple BOGO
+                    offers, product-page upsells, the theme widget and photo
+                    tags, and automatic Shopify discounts
                   </s-list-item>
                   <s-list-item>
-                    Pro is $2/month and adds free gifts, mix & match, bundle
-                    builders, coupons, and email customer support — approve the
-                    charge in Shopify (not billed automatically)
+                    Pro is $2/month and adds extra BOGO types, free gifts, mix
+                    & match, bundle builders, coupons, and email customer
+                    support — approve the charge in Shopify (not billed
+                    automatically)
                   </s-list-item>
                   <s-list-item>
                     Return to Free anytime from this page

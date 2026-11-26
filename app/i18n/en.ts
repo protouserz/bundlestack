@@ -110,6 +110,7 @@ export const en = {
     "Preview of {title} — this is already what checkout will discount.",
   "theme.previewInsideApp":
     "Preview inside the app. Checkout already uses these tiers.",
+  "theme.previewAria": "Example quantity offers",
   "theme.openLiveProduct": "Open live product",
   "theme.blockFallback": "BundleStack offers",
 
@@ -213,6 +214,7 @@ export const en = {
   "widget.navy": "Navy",
   "widget.liveTheme":
     "Live product pages use Add to cart and text colors from your theme. The preview below is an example.",
+  "widget.themeNote": "Colors follow your live theme.",
   "widget.preview": "Preview",
   "widget.accent": "Accent",
   "widget.background": "Background",
@@ -220,6 +222,7 @@ export const en = {
   "widget.selectedRow": "Selected row",
   "widget.colorAria": "{label} color",
 
+  "storefront.heading": "Buy more, save more",
   "storefront.buy": "Buy {qty}",
   "storefront.buyGetFree": "Buy {buy} get {get} free",
   "storefront.buySave": "Buy {qty}, save {saving}",

@@ -1,13 +1,16 @@
 import {
   DEFAULT_WIDGET_LOOK,
   WIDGET_LOOK_PRESETS,
-  isBogoOffer,
   isThemeLook,
   type DiscountTier,
   type WidgetLook,
 } from "../../models/offer";
 import { useI18n } from "../../i18n/I18nProvider";
-import type { MessageKey } from "../../i18n";
+import {
+  tierBadgeCopy,
+  tierLabelCopy,
+  widgetHeadingCopy,
+} from "../../i18n/storefrontCopy";
 import "../../../extensions/bundlestack-widget/assets/bundlestack-widget.css";
 import styles from "./offer-form.module.css";
 
@@ -17,32 +20,6 @@ type WidgetLookCardProps = {
   offerType: string;
   tiers: DiscountTier[];
 };
-
-function previewLabel(
-  tier: DiscountTier,
-  offerType: string,
-  t: (key: MessageKey, vars?: Record<string, string | number>) => string,
-) {
-  if (isBogoOffer(offerType)) {
-    return t("storefront.buyGetFree", {
-      buy: tier.minQty,
-      get: tier.getQty ?? 1,
-    });
-  }
-  if (tier.label && !/^save\s/i.test(tier.label.trim()) && !/^buy\s+\d+\s+get\s+\d+\s+free$/i.test(tier.label.trim())) {
-    return tier.label;
-  }
-  return t("storefront.buy", { qty: tier.minQty });
-}
-
-function previewBadge(
-  tier: DiscountTier,
-  offerType: string,
-  t: (key: MessageKey, vars?: Record<string, string | number>) => string,
-) {
-  if (isBogoOffer(offerType) || (tier.getQty ?? 0) > 0) return t("storefront.free");
-  return t("storefront.savePercent", { value: tier.discountValue });
-}
 
 function presetSelected(
   preset: (typeof WIDGET_LOOK_PRESETS)[number],
@@ -186,7 +163,7 @@ export function WidgetLookCard({
       >
         <div className="bundlestack-widget__header">
           <p className="bundlestack-widget__title">
-            {look.heading || DEFAULT_WIDGET_LOOK.heading}
+            {widgetHeadingCopy(look.heading || DEFAULT_WIDGET_LOOK.heading, t)}
           </p>
         </div>
         <div className="bundlestack-widget__tiers" role="group">
@@ -204,11 +181,11 @@ export function WidgetLookCard({
               >
                 <span className="bundlestack-widget__tier-radio" aria-hidden="true" />
                 <span className="bundlestack-widget__tier-label">
-                  {previewLabel(tier, offerType, t)}
+                  {tierLabelCopy(tier, offerType, t)}
                 </span>
                 <span className="bundlestack-widget__tier-meta">
                   <span className="bundlestack-widget__tier-badge">
-                    {previewBadge(tier, offerType, t)}
+                    {tierBadgeCopy(tier, offerType, t)}
                   </span>
                 </span>
               </div>

@@ -236,13 +236,18 @@ export type StorefrontPreviewRow = {
   key: string;
   label: string;
   badge: string;
+  unitPrice: string;
   unitPriceLabel: string;
   defaultSelected: boolean;
 };
 
-function formatPreviewMoney(amount: number, currencyCode: string) {
+function formatPreviewMoney(
+  amount: number,
+  currencyCode: string,
+  locale = "en-US",
+) {
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currencyCode,
     }).format(amount);
@@ -257,6 +262,7 @@ function formatPreviewMoney(amount: number, currencyCode: string) {
 export type StorefrontPreviewOptions = {
   exampleAmount?: number;
   currencyCode?: string;
+  locale?: string;
 };
 
 /** Admin mock of the product-page widget, using sample or live product pricing. */
@@ -273,6 +279,7 @@ export function storefrontPreviewModel(
       ? options.exampleAmount
       : PREVIEW_EXAMPLE_AMOUNT;
   const currencyCode = options.currencyCode?.trim() || "USD";
+  const locale = options.locale?.trim() || "en-US";
   const source =
     offer?.tiers?.length
       ? offer
@@ -298,6 +305,7 @@ export function storefrontPreviewModel(
       : customLabel && !/^save\s/i.test(customLabel)
         ? customLabel
         : `Buy ${minQty}`;
+    const unitPrice = formatPreviewMoney(unitAmount, currencyCode, locale);
 
     return {
       key: `${minQty}-${getQty}-${index}`,
@@ -307,7 +315,8 @@ export function storefrontPreviewModel(
         : tier.discountType === "percentage"
           ? `Save ${tier.discountValue}%`
           : `Save $${tier.discountValue}`,
-      unitPriceLabel: `${formatPreviewMoney(unitAmount, currencyCode)} each`,
+      unitPrice,
+      unitPriceLabel: `${unitPrice} each`,
       defaultSelected: isBogo && index === 0,
     };
   });

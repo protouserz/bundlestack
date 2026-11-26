@@ -1,12 +1,21 @@
 import { useState } from "react";
 import {
+  DEFAULT_QUANTITY_TIERS,
   DEFAULT_WIDGET_LOOK,
+  OFFER_TYPE_QUANTITY_BREAK,
   isThemeLook,
   storefrontPreviewModel,
   type DiscountTier,
   type StorefrontPreviewProduct,
   type WidgetLook,
 } from "../../models/offer";
+import { useI18n } from "../../i18n/I18nProvider";
+import {
+  overlayCopy,
+  tierBadgeCopy,
+  tierLabelCopy,
+  widgetHeadingCopy,
+} from "../../i18n/storefrontCopy";
 import styles from "./dashboard.module.css";
 
 type PreviewOffer = {
@@ -23,15 +32,25 @@ export function OfferStorefrontPreview({
   offer?: PreviewOffer | null;
   product?: StorefrontPreviewProduct | null;
 }) {
+  const { t, locale } = useI18n();
+  const source = offer?.tiers?.length
+    ? offer
+    : {
+        offerType: OFFER_TYPE_QUANTITY_BREAK,
+        tiers: DEFAULT_QUANTITY_TIERS,
+      };
   const model = storefrontPreviewModel(offer, {
     exampleAmount: product?.exampleAmount,
     currencyCode: product?.currencyCode,
+    locale,
   });
   const look = offer?.widgetLook ?? DEFAULT_WIDGET_LOOK;
   const matchingTheme = isThemeLook(look);
   const defaultKey =
     model.rows.find((row) => row.defaultSelected)?.key ?? null;
   const [selectedKey, setSelectedKey] = useState<string | null>(defaultKey);
+  const heading = widgetHeadingCopy(look.heading || model.title, t);
+  const overlay = overlayCopy(source, t);
 
   return (
     <div
@@ -44,7 +63,7 @@ export function OfferStorefrontPreview({
       }}
     >
       <div className={styles.storefrontPreviewCard}>
-        <span className={styles.storefrontPreviewBadge}>{model.overlay}</span>
+        <span className={styles.storefrontPreviewBadge}>{overlay}</span>
         {product?.imageUrl ? (
           <img
             className={styles.storefrontPreviewPhoto}
@@ -63,20 +82,21 @@ export function OfferStorefrontPreview({
 
       <div className={styles.storefrontPreviewWidget}>
         <p className={styles.storefrontPreviewWidgetTitle}>
-          {look.heading || model.title}
+          {heading}
         </p>
         {matchingTheme ? (
           <p className={styles.storefrontPreviewThemeNote}>
-            Colors follow your live theme.
+            {t("widget.themeNote")}
           </p>
         ) : null}
         <div
           className={styles.storefrontPreviewTiers}
           role="group"
-          aria-label="Example quantity offers"
+          aria-label={t("theme.previewAria")}
         >
-          {model.rows.map((row) => {
+          {model.rows.map((row, index) => {
             const selected = selectedKey === row.key;
+            const tier = source.tiers[index];
             return (
               <button
                 key={row.key}
@@ -98,14 +118,18 @@ export function OfferStorefrontPreview({
                   aria-hidden="true"
                 />
                 <span className={styles.storefrontPreviewTierLabel}>
-                  {row.label}
+                  {tier
+                    ? tierLabelCopy(tier, source.offerType, t)
+                    : row.label}
                 </span>
                 <span className={styles.storefrontPreviewTierMeta}>
                   <span className={styles.storefrontPreviewTierBadge}>
-                    {row.badge}
+                    {tier
+                      ? tierBadgeCopy(tier, source.offerType, t)
+                      : row.badge}
                   </span>
                   <span className={styles.storefrontPreviewPrice}>
-                    {row.unitPriceLabel}
+                    {t("storefront.unitEach", { price: row.unitPrice })}
                   </span>
                 </span>
               </button>

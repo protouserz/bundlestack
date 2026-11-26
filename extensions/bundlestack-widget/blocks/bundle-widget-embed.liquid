@@ -6,6 +6,7 @@
 {% endcomment %}
 
 {% if request.page_type == 'product' and product %}
+  {% render 'bundlestack-i18n' %}
   <script src="{{ 'bundlestack-shared.js' | asset_url }}" defer></script>
   <script src="{{ 'bundlestack-promos.js' | asset_url }}" defer></script>
 
@@ -19,15 +20,19 @@
     data-currency="{{ cart.currency.iso_code }}"
     data-proxy-path="/apps/bundlestack/offers"
   >
+    {% assign bs_heading = block.settings.heading | strip %}
+    {% if bs_heading == blank or bs_heading == 'Buy more, save more' %}
+      {% assign bs_heading = 'bundlestack.heading' | t %}
+    {% endif %}
     <div class="bundlestack-widget__header">
       <p class="bundlestack-widget__title">
-        {{ block.settings.heading | default: 'Buy more, save more' }}
+        {{ bs_heading }}
       </p>
     </div>
     <div
       class="bundlestack-widget__tiers"
       role="group"
-      aria-label="{{ block.settings.heading | default: 'Buy more, save more' }}"
+      aria-label="{{ bs_heading }}"
       aria-live="polite"
     ></div>
   </div>
@@ -70,7 +75,7 @@
           if (!look) return;
           if (look.matchTheme === true || look.matchTheme === "true") return;
           var title = root.querySelector(".bundlestack-widget__title");
-          if (title && look.heading) title.textContent = look.heading;
+          if (title && look.heading && look.heading !== "Buy more, save more") title.textContent = look.heading;
           if (look.textColor) root.style.setProperty("--bs-navy", look.textColor);
           if (look.background)
             root.style.setProperty("--bs-surface", look.background);

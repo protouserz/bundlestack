@@ -3,6 +3,7 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import { AdminDeepLinkButton, ExternalLinkButton } from "../AdminLink";
 import { SButton } from "../polaris";
 import { OfferStorefrontPreview } from "./OfferStorefrontPreview";
+import { useI18n } from "../../i18n/I18nProvider";
 import type { DiscountTier, StorefrontPreviewProduct, WidgetLook } from "../../models/offer";
 import styles from "./dashboard.module.css";
 
@@ -79,8 +80,9 @@ export function ThemeWidgetStatus({
   previewProduct?: StorefrontPreviewProduct | null;
 }) {
   const shopify = useAppBridge();
+  const { t } = useI18n();
   const [status, setStatus] = useState<BlockStatus>("loading");
-  const [blockName, setBlockName] = useState("BundleStack offers");
+  const [blockName, setBlockName] = useState(() => t("theme.blockFallback"));
 
   useEffect(() => {
     let cancelled = false;
@@ -102,7 +104,7 @@ export function ThemeWidgetStatus({
           return;
         }
 
-        setBlockName(block.name ?? "BundleStack offers");
+        setBlockName(block.name ?? t("theme.blockFallback"));
         setStatus(block.status ?? "unknown");
       } catch {
         if (!cancelled) setStatus("unknown");
@@ -114,7 +116,7 @@ export function ThemeWidgetStatus({
     return () => {
       cancelled = true;
     };
-  }, [shopify]);
+  }, [shopify, t]);
 
   const embedOn = status === "active";
 
@@ -122,8 +124,8 @@ export function ThemeWidgetStatus({
     <s-section
       heading={
         embedOn
-          ? "Live on product pages"
-          : "Quantity breaks are live at checkout"
+          ? t("theme.liveOnProductPages")
+          : t("theme.liveAtCheckout")
       }
     >
       <s-stack direction="block" gap="base">
@@ -131,17 +133,15 @@ export function ThemeWidgetStatus({
           <s-banner tone="success">
             <s-stack direction="block" gap="base">
               <s-text>
-                <strong>{blockName}</strong> is active on your published theme.
-                Checkout discounts and the product-page widget are both on.
-                Change products, percents, or widget colors anytime.
+                {t("theme.embedOn", { name: blockName })}
               </s-text>
               <s-stack direction="inline" gap="base">
                 <SButton href={customizeOfferHref} variant="primary">
-                  Customize offer
+                  {t("dashboard.customizeOffer")}
                 </SButton>
                 {previewProduct?.storefrontUrl ? (
                   <ExternalLinkButton href={previewProduct.storefrontUrl}>
-                    Open live product
+                    {t("theme.openLiveProduct")}
                   </ExternalLinkButton>
                 ) : null}
               </s-stack>
@@ -152,24 +152,20 @@ export function ThemeWidgetStatus({
             <s-banner tone="success">
               <s-stack direction="block" gap="base">
                 <s-text>
-                  Buy 2 save 10% and Buy 3 save 15% already apply at checkout on
-                  every product. Shoppers do not enter a code. Change products
-                  or percents anytime.
+                  {t("theme.embedOff")}
                 </s-text>
                 <SButton href={customizeOfferHref} variant="primary">
-                  Customize offer
+                  {t("dashboard.customizeOffer")}
                 </SButton>
               </s-stack>
             </s-banner>
             <s-banner tone="info">
               <s-stack direction="block" gap="base">
                 <s-text>
-                  Optional: show the same offer on product pages. Enable{" "}
-                  <strong>{blockName}</strong> in the theme editor to set
-                  heading and colors, then click Save.
+                  {t("theme.optionalWidget", { name: blockName })}
                 </s-text>
                 <AdminDeepLinkButton href={themeEditorUrl}>
-                  Show on product pages
+                  {t("dashboard.showOnProductPages")}
                 </AdminDeepLinkButton>
               </s-stack>
             </s-banner>
@@ -179,11 +175,11 @@ export function ThemeWidgetStatus({
         <p className={styles.storefrontPreviewCaption}>
           {embedOn
             ? previewProduct?.title
-              ? `Preview of ${previewProduct.title} on a product page.`
-              : "Preview of the live product-page widget."
+              ? t("theme.previewNamedOn", { title: previewProduct.title })
+              : t("theme.previewLiveWidget")
             : previewProduct?.title
-              ? `Preview of ${previewProduct.title} — this is already what checkout will discount.`
-              : "Preview inside the app. Checkout already uses these tiers."}
+              ? t("theme.previewNamedCheckout", { title: previewProduct.title })
+              : t("theme.previewInsideApp")}
         </p>
         <OfferStorefrontPreview offer={previewOffer} product={previewProduct} />
       </s-stack>

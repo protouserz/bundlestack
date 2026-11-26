@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack mengderabatter",
+    "settings": {
+      "heading": {
+        "label": "Overskrift"
+      },
+      "accent": {
+        "label": "Aksent"
+      },
+      "background": {
+        "label": "Bakgrunn"
+      },
+      "text_color": {
+        "label": "Tekst"
+      },
+      "selected_background": {
+        "label": "Bakgrunn for valgt trinn"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack-tilbud",
+    "settings": {
+      "heading": {
+        "label": "Overskrift"
+      },
+      "accent": {
+        "label": "Aksent"
+      },
+      "background": {
+        "label": "Bakgrunn"
+      },
+      "text_color": {
+        "label": "Tekst"
+      },
+      "selected_background": {
+        "label": "Bakgrunn for valgt trinn"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack tilbudsmerke"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack-merke på bilder"
+  }
+}

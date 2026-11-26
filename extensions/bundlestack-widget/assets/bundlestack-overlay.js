@@ -7,11 +7,15 @@
     return type === "percentage" ? `${value}%` : `$${value}`;
   }
 
+  function t(key, vars) {
+    return window.__bsT ? window.__bsT(key, vars) : "";
+  }
+
   function badgeLines(badge) {
     if (badge.offerType === "bogo" || Number(badge.getQty) > 0) {
       const getQty = Math.max(1, Math.floor(Number(badge.getQty)) || 1);
       return {
-        primary: `Buy ${badge.minQty} get ${getQty} free`,
+        primary: t("buyGetFree", { buy: badge.minQty, get: getQty }),
         secondary: null,
       };
     }
@@ -26,11 +30,11 @@
     );
 
     return {
-      primary: `Buy ${badge.minQty}, save ${startingSaving}`,
+      primary: t("buySave", { qty: badge.minQty, saving: startingSaving }),
       secondary:
         startingSaving === maximumSaving
           ? null
-          : `Buy more, save up to ${maximumSaving}`,
+          : t("buyMoreUpTo", { saving: maximumSaving }),
     };
   }
 

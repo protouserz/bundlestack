@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack volymrabatter",
+    "settings": {
+      "heading": {
+        "label": "Rubrik"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Bakgrund"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Bakgrund för valt steg"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack-erbjudanden",
+    "settings": {
+      "heading": {
+        "label": "Rubrik"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Bakgrund"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Bakgrund för valt steg"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack erbjudandemärke"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack-märke på foton"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "買越多，省越多",
+    "buy": "買 {qty} 件",
+    "buy_get_free": "買 {buy} 送 {get}",
+    "buy_save": "買 {qty} 件，省 {saving}",
+    "buy_more_up_to": "買更多，最高省 {saving}",
+    "save_percent": "省 {value}%",
+    "save_amount": "省 {value}",
+    "each": "每件",
+    "free": "免費",
+    "clear": "清除選取",
+    "preview": "預覽線上商店。",
+    "view_offers": "查看滿量優惠",
+    "widget": {
+      "heading": "買越多，省越多",
+      "loading": "正在載入優惠...",
+      "powered_by": "由 BundleStack 提供"
+    }
+  }
+}

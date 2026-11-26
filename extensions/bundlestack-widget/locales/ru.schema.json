@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "Скидки за объём BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Заголовок"
+      },
+      "accent": {
+        "label": "Акцент"
+      },
+      "background": {
+        "label": "Фон"
+      },
+      "text_color": {
+        "label": "Текст"
+      },
+      "selected_background": {
+        "label": "Фон выбранного уровня"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "Предложения BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Заголовок"
+      },
+      "accent": {
+        "label": "Акцент"
+      },
+      "background": {
+        "label": "Фон"
+      },
+      "text_color": {
+        "label": "Текст"
+      },
+      "selected_background": {
+        "label": "Фон выбранного уровня"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "Значок предложения BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "Значок BundleStack на фото"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack miktar indirimleri",
+    "settings": {
+      "heading": {
+        "label": "Başlık"
+      },
+      "accent": {
+        "label": "Vurgu"
+      },
+      "background": {
+        "label": "Arka plan"
+      },
+      "text_color": {
+        "label": "Metin"
+      },
+      "selected_background": {
+        "label": "Seçili kademe arka planı"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack teklifleri",
+    "settings": {
+      "heading": {
+        "label": "Başlık"
+      },
+      "accent": {
+        "label": "Vurgu"
+      },
+      "background": {
+        "label": "Arka plan"
+      },
+      "text_color": {
+        "label": "Metin"
+      },
+      "selected_background": {
+        "label": "Seçili kademe arka planı"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack fırsat rozeti"
+  },
+  "bundle-badge-overlay": {
+    "name": "Fotoğraflarda BundleStack rozeti"
+  }
+}

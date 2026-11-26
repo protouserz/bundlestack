@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack مقدار رعایت",
+    "settings": {
+      "heading": {
+        "label": "سرخی"
+      },
+      "accent": {
+        "label": "ایکسنٹ"
+      },
+      "background": {
+        "label": "پس منظر"
+      },
+      "text_color": {
+        "label": "متن"
+      },
+      "selected_background": {
+        "label": "منتخب درجے کا پس منظر"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack آفرز",
+    "settings": {
+      "heading": {
+        "label": "سرخی"
+      },
+      "accent": {
+        "label": "ایکسنٹ"
+      },
+      "background": {
+        "label": "پس منظر"
+      },
+      "text_color": {
+        "label": "متن"
+      },
+      "selected_background": {
+        "label": "منتخب درجے کا پس منظر"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack ڈیل بیج"
+  },
+  "bundle-badge-overlay": {
+    "name": "تصاویر پر BundleStack بیج"
+  }
+}

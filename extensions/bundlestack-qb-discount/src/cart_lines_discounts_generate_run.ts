@@ -5,6 +5,11 @@ import {
   CartLinesDiscountsGenerateRunResult,
   ProductDiscountCandidateValue,
 } from "../generated/api";
+import {
+  checkoutMessages,
+  interpolate,
+  type CheckoutMessages,
+} from "./messages";
 
 type QuantityTier = {
   minQty: number;
@@ -105,9 +110,19 @@ function matchingLines(input: CartInput, productIds: string[]): MatchingLine[] {
   return lines;
 }
 
+function languageFromInput(input: CartInput): CheckoutMessages {
+  const iso = (
+    input as CartInput & {
+      localization?: { language?: { isoCode?: string } };
+    }
+  ).localization?.language?.isoCode;
+  return checkoutMessages(iso);
+}
+
 function runBogo(
   config: FunctionConfig,
   lines: MatchingLine[],
+  m: CheckoutMessages,
 ): CartLinesDiscountsGenerateRunResult {
   const buyQuantity = Math.max(1, Math.floor(Number(config.buyQuantity) || 1));
   const getQuantity = Math.max(1, Math.floor(Number(config.getQuantity) || 1));
@@ -145,7 +160,10 @@ function runBogo(
   }
 
   const linesById = new Map(lines.map((line) => [line.id, line]));
-  const message = `Buy ${buyQuantity} get ${getQuantity} free`;
+  const message = interpolate(m.buyGetFree, {
+    buy: buyQuantity,
+    get: getQuantity,
+  });
 
   return {
     operations: [
@@ -253,6 +271,7 @@ function addLineDiscount(
 function runCrossProductBogo(
   config: FunctionConfig,
   lines: MatchingLine[],
+  m: CheckoutMessages,
 ): CartLinesDiscountsGenerateRunResult {
   const buyQuantity = Math.max(1, Math.floor(Number(config.buyQuantity) || 1));
   const getQuantity = Math.max(1, Math.floor(Number(config.getQuantity) || 1));
@@ -281,14 +300,14 @@ function runCrossProductBogo(
   const getDiscountValue = Number(config.getDiscountValue) || 100;
   if (getDiscountType === "fixed") {
     return addLineDiscount(
-      `BOGO $${getDiscountValue} off`,
+      interpolate(m.bogoAmount, { value: getDiscountValue }),
       discountedQtyByLine,
       { fixedAmount: { amount: String(getDiscountValue) } },
     );
   }
   if (getDiscountType === "percentage" && getDiscountValue < 100) {
     return addLineDiscount(
-      `BOGO ${getDiscountValue}% off`,
+      interpolate(m.bogoPct, { value: getDiscountValue }),
       discountedQtyByLine,
       { percentage: { value: getDiscountValue } },
     );
@@ -301,7 +320,10 @@ function runCrossProductBogo(
         productDiscountsAdd: {
           candidates: [...discountedQtyByLine.entries()].map(
             ([id, quantity]) => ({
-              message: `Buy ${buyQuantity} get ${getQuantity} free`,
+              message: interpolate(m.buyGetFree, {
+                buy: buyQuantity,
+                get: getQuantity,
+              }),
               targets: [{ cartLine: { id, quantity } }],
               value: {
                 fixedAmount: {
@@ -321,6 +343,7 @@ function runCrossProductBogo(
 function runFreeGift(
   config: FunctionConfig,
   lines: MatchingLine[],
+  m: CheckoutMessages,
 ): CartLinesDiscountsGenerateRunResult {
   const giftProductIds = config.giftProductIds ?? [];
   if (giftProductIds.length === 0) return { operations: [] };
@@ -360,7 +383,7 @@ function runFreeGift(
         productDiscountsAdd: {
           candidates: [...discountedQtyByLine.entries()].map(
             ([id, quantity]) => ({
-              message: "Free gift",
+              message: m.freeGift,
               targets: [{ cartLine: { id, quantity } }],
               value: {
                 fixedAmount: {
@@ -380,6 +403,7 @@ function runFreeGift(
 function runMixMatch(
   config: FunctionConfig,
   lines: MatchingLine[],
+  m: CheckoutMessages,
 ): CartLinesDiscountsGenerateRunResult {
   const eligible = linesForProducts(
     lines,
@@ -394,9 +418,10 @@ function runMixMatch(
   const discountType = config.discountType || "percentage";
   const discountValue = Number(config.discountValue) || 0;
   return addLineDiscount(
-    discountType === "fixed"
-      ? `Mix & match $${discountValue} off`
-      : `Mix & match ${discountValue}% off`,
+    interpolate(
+      discountType === "fixed" ? m.mixAmount : m.mixPct,
+      { value: discountValue },
+    ),
     map,
     discountType === "fixed"
       ? { fixedAmount: { amount: String(discountValue) } }
@@ -407,6 +432,7 @@ function runMixMatch(
 function runBundleBuilder(
   config: FunctionConfig,
   lines: MatchingLine[],
+  m: CheckoutMessages,
 ): CartLinesDiscountsGenerateRunResult {
   const steps = config.steps ?? [];
   const minStepsCompleted = Math.max(1, Number(config.minStepsCompleted) || 1);
@@ -430,9 +456,10 @@ function runBundleBuilder(
   const discountType = config.discountType || "percentage";
   const discountValue = Number(config.discountValue) || 0;
   return addLineDiscount(
-    discountType === "fixed"
-      ? `Bundle $${discountValue} off`
-      : `Bundle ${discountValue}% off`,
+    interpolate(
+      discountType === "fixed" ? m.bundleAmount : m.bundlePct,
+      { value: discountValue },
+    ),
     map,
     discountType === "fixed"
       ? { fixedAmount: { amount: String(discountValue) } }
@@ -443,6 +470,7 @@ function runBundleBuilder(
 function runFbt(
   config: FunctionConfig,
   lines: MatchingLine[],
+  m: CheckoutMessages,
 ): CartLinesDiscountsGenerateRunResult {
   const anchors = config.anchorProductIds?.length
     ? config.anchorProductIds
@@ -471,9 +499,10 @@ function runFbt(
   const discountType = config.discountType || "percentage";
   const discountValue = Number(config.discountValue) || 0;
   return addLineDiscount(
-    discountType === "fixed"
-      ? `Frequently bought $${discountValue} off`
-      : `Frequently bought ${discountValue}% off`,
+    interpolate(
+      discountType === "fixed" ? m.fbtAmount : m.fbtPct,
+      { value: discountValue },
+    ),
     map,
     discountType === "fixed"
       ? { fixedAmount: { amount: String(discountValue) } }
@@ -498,18 +527,19 @@ export function cartLinesDiscountsGenerateRun(
   const config = parseConfig(input.discount.metafield?.jsonValue);
   const type = String(config?.type ?? "").toLowerCase();
   const catalogLines = matchingLines(input, []);
+  const m = languageFromInput(input);
 
   if (type === "free_gift") {
-    return runFreeGift(config ?? {}, catalogLines);
+    return runFreeGift(config ?? {}, catalogLines, m);
   }
   if (type === "mix_match") {
-    return runMixMatch(config ?? {}, catalogLines);
+    return runMixMatch(config ?? {}, catalogLines, m);
   }
   if (type === "bundle_builder") {
-    return runBundleBuilder(config ?? {}, catalogLines);
+    return runBundleBuilder(config ?? {}, catalogLines, m);
   }
   if (type === "fbt") {
-    return runFbt(config ?? {}, catalogLines);
+    return runFbt(config ?? {}, catalogLines, m);
   }
 
   const productIds = config?.productIds ?? [];
@@ -523,9 +553,9 @@ export function cartLinesDiscountsGenerateRun(
       config.sameProduct === false ||
       (config.getProductIds?.length ?? 0) > 0
     ) {
-      return runCrossProductBogo(config, catalogLines);
+      return runCrossProductBogo(config, catalogLines, m);
     }
-    return runBogo(config, lines);
+    return runBogo(config, lines, m);
   }
 
   const tiers = config?.tiers ?? [];
@@ -545,7 +575,10 @@ export function cartLinesDiscountsGenerateRun(
         productDiscountsAdd: {
           candidates: [
             {
-              message: `Buy ${tier.minQty}+, save ${tier.discountValue}%`,
+              message: interpolate(m.buySavePct, {
+                qty: tier.minQty,
+                value: tier.discountValue,
+              }),
               targets: lines.map((line) => ({
                 cartLine: { id: line.id },
               })),

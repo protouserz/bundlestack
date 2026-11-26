@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack Mengenrabatte",
+    "settings": {
+      "heading": {
+        "label": "Überschrift"
+      },
+      "accent": {
+        "label": "Akzent"
+      },
+      "background": {
+        "label": "Hintergrund"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Hintergrund der Auswahl"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack Angebote",
+    "settings": {
+      "heading": {
+        "label": "Überschrift"
+      },
+      "accent": {
+        "label": "Akzent"
+      },
+      "background": {
+        "label": "Hintergrund"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Hintergrund der Auswahl"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack Angebotsbadge"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack Badge auf Fotos"
+  }
+}

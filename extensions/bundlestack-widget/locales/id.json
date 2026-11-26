@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Beli lebih banyak, hemat lebih banyak",
+    "buy": "Beli {qty}",
+    "buy_get_free": "Beli {buy}, gratis {get}",
+    "buy_save": "Beli {qty}, hemat {saving}",
+    "buy_more_up_to": "Beli lebih banyak, hemat hingga {saving}",
+    "save_percent": "Hemat {value}%",
+    "save_amount": "Hemat {value}",
+    "each": "pcs",
+    "free": "Gratis",
+    "clear": "Hapus pilihan",
+    "preview": "Pratinjau toko live.",
+    "view_offers": "Lihat penawaran diskon volume",
+    "widget": {
+      "heading": "Beli lebih banyak, hemat lebih banyak",
+      "loading": "Memuat penawaran...",
+      "powered_by": "Didukung BundleStack"
+    }
+  }
+}

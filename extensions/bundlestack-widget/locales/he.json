@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "קנו יותר, חסכו יותר",
+    "buy": "קנו {qty}",
+    "buy_get_free": "קנו {buy} וקבלו {get} במתנה",
+    "buy_save": "קנו {qty}, חסכו {saving}",
+    "buy_more_up_to": "קנו עוד, חסכו עד {saving}",
+    "save_percent": "חסכו {value}%",
+    "save_amount": "חסכו {value}",
+    "each": "ליחידה",
+    "free": "חינם",
+    "clear": "נקה בחירה",
+    "preview": "תצוגה מקדימה של החנות.",
+    "view_offers": "צפייה בהנחות כמות",
+    "widget": {
+      "heading": "קנו יותר, חסכו יותר",
+      "loading": "טוען מבצעים...",
+      "powered_by": "מופעל על ידי BundleStack"
+    }
+  }
+}

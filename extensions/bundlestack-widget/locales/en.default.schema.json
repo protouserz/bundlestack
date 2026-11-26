@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack qty breaks",
+    "settings": {
+      "heading": {
+        "label": "Heading"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Background"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Selected tier background"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack offers",
+    "settings": {
+      "heading": {
+        "label": "Heading"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Background"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Selected tier background"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack deal badge"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack badge overlay"
+  }
+}

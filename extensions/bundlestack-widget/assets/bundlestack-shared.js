@@ -67,7 +67,13 @@
   global.__bundlestackApplyLook = function (root, look) {
     if (!root || !look) return;
     var title = root.querySelector(".bundlestack-widget__title");
-    if (title && look.heading) title.textContent = look.heading;
+    if (
+      title &&
+      look.heading &&
+      look.heading !== "Buy more, save more"
+    ) {
+      title.textContent = look.heading;
+    }
     var group = root.querySelector(".bundlestack-widget__tiers");
     if (group && look.heading) group.setAttribute("aria-label", look.heading);
 
@@ -96,6 +102,32 @@
     if (look.selectedBackground) {
       root.style.setProperty("--bs-emerald-soft", look.selectedBackground);
     }
+  };
+
+  global.__bsT = function (key, vars) {
+    var fallback = {
+      heading: "Buy more, save more",
+      buy: "Buy {qty}",
+      buyGetFree: "Buy {buy} get {get} free",
+      buySave: "Buy {qty}, save {saving}",
+      buyMoreUpTo: "Buy more, save up to {saving}",
+      savePercent: "Save {value}%",
+      saveAmount: "Save {value}",
+      each: "each",
+      free: "Free",
+      clear: "Clear selection",
+      preview: "Preview the live store.",
+      viewOffers: "View volume discount offers",
+    };
+    var s = (global.__bsI18n && global.__bsI18n[key]) || fallback[key] || "";
+    if (vars) {
+      for (var k in vars) {
+        if (Object.prototype.hasOwnProperty.call(vars, k)) {
+          s = s.split("{" + k + "}").join(String(vars[k]));
+        }
+      }
+    }
+    return s;
   };
 
   if (global.__bundlestackFetchJson) return;

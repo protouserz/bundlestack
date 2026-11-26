@@ -41,6 +41,8 @@ import {
 } from "../models/health.server";
 import { syncDiscountUsesForShop } from "../models/usage.server";
 import { SButton, SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
+import { toBcp47, type MessageKey } from "../i18n";
 
 function themeEditorUrlForShop(shop: string) {
   const shopHandle = shop.replace(".myshopify.com", "");
@@ -237,6 +239,7 @@ function HealthCheckFixButton({
   fetcher: ReturnType<typeof useFetcher<typeof action>>;
 }) {
   const isLoading = fetcher.state !== "idle";
+  const { t } = useI18n();
 
   if (fix.href) {
     const href = fix.external
@@ -244,7 +247,7 @@ function HealthCheckFixButton({
       : fix.href;
     return (
       <SButton href={href} target={fix.external ? "_top" : undefined}>
-        Try to fix
+        {t("common.tryToFix")}
       </SButton>
     );
   }
@@ -257,24 +260,65 @@ function HealthCheckFixButton({
         className={styles.fixButton}
         disabled={isLoading}
       >
-        {isLoading ? "Fixing…" : "Try to fix"}
+        {isLoading ? t("common.fixing") : t("common.tryToFix")}
       </button>
     </fetcher.Form>
   );
 }
 
-function formatDateRange() {
+function formatDateRange(locale: string) {
   const end = new Date();
   const start = new Date();
   start.setDate(start.getDate() - 29);
 
-  const formatter = new Intl.DateTimeFormat("en-US", {
+  const formatter = new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 
   return `${formatter.format(start)} – ${formatter.format(end)}`;
+}
+
+function translateHealthCheck(
+  t: (key: MessageKey, vars?: Record<string, string | number>) => string,
+  check: ShopHealth["checks"][number],
+) {
+  const count = check.count ?? 0;
+  if (check.id === "active-offers") {
+    return {
+      label: t("health.activeOffers"),
+      message:
+        check.status === "ok"
+          ? t("health.activeOffersOk", { count })
+          : t("health.activeOffersNone"),
+    };
+  }
+  if (check.id === "discount-sync") {
+    return {
+      label: t("health.shopifyDiscounts"),
+      message:
+        check.status === "ok"
+          ? t("health.discountsOk")
+          : t("health.discountsMissing", { count }),
+    };
+  }
+  if (check.id === "discount-exists") {
+    return {
+      label: t("health.verification"),
+      message:
+        check.status === "ok"
+          ? t("health.verificationOk")
+          : t("health.verificationMissing", { count }),
+    };
+  }
+  if (check.id === "app-proxy") {
+    return {
+      label: t("health.storefrontApi"),
+      message: t("health.storefrontOk"),
+    };
+  }
+  return { label: check.label, message: check.message };
 }
 
 function HealthChecksPanel({
@@ -284,14 +328,17 @@ function HealthChecksPanel({
   health: ShopHealth;
   fixFetcher: ReturnType<typeof useFetcher<typeof action>>;
 }) {
+  const { t } = useI18n();
   return (
-    <s-section heading="System checks">
+    <s-section heading={t("dashboard.systemChecks")}>
       <div className={styles.healthChecks}>
-        {health.checks.map((check) => (
+        {health.checks.map((check) => {
+          const copy = translateHealthCheck(t, check);
+          return (
           <div key={check.id} className={styles.healthCheckRow}>
             <div className={styles.healthCheckMeta}>
-              <p className={styles.healthCheckLabel}>{check.label}</p>
-              <p className={styles.healthCheckMessage}>{check.message}</p>
+              <p className={styles.healthCheckLabel}>{copy.label}</p>
+              <p className={styles.healthCheckMessage}>{copy.message}</p>
             </div>
             <s-stack direction="inline" gap="base">
               <s-badge
@@ -303,14 +350,19 @@ function HealthChecksPanel({
                       : "critical"
                 }
               >
-                {check.status}
+                {check.status === "ok"
+                  ? t("health.ok")
+                  : check.status === "warning"
+                    ? t("health.warning")
+                    : t("health.error")}
               </s-badge>
               {check.fix ? (
                 <HealthCheckFixButton fix={check.fix} fetcher={fixFetcher} />
               ) : null}
             </s-stack>
           </div>
-        ))}
+          );
+        })}
       </div>
     </s-section>
   );
@@ -332,6 +384,7 @@ export default function Dashboard() {
   const onboardingFetcher = useFetcher<typeof action>();
   const statsFetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
+  const { t, locale } = useI18n();
   const lastToastKey = useRef<string | null>(null);
   const fixResult = syncFeedback;
   const showSetupGuide = !onboardingDone;
@@ -366,7 +419,7 @@ export default function Dashboard() {
   }, [fixResult, shopify, syncFeedback]);
 
   return (
-    <SPage heading={showSetupGuide ? "Your offer is live" : "Dashboard"}>
+    <SPage heading={showSetupGuide ? t("dashboard.offerLive") : t("dashboard.title")}>
       {showSetupGuide ? (
         <>
           <SButton
@@ -374,7 +427,7 @@ export default function Dashboard() {
             variant="primary"
             href={customizeOfferHref}
           >
-            {seededOffer ? "Customize offer" : "Create offer"}
+            {seededOffer ? t("dashboard.customizeOffer") : t("dashboard.createOffer")}
           </SButton>
           <SButton
             slot="secondary-actions"
@@ -382,19 +435,19 @@ export default function Dashboard() {
             href={toShopifyAdminProtocol(themeEditorUrl)}
             target="_top"
           >
-            Show on product pages
+            {t("dashboard.showOnProductPages")}
           </SButton>
         </>
       ) : (
         <>
           <SButton slot="primary-action" variant="primary" href="/app/offers/new">
-            Create offer
+            {t("dashboard.createOffer")}
           </SButton>
           <SButton slot="secondary-actions" variant="secondary" href="/app/promotions">
-            Promotions
+            {t("nav.promotions")}
           </SButton>
           <SButton slot="secondary-actions" variant="secondary" href="/app/coupons">
-            Coupons
+            {t("nav.coupons")}
           </SButton>
         </>
       )}
@@ -410,7 +463,9 @@ export default function Dashboard() {
 
         {showSetupGuide ? null : (
           <s-text tone="neutral">
-            Reporting period: {formatDateRange()}
+            {t("dashboard.reportingPeriod", {
+              range: formatDateRange(toBcp47(locale)),
+            })}
           </s-text>
         )}
 
@@ -441,24 +496,24 @@ export default function Dashboard() {
               health={health}
             />
 
-            <s-section heading="Promotions and coupons">
+            <s-section heading={t("dashboard.promotionsAndCoupons")}>
               <s-stack direction="block" gap="base">
                 <s-paragraph>
                   {isPaidPlan(billing.plan)
-                    ? "Free gifts, mix and match, bundle builders, frequently bought together, and checkout discount codes."
-                    : "Frequently bought together (upsell and cross-sell) is included. Free gifts, mix and match, builders, and coupons unlock on Pro."}
+                    ? t("dashboard.promotionsPaid")
+                    : t("dashboard.promotionsFree")}
                 </s-paragraph>
                 <s-stack direction="inline" gap="base">
                   <SButton href="/app/promotions" variant="primary">
-                    Promotions
+                    {t("nav.promotions")}
                   </SButton>
                   {isPaidPlan(billing.plan) ? (
                     <SButton href="/app/coupons" variant="secondary">
-                      Coupons
+                      {t("nav.coupons")}
                     </SButton>
                   ) : (
                     <SButton href="/app/billing" variant="secondary">
-                      Upgrade to Pro
+                      {t("common.upgradeToPro")}
                     </SButton>
                   )}
                 </s-stack>
@@ -476,7 +531,7 @@ export default function Dashboard() {
                 variant="tertiary"
                 {...(statsFetcher.state !== "idle" ? { loading: true } : {})}
               >
-                Refresh redemption stats
+                {t("dashboard.refreshStats")}
               </SButton>
             </statsFetcher.Form>
             <div className={styles.midRow}>
@@ -493,13 +548,16 @@ export default function Dashboard() {
             <HealthChecksPanel health={health} fixFetcher={fixFetcher} />
 
             <p className={styles.metricSubtext}>
-              Current plan: <strong>{billing.planLabel}</strong>
+              {t("dashboard.planLine")}
+              <strong>{billing.planLabel}</strong>
               {billing.monthlyPrice > 0
-                ? ` · $${billing.monthlyPrice.toFixed(2)}/mo`
-                : " · Free tier"}
+                ? t("dashboard.perMonth", {
+                    price: billing.monthlyPrice.toFixed(2),
+                  })
+                : t("dashboard.freeTier")}
               {" · "}
               <Link className={styles.panelLink} to="/app/billing">
-                View billing details
+                {t("dashboard.viewBilling")}
               </Link>
             </p>
           </>

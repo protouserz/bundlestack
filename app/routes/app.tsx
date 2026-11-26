@@ -13,6 +13,8 @@ import { seedDefaultOfferIfNeeded } from "../models/onboarding.server";
 import { AppLoadingIndicator } from "../components/AppLoadingIndicator";
 import { AppSupportFooter } from "../components/AppSupportFooter";
 import { SAppNav, SNavLink } from "../components/polaris";
+import { I18nProvider, useI18n } from "../i18n/I18nProvider";
+import { localeFromRequest } from "../i18n";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
@@ -32,6 +34,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return {
     apiKey,
     privacyUrl: appUrl ? `${appUrl}/privacy` : "/privacy",
+    locale: localeFromRequest(request),
   };
 };
 
@@ -42,36 +45,48 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function App() {
-  const { apiKey, privacyUrl } = useLoaderData<typeof loader>();
+  const { apiKey, privacyUrl, locale } = useLoaderData<typeof loader>();
 
   return (
     <AppProvider embedded apiKey={apiKey}>
+      <I18nProvider locale={locale}>
+        <AppChrome privacyUrl={privacyUrl} />
+      </I18nProvider>
+    </AppProvider>
+  );
+}
+
+function AppChrome({ privacyUrl }: { privacyUrl: string }) {
+  const { t } = useI18n();
+
+  return (
+    <>
       {/* Host admin sidebar. App Bridge reads NavMenu on embed; s-app-nav
           satisfies Built for Shopify 4.1.4. */}
       <NavMenu>
         <a href="/app" rel="home">
-          Dashboard
+          {t("nav.dashboard")}
         </a>
-        <a href="/app/offers">Offers</a>
-        <a href="/app/promotions">Promotions</a>
-        <a href="/app/coupons">Coupons</a>
-        <a href="/app/billing">Billing</a>
-        <a href="/app/support">Support</a>
+        <a href="/app/offers">{t("nav.offers")}</a>
+        <a href="/app/promotions">{t("nav.promotions")}</a>
+        <a href="/app/coupons">{t("nav.coupons")}</a>
+        <a href="/app/billing">{t("nav.billing")}</a>
+        <a href="/app/support">{t("nav.support")}</a>
       </NavMenu>
       <SAppNav>
         <SNavLink href="/app" rel="home">
-          Dashboard
+          {t("nav.dashboard")}
         </SNavLink>
-        <SNavLink href="/app/offers">Offers</SNavLink>
-        <SNavLink href="/app/promotions">Promotions</SNavLink>
-        <SNavLink href="/app/coupons">Coupons</SNavLink>
-        <SNavLink href="/app/billing">Billing</SNavLink>
-        <SNavLink href="/app/support">Support</SNavLink>
+        <SNavLink href="/app/offers">{t("nav.offers")}</SNavLink>
+        <SNavLink href="/app/promotions">{t("nav.promotions")}</SNavLink>
+        <SNavLink href="/app/coupons">{t("nav.coupons")}</SNavLink>
+        <SNavLink href="/app/billing">{t("nav.billing")}</SNavLink>
+        <SNavLink href="/app/support">{t("nav.support")}</SNavLink>
       </SAppNav>
       <AppLoadingIndicator />
       <Outlet />
       <AppSupportFooter privacyUrl={privacyUrl} />
-    </AppProvider>
+    </>
   );
 }
 

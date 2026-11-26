@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Cumpără mai mult, economisește mai mult",
+    "buy": "Cumpără {qty}",
+    "buy_get_free": "Cumpără {buy}, primești {get} gratuit",
+    "buy_save": "Cumpără {qty}, economisește {saving}",
+    "buy_more_up_to": "Cumpără mai mult, economisește până la {saving}",
+    "save_percent": "Economisește {value}%",
+    "save_amount": "Economisește {value}",
+    "each": "buc.",
+    "free": "Gratuit",
+    "clear": "Șterge selecția",
+    "preview": "Previzualizează magazinul live.",
+    "view_offers": "Vezi ofertele pe cantitate",
+    "widget": {
+      "heading": "Cumpără mai mult, economisește mai mult",
+      "loading": "Se încarcă ofertele...",
+      "powered_by": "Furnizat de BundleStack"
+    }
+  }
+}

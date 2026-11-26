@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "Chiết khấu số lượng BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Tiêu đề"
+      },
+      "accent": {
+        "label": "Màu nhấn"
+      },
+      "background": {
+        "label": "Nền"
+      },
+      "text_color": {
+        "label": "Chữ"
+      },
+      "selected_background": {
+        "label": "Nền mức đã chọn"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "Ưu đãi BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Tiêu đề"
+      },
+      "accent": {
+        "label": "Màu nhấn"
+      },
+      "background": {
+        "label": "Nền"
+      },
+      "text_color": {
+        "label": "Chữ"
+      },
+      "selected_background": {
+        "label": "Nền mức đã chọn"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "Huy hiệu ưu đãi BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "Huy hiệu BundleStack trên ảnh"
+  }
+}

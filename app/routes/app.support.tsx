@@ -7,6 +7,7 @@ import { Form, useActionData, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { SButton, SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
 import prisma from "../db.server";
 import { isBillingPlan, isPaidPlan } from "../billing.server";
 import {
@@ -148,9 +149,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 export default function AppSupport() {
   const { shop, userName, hasSupport } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const { t } = useI18n();
 
   return (
-    <SPage heading="Support">
+    <SPage heading={t("support.title")}>
       <s-stack direction="block" gap="large">
         {actionData?.ok ? (
           <s-banner tone="success">

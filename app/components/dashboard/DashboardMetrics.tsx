@@ -1,4 +1,5 @@
 import type { ShopHealth } from "../../models/health.server";
+import { useI18n } from "../../i18n/I18nProvider";
 import {
   Sparkline,
   buildSparklineFromCount,
@@ -13,25 +14,27 @@ type DashboardMetricsProps = {
   health: ShopHealth;
 };
 
-function healthLabel(overall: ShopHealth["overall"]) {
-  if (overall === "healthy") return "Good";
-  if (overall === "attention") return "Needs attention";
-  return "Action required";
-}
-
 export function DashboardMetrics({
   activeOffers,
   totalOffers,
   discountUses,
   health,
 }: DashboardMetricsProps) {
+  const { t } = useI18n();
+  const healthLabel =
+    health.overall === "healthy"
+      ? t("metrics.healthGood")
+      : health.overall === "attention"
+        ? t("metrics.healthAttention")
+        : t("metrics.healthCritical");
+
   return (
     <s-grid gridTemplateColumns="repeat(3, minmax(0, 1fr))" gap="base">
-      <s-section heading="Active offers">
+      <s-section heading={t("metrics.activeOffers")}>
         <s-stack direction="block" gap="small-200">
           <s-heading>{activeOffers}</s-heading>
           <s-paragraph>
-            {totalOffers} total configured
+            {t("metrics.totalConfigured", { count: totalOffers })}
           </s-paragraph>
           <Sparkline
             className={styles.sparkline}
@@ -40,13 +43,13 @@ export function DashboardMetrics({
         </s-stack>
       </s-section>
 
-      <s-section heading="Discount redemptions">
+      <s-section heading={t("metrics.discountRedemptions")}>
         <s-stack direction="block" gap="small-200">
           <s-heading>{discountUses}</s-heading>
           <s-paragraph>
             {discountUses > 0
-              ? "Synced from Shopify automatic discounts"
-              : "Updates when shoppers use your bundle tiers"}
+              ? t("metrics.redemptionsSynced")
+              : t("metrics.redemptionsEmpty")}
           </s-paragraph>
           <Sparkline
             className={styles.sparkline}
@@ -55,13 +58,13 @@ export function DashboardMetrics({
         </s-stack>
       </s-section>
 
-      <s-section heading="Store health">
+      <s-section heading={t("metrics.storeHealth")}>
         <s-stack direction="block" gap="small-200">
-          <s-heading>{healthLabel(health.overall)}</s-heading>
+          <s-heading>{healthLabel}</s-heading>
           <s-paragraph>
             {health.overall === "healthy"
-              ? "All systems operational"
-              : "Review system checks below"}
+              ? t("metrics.allOperational")
+              : t("metrics.reviewChecks")}
           </s-paragraph>
         </s-stack>
       </s-section>

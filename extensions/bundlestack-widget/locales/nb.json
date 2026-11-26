@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Kjøp mer, spar mer",
+    "buy": "Kjøp {qty}",
+    "buy_get_free": "Kjøp {buy}, få {get} gratis",
+    "buy_save": "Kjøp {qty}, spar {saving}",
+    "buy_more_up_to": "Kjøp mer, spar inntil {saving}",
+    "save_percent": "Spar {value} %",
+    "save_amount": "Spar {value}",
+    "each": "stk",
+    "free": "Gratis",
+    "clear": "Fjern valg",
+    "preview": "Forhåndsvis den live butikken.",
+    "view_offers": "Se mengderabatter",
+    "widget": {
+      "heading": "Kjøp mer, spar mer",
+      "loading": "Laster tilbud...",
+      "powered_by": "Drevet av BundleStack"
+    }
+  }
+}

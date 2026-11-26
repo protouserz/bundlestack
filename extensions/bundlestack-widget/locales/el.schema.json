@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "Έκπτωση ποσότητας BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Τίτλος"
+      },
+      "accent": {
+        "label": "Τονισμός"
+      },
+      "background": {
+        "label": "Φόντο"
+      },
+      "text_color": {
+        "label": "Κείμενο"
+      },
+      "selected_background": {
+        "label": "Φόντο επιλεγμένης βαθμίδας"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "Προσφορές BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Τίτλος"
+      },
+      "accent": {
+        "label": "Τονισμός"
+      },
+      "background": {
+        "label": "Φόντο"
+      },
+      "text_color": {
+        "label": "Κείμενο"
+      },
+      "selected_background": {
+        "label": "Φόντο επιλεγμένης βαθμίδας"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "Σήμα προσφοράς BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "Επικάλυψη σήματος BundleStack"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "خصومات كمية BundleStack",
+    "settings": {
+      "heading": {
+        "label": "العنوان"
+      },
+      "accent": {
+        "label": "لون التمييز"
+      },
+      "background": {
+        "label": "الخلفية"
+      },
+      "text_color": {
+        "label": "النص"
+      },
+      "selected_background": {
+        "label": "خلفية المستوى المحدد"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "عروض BundleStack",
+    "settings": {
+      "heading": {
+        "label": "العنوان"
+      },
+      "accent": {
+        "label": "لون التمييز"
+      },
+      "background": {
+        "label": "الخلفية"
+      },
+      "text_color": {
+        "label": "النص"
+      },
+      "selected_background": {
+        "label": "خلفية المستوى المحدد"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "شارة عرض BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "ملصق BundleStack على الصور"
+  }
+}

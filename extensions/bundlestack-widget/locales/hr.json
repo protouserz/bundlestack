@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Kupite više, uštedite više",
+    "buy": "Kupite {qty}",
+    "buy_get_free": "Kupite {buy}, dobijte {get} besplatno",
+    "buy_save": "Kupite {qty}, uštedite {saving}",
+    "buy_more_up_to": "Kupite više, uštedite do {saving}",
+    "save_percent": "Uštedite {value} %",
+    "save_amount": "Uštedite {value}",
+    "each": "kom.",
+    "free": "Besplatno",
+    "clear": "Poništi odabir",
+    "preview": "Pregled trgovine uživo.",
+    "view_offers": "Pogledajte količinske popuste",
+    "widget": {
+      "heading": "Kupite više, uštedite više",
+      "loading": "Učitavanje ponuda...",
+      "powered_by": "Pokreće BundleStack"
+    }
+  }
+}

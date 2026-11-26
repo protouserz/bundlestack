@@ -26,6 +26,7 @@ import {
 import { applyOfferDiscountSync, deleteShopifyDiscounts } from "../models/discount.server";
 import { OfferForm } from "../components/offer-form/OfferForm";
 import { SButton, SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
 import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -88,9 +89,10 @@ export default function EditOffer() {
   const isDeleting = deleteFetcher.state !== "idle";
   const isSaving = navigation.state === "submitting";
   const formId = "edit-offer-form";
+  const { t } = useI18n();
 
   return (
-    <SPage heading="Edit offer">
+    <SPage heading={t("offers.editTitle")}>
       <Form
         id={formId}
         key={formKey}

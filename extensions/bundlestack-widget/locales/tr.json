@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Daha çok alın, daha çok kazanın",
+    "buy": "{qty} adet alın",
+    "buy_get_free": "{buy} alın, {get} bedava",
+    "buy_save": "{qty} alın, {saving} kazanın",
+    "buy_more_up_to": "Daha fazla alın, {saving}’e varan kazanın",
+    "save_percent": "%{value} kazanın",
+    "save_amount": "{value} kazanın",
+    "each": "adet",
+    "free": "Ücretsiz",
+    "clear": "Seçimi temizle",
+    "preview": "Canlı mağazayı önizleyin.",
+    "view_offers": "Hacim indirimlerini görüntüle",
+    "widget": {
+      "heading": "Daha çok alın, daha çok kazanın",
+      "loading": "Teklifler yükleniyor...",
+      "powered_by": "BundleStack tarafından desteklenir"
+    }
+  }
+}

@@ -1,5 +1,17 @@
 {
   "bundlestack": {
+    "heading": "Buy more, save more",
+    "buy": "Buy {qty}",
+    "buy_get_free": "Buy {buy} get {get} free",
+    "buy_save": "Buy {qty}, save {saving}",
+    "buy_more_up_to": "Buy more, save up to {saving}",
+    "save_percent": "Save {value}%",
+    "save_amount": "Save {value}",
+    "each": "each",
+    "free": "Free",
+    "clear": "Clear selection",
+    "preview": "Preview the live store.",
+    "view_offers": "View volume discount offers",
     "widget": {
       "heading": "Buy more, save more",
       "loading": "Loading offers...",

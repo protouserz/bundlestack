@@ -17,15 +17,40 @@ import {
 } from "../models/promotion.types";
 import { PLAN_LABELS } from "../billing.plans";
 import { SButton, SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
+import type { MessageKey } from "../i18n";
 import { PromotionTypeMark } from "../components/promotions/PromotionTypeMark";
 import styles from "../components/promotions/promotions.module.css";
 
-const TYPE_EXAMPLE: Record<PromotionType, string> = {
-  bogo: "Buy 1, get 1 free",
-  free_gift: "Free gift over $50",
-  mix_match: "Any 3, 15% off",
-  bundle_builder: "Pick a kit, save 10%",
-  fbt: "Add-on 10% off",
+const TYPE_COPY: Record<
+  PromotionType,
+  { label: MessageKey; desc: MessageKey; example: MessageKey }
+> = {
+  bogo: {
+    label: "promotions.bogo",
+    desc: "promotions.bogoDesc",
+    example: "promotions.bogoExample",
+  },
+  free_gift: {
+    label: "promotions.gifts",
+    desc: "promotions.giftsDesc",
+    example: "promotions.giftsExample",
+  },
+  mix_match: {
+    label: "promotions.mix",
+    desc: "promotions.mixDesc",
+    example: "promotions.mixExample",
+  },
+  bundle_builder: {
+    label: "promotions.builder",
+    desc: "promotions.builderDesc",
+    example: "promotions.builderExample",
+  },
+  fbt: {
+    label: "promotions.fbt",
+    desc: "promotions.fbtDesc",
+    example: "promotions.fbtExample",
+  },
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -59,24 +84,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function PromotionsHub() {
   const { counts, total, allowedByType, access } =
     useLoaderData<typeof loader>();
+  const { t, plural } = useI18n();
 
   return (
-    <SPage heading="Promotions">
+    <SPage heading={t("promotions.title")}>
       <div className={styles.page}>
         <div className={styles.intro}>
           <p className={styles.introCopy}>
             {access.advancedAllowed
-              ? "Grow order value beyond quantity breaks. Each type syncs to checkout automatically — shoppers see the deal on the product page after you save the theme embed."
-              : "Frequently bought together (upsell and cross-sell) is included. Free gifts, mix & match, builders, and extra BOGO types unlock on Pro."}
+              ? t("promotions.introPaid")
+              : t("promotions.introFree")}
           </p>
           <span className={styles.introCount}>
-            {total} promotion{total === 1 ? "" : "s"}
+            {plural("promotions.count", total)}
           </span>
         </div>
 
         <div className={styles.grid}>
           {PROMOTION_TYPES.map((type) => {
             const meta = PROMOTION_TYPE_META[type];
+            const copy = TYPE_COPY[type];
             const count = counts[type];
             const typeAllowed = allowedByType[type];
 
@@ -88,35 +115,35 @@ export default function PromotionsHub() {
                 <div className={styles.cardHeader}>
                   <PromotionTypeMark type={type} />
                   <div className={styles.cardHeading}>
-                    <h2 className={styles.cardTitle}>{meta.label}</h2>
+                    <h2 className={styles.cardTitle}>{t(copy.label)}</h2>
                     {typeAllowed ? (
                       <span
                         className={`${styles.badge}${count > 0 ? ` ${styles.badgeLive}` : ""}`}
                       >
-                        {count} live
+                        {t("promotions.live", { count })}
                       </span>
                     ) : (
                       <span className={`${styles.badge} ${styles.badgePro}`}>
-                        Pro
+                        {t("common.pro")}
                       </span>
                     )}
                   </div>
                 </div>
-                <p className={styles.cardBody}>{meta.description}</p>
-                <p className={styles.example}>{TYPE_EXAMPLE[type]}</p>
+                <p className={styles.cardBody}>{t(copy.desc)}</p>
+                <p className={styles.example}>{t(copy.example)}</p>
                 <div className={styles.actions}>
                   {typeAllowed ? (
                     <>
                       <SButton variant="primary" href={`${meta.href}/new`}>
-                        Create
+                        {t("common.create")}
                       </SButton>
                       <SButton variant="tertiary" href={meta.href}>
-                        {count > 0 ? "Manage" : "View"}
+                        {count > 0 ? t("common.manage") : t("common.view")}
                       </SButton>
                     </>
                   ) : (
                     <SButton variant="primary" href="/app/billing">
-                      Upgrade to Pro
+                      {t("common.upgradeToPro")}
                     </SButton>
                   )}
                 </div>

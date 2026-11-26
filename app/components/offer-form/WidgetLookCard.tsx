@@ -6,6 +6,8 @@ import {
   type DiscountTier,
   type WidgetLook,
 } from "../../models/offer";
+import { useI18n } from "../../i18n/I18nProvider";
+import type { MessageKey } from "../../i18n";
 import "../../../extensions/bundlestack-widget/assets/bundlestack-widget.css";
 import styles from "./offer-form.module.css";
 
@@ -16,19 +18,30 @@ type WidgetLookCardProps = {
   tiers: DiscountTier[];
 };
 
-function previewLabel(tier: DiscountTier, offerType: string) {
+function previewLabel(
+  tier: DiscountTier,
+  offerType: string,
+  t: (key: MessageKey, vars?: Record<string, string | number>) => string,
+) {
   if (isBogoOffer(offerType)) {
-    return tier.label || `Buy ${tier.minQty} get ${tier.getQty ?? 1} free`;
+    return t("storefront.buyGetFree", {
+      buy: tier.minQty,
+      get: tier.getQty ?? 1,
+    });
   }
-  if (tier.label && !/^save\s/i.test(tier.label.trim())) {
+  if (tier.label && !/^save\s/i.test(tier.label.trim()) && !/^buy\s+\d+\s+get\s+\d+\s+free$/i.test(tier.label.trim())) {
     return tier.label;
   }
-  return `Buy ${tier.minQty}`;
+  return t("storefront.buy", { qty: tier.minQty });
 }
 
-function previewBadge(tier: DiscountTier, offerType: string) {
-  if (isBogoOffer(offerType) || (tier.getQty ?? 0) > 0) return "Free";
-  return `Save ${tier.discountValue}%`;
+function previewBadge(
+  tier: DiscountTier,
+  offerType: string,
+  t: (key: MessageKey, vars?: Record<string, string | number>) => string,
+) {
+  if (isBogoOffer(offerType) || (tier.getQty ?? 0) > 0) return t("storefront.free");
+  return t("storefront.savePercent", { value: tier.discountValue });
 }
 
 function presetSelected(
@@ -51,9 +64,16 @@ export function WidgetLookCard({
   offerType,
   tiers,
 }: WidgetLookCardProps) {
+  const { t } = useI18n();
   const rows = tiers;
   const selectedIndex = Math.min(1, Math.max(0, rows.length - 1));
   const matchingTheme = isThemeLook(look);
+  const presetLabel = (id: string, fallback: string) => {
+    if (id === "theme") return t("widget.matchTheme");
+    if (id === "emerald") return t("widget.emerald");
+    if (id === "navy") return t("widget.navy");
+    return fallback;
+  };
 
   const setField = <K extends keyof WidgetLook>(field: K, value: WidgetLook[K]) => {
     onChange({ ...look, matchTheme: false, [field]: value });
@@ -61,13 +81,12 @@ export function WidgetLookCard({
 
   return (
     <section className={styles.card}>
-      <h2 className={styles.cardTitle}>Widget look</h2>
+      <h2 className={styles.cardTitle}>{t("widget.look")}</h2>
       <p className={styles.cardDescription}>
-        Heading and colors for the product-page widget. Match theme uses your
-        store’s buttons and text. Checkout discounts stay the same.
+        {t("widget.lookHelp")}
       </p>
 
-      <div className={styles.lookPresets} role="group" aria-label="Look presets">
+      <div className={styles.lookPresets} role="group" aria-label={t("widget.presets")}>
         {WIDGET_LOOK_PRESETS.map((preset) => {
           const selected = presetSelected(preset, look);
           return (
@@ -85,14 +104,14 @@ export function WidgetLookCard({
                 })
               }
             >
-              {preset.label}
+              {presetLabel(preset.id, preset.label)}
             </button>
           );
         })}
       </div>
 
       <label className={styles.field}>
-        <span className={styles.fieldLabel}>Heading</span>
+        <span className={styles.fieldLabel}>{t("widget.heading")}</span>
         <input
           className={styles.input}
           name="widgetHeading"
@@ -112,17 +131,16 @@ export function WidgetLookCard({
 
       {matchingTheme ? (
         <p className={styles.cardDescription}>
-          Live product pages use Add to cart and text colors from your theme.
-          The preview below is an example.
+          {t("widget.liveTheme")}
         </p>
       ) : (
         <div className={styles.lookColors}>
           {(
             [
-              ["accent", "Accent", look.accent],
-              ["background", "Background", look.background],
-              ["textColor", "Text", look.textColor],
-              ["selectedBackground", "Selected row", look.selectedBackground],
+              ["accent", t("widget.accent"), look.accent],
+              ["background", t("widget.background"), look.background],
+              ["textColor", t("widget.text"), look.textColor],
+              ["selectedBackground", t("widget.selectedRow"), look.selectedBackground],
             ] as const
           ).map(([field, label, value]) => (
             <label key={field} className={styles.colorField}>
@@ -131,7 +149,7 @@ export function WidgetLookCard({
                 <input
                   type="color"
                   value={value}
-                  aria-label={`${label} color`}
+                  aria-label={t("widget.colorAria", { label })}
                   onChange={(event) => setField(field, event.target.value)}
                 />
                 <input
@@ -154,7 +172,7 @@ export function WidgetLookCard({
         </div>
       )}
 
-      <p className={styles.cardDescription}>Preview</p>
+      <p className={styles.cardDescription}>{t("widget.preview")}</p>
       <div
         className="bundlestack-widget"
         style={{
@@ -186,11 +204,11 @@ export function WidgetLookCard({
               >
                 <span className="bundlestack-widget__tier-radio" aria-hidden="true" />
                 <span className="bundlestack-widget__tier-label">
-                  {previewLabel(tier, offerType)}
+                  {previewLabel(tier, offerType, t)}
                 </span>
                 <span className="bundlestack-widget__tier-meta">
                   <span className="bundlestack-widget__tier-badge">
-                    {previewBadge(tier, offerType)}
+                    {previewBadge(tier, offerType, t)}
                   </span>
                 </span>
               </div>

@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "زیادہ خریدیں، زیادہ بچائیں",
+    "buy": "{qty} خریدیں",
+    "buy_get_free": "{buy} خریدیں، {get} مفت پائیں",
+    "buy_save": "{qty} خریدیں، {saving} بچائیں",
+    "buy_more_up_to": "اور خریدیں، {saving} تک بچائیں",
+    "save_percent": "{value}% بچائیں",
+    "save_amount": "{value} بچائیں",
+    "each": "فی عدد",
+    "free": "مفت",
+    "clear": "انتخاب صاف کریں",
+    "preview": "لائیو اسٹور کا پیش منظر۔",
+    "view_offers": "والیوم ڈسکاؤنٹ دیکھیں",
+    "widget": {
+      "heading": "زیادہ خریدیں، زیادہ بچائیں",
+      "loading": "آفرز لوڈ ہو رہی ہیں...",
+      "powered_by": "BundleStack سے منسلک"
+    }
+  }
+}

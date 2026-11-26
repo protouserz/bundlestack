@@ -83,4 +83,24 @@ describe("promotion discounts", () => {
       fixedAmount: { amount: "5.00", appliesToEachItem: true },
     });
   });
+
+  it("localizes checkout messages for the cart language", () => {
+    const result = cartLinesDiscountsGenerateRun({
+      ...input(
+        {
+          type: "free_gift",
+          minSubtotal: 20,
+          giftProductIds: ["gid://shopify/Product/2"],
+          giftQuantity: 1,
+          productIds: ["gid://shopify/Product/1"],
+        },
+        3,
+      ),
+      localization: { language: { isoCode: "ES" } },
+    } as never);
+
+    expect(
+      result.operations[0]?.productDiscountsAdd?.candidates[0]?.message,
+    ).toBe("Regalo");
+  });
 });

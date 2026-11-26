@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Pirkite daugiau, sutaupykite daugiau",
+    "buy": "Pirkite {qty}",
+    "buy_get_free": "Pirkite {buy}, gaukite {get} nemokamai",
+    "buy_save": "Pirkite {qty}, sutaupykite {saving}",
+    "buy_more_up_to": "Pirkite daugiau, sutaupykite iki {saving}",
+    "save_percent": "Sutaupykite {value} %",
+    "save_amount": "Sutaupykite {value}",
+    "each": "vnt.",
+    "free": "Nemokamai",
+    "clear": "Išvalyti pasirinkimą",
+    "preview": "Peržiūrėti veikiančią parduotuvę.",
+    "view_offers": "Peržiūrėti kiekio nuolaidas",
+    "widget": {
+      "heading": "Pirkite daugiau, sutaupykite daugiau",
+      "loading": "Įkeliami pasiūlymai...",
+      "powered_by": "Veikia su BundleStack"
+    }
+  }
+}

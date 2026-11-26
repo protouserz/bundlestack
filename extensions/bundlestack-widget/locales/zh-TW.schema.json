@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack 滿量優惠",
+    "settings": {
+      "heading": {
+        "label": "標題"
+      },
+      "accent": {
+        "label": "強調色"
+      },
+      "background": {
+        "label": "背景"
+      },
+      "text_color": {
+        "label": "文字"
+      },
+      "selected_background": {
+        "label": "選取層級背景"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack 優惠",
+    "settings": {
+      "heading": {
+        "label": "標題"
+      },
+      "accent": {
+        "label": "強調色"
+      },
+      "background": {
+        "label": "背景"
+      },
+      "text_color": {
+        "label": "文字"
+      },
+      "selected_background": {
+        "label": "選取層級背景"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack 優惠徽章"
+  },
+  "bundle-badge-overlay": {
+    "name": "圖片上的 BundleStack 徽章"
+  }
+}

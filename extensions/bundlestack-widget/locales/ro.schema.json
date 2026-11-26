@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "Reduceri de cantitate BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Titlu"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Fundal"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Fundal nivel selectat"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "Oferte BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Titlu"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Fundal"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Fundal nivel selectat"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "Insignă ofertă BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "Insignă BundleStack pe fotografii"
+  }
+}

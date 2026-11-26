@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Koop meer, bespaar meer",
+    "buy": "Koop {qty}",
+    "buy_get_free": "Koop {buy}, krijg {get} gratis",
+    "buy_save": "Koop {qty}, bespaar {saving}",
+    "buy_more_up_to": "Koop meer, bespaar tot {saving}",
+    "save_percent": "Bespaar {value}%",
+    "save_amount": "Bespaar {value}",
+    "each": "per stuk",
+    "free": "Gratis",
+    "clear": "Selectie wissen",
+    "preview": "Voorbeeld van de live winkel.",
+    "view_offers": "Bekijk staffelkortingen",
+    "widget": {
+      "heading": "Koop meer, bespaar meer",
+      "loading": "Aanbiedingen laden...",
+      "powered_by": "Mogelijk gemaakt door BundleStack"
+    }
+  }
+}

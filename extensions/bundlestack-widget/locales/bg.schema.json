@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack отстъпки за количество",
+    "settings": {
+      "heading": {
+        "label": "Заглавие"
+      },
+      "accent": {
+        "label": "Акцент"
+      },
+      "background": {
+        "label": "Фон"
+      },
+      "text_color": {
+        "label": "Текст"
+      },
+      "selected_background": {
+        "label": "Фон на избраното ниво"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack оферти",
+    "settings": {
+      "heading": {
+        "label": "Заглавие"
+      },
+      "accent": {
+        "label": "Акцент"
+      },
+      "background": {
+        "label": "Фон"
+      },
+      "text_color": {
+        "label": "Текст"
+      },
+      "selected_background": {
+        "label": "Фон на избраното ниво"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack етикет"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack стикер върху снимки"
+  }
+}

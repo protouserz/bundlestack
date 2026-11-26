@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "اشترِ أكثر ووفّر أكثر",
+    "buy": "اشترِ {qty}",
+    "buy_get_free": "اشترِ {buy} واحصل على {get} مجانًا",
+    "buy_save": "اشترِ {qty} ووفّر {saving}",
+    "buy_more_up_to": "اشترِ المزيد ووفّر حتى {saving}",
+    "save_percent": "وفّر {value}%",
+    "save_amount": "وفّر {value}",
+    "each": "للقطعة",
+    "free": "مجاني",
+    "clear": "إلغاء التحديد",
+    "preview": "معاينة المتجر المباشر.",
+    "view_offers": "عرض عروض الخصم حسب الكمية",
+    "widget": {
+      "heading": "اشترِ أكثر ووفّر أكثر",
+      "loading": "جارٍ تحميل العروض...",
+      "powered_by": "مدعوم من BundleStack"
+    }
+  }
+}

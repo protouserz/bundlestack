@@ -17,6 +17,7 @@ import {
 } from "../models/coupon.server";
 import { deleteShopifyDiscountCodes } from "../models/discount-code.server";
 import { SButton, SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
 import styles from "../components/promotions/promotions.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -82,10 +83,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 export default function CouponsIndex() {
   const { coupons, access } = useLoaderData<typeof loader>();
   const submit = useSubmit();
+  const { t } = useI18n();
 
   if (!access.allowed) {
     return (
-      <SPage heading="Coupons">
+      <SPage heading={t("coupons.title")}>
         <s-banner tone="warning">
           <s-stack direction="block" gap="base">
             <s-text>
@@ -93,7 +95,7 @@ export default function CouponsIndex() {
               current plan is <strong>{access.planLabel}</strong>.
             </s-text>
             <SButton variant="primary" href="/app/billing">
-              Upgrade to Pro
+              {t("common.upgradeToPro")}
             </SButton>
           </s-stack>
         </s-banner>
@@ -106,9 +108,9 @@ export default function CouponsIndex() {
   };
 
   return (
-    <SPage heading="Coupons">
+    <SPage heading={t("coupons.title")}>
       <SButton slot="primary-action" variant="primary" href="/app/coupons/new">
-        Create coupon
+        {t("coupons.create")}
       </SButton>
 
       <div className={styles.page}>

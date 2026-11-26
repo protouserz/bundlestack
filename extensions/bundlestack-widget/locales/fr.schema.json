@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "Remises volume BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Titre"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Arrière-plan"
+      },
+      "text_color": {
+        "label": "Texte"
+      },
+      "selected_background": {
+        "label": "Fond du palier sélectionné"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "Offres BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Titre"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Arrière-plan"
+      },
+      "text_color": {
+        "label": "Texte"
+      },
+      "selected_background": {
+        "label": "Fond du palier sélectionné"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "Badge d’offre BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "Badge BundleStack sur les photos"
+  }
+}

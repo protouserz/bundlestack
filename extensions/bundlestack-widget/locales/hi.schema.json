@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack मात्रा छूट",
+    "settings": {
+      "heading": {
+        "label": "शीर्षक"
+      },
+      "accent": {
+        "label": "एक्सेंट"
+      },
+      "background": {
+        "label": "पृष्ठभूमि"
+      },
+      "text_color": {
+        "label": "टेक्स्ट"
+      },
+      "selected_background": {
+        "label": "चयनित स्तर की पृष्ठभूमि"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack ऑफ़र",
+    "settings": {
+      "heading": {
+        "label": "शीर्षक"
+      },
+      "accent": {
+        "label": "एक्सेंट"
+      },
+      "background": {
+        "label": "पृष्ठभूमि"
+      },
+      "text_color": {
+        "label": "टेक्स्ट"
+      },
+      "selected_background": {
+        "label": "चयनित स्तर की पृष्ठभूमि"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack डील बैज"
+  },
+  "bundle-badge-overlay": {
+    "name": "फ़ोटो पर BundleStack बैज"
+  }
+}

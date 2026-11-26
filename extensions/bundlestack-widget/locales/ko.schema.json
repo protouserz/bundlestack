@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack 수량 할인",
+    "settings": {
+      "heading": {
+        "label": "제목"
+      },
+      "accent": {
+        "label": "강조색"
+      },
+      "background": {
+        "label": "배경"
+      },
+      "text_color": {
+        "label": "텍스트"
+      },
+      "selected_background": {
+        "label": "선택된 단계 배경"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack 오퍼",
+    "settings": {
+      "heading": {
+        "label": "제목"
+      },
+      "accent": {
+        "label": "강조색"
+      },
+      "background": {
+        "label": "배경"
+      },
+      "text_color": {
+        "label": "텍스트"
+      },
+      "selected_background": {
+        "label": "선택된 단계 배경"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack 딜 배지"
+  },
+  "bundle-badge-overlay": {
+    "name": "사진 위 BundleStack 배지"
+  }
+}

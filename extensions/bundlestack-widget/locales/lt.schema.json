@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack kiekio nuolaidos",
+    "settings": {
+      "heading": {
+        "label": "Antraštė"
+      },
+      "accent": {
+        "label": "Akcentas"
+      },
+      "background": {
+        "label": "Fonas"
+      },
+      "text_color": {
+        "label": "Tekstas"
+      },
+      "selected_background": {
+        "label": "Pasirinkto lygio fonas"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack pasiūlymai",
+    "settings": {
+      "heading": {
+        "label": "Antraštė"
+      },
+      "accent": {
+        "label": "Akcentas"
+      },
+      "background": {
+        "label": "Fonas"
+      },
+      "text_color": {
+        "label": "Tekstas"
+      },
+      "selected_background": {
+        "label": "Pasirinkto lygio fonas"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack pasiūlymo ženklelis"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack ženklelis nuotraukose"
+  }
+}

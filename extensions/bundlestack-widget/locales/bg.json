@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Купете повече, спестете повече",
+    "buy": "Купете {qty}",
+    "buy_get_free": "Купете {buy}, вземете {get} безплатно",
+    "buy_save": "Купете {qty}, спестете {saving}",
+    "buy_more_up_to": "Купете повече, спестете до {saving}",
+    "save_percent": "Спестете {value}%",
+    "save_amount": "Спестете {value}",
+    "each": "бр.",
+    "free": "Безплатно",
+    "clear": "Изчисти избора",
+    "preview": "Преглед на живия магазин.",
+    "view_offers": "Вижте офертите за количество",
+    "widget": {
+      "heading": "Купете повече, спестете повече",
+      "loading": "Зареждане на оферти...",
+      "powered_by": "С подкрепата на BundleStack"
+    }
+  }
+}

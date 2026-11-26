@@ -15,6 +15,7 @@ export type HealthCheck = {
   label: string;
   status: "ok" | "warning" | "error";
   message: string;
+  count?: number;
   fix?: HealthFixAction;
 };
 
@@ -56,6 +57,7 @@ export async function getShopHealth(
       label: "Active offers",
       status: "warning",
       message: "No active offers. Create one and set status to Active.",
+      count: 0,
       fix: {
         intent: "create-offer",
         label: "Create offer",
@@ -68,6 +70,7 @@ export async function getShopHealth(
       label: "Active offers",
       status: "ok",
       message: `${activeOffers.length} active offer(s) configured.`,
+      count: activeOffers.length,
     });
   }
 
@@ -81,6 +84,7 @@ export async function getShopHealth(
       label: "Shopify discounts",
       status: "error",
       message: `${offersMissingDiscounts.length} active offer(s) missing synced discounts.`,
+      count: offersMissingDiscounts.length,
       fix: {
         intent: "sync-discounts",
         label: "Sync discounts",
@@ -108,6 +112,7 @@ export async function getShopHealth(
       label: "Discount verification",
       status: "error",
       message: `${missingInShopify} discount(s) missing in Shopify.`,
+      count: missingInShopify,
       fix: {
         intent: "sync-discounts",
         label: "Recreate discounts",

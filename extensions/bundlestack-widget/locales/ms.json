@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Beli lagi, jimat lagi",
+    "buy": "Beli {qty}",
+    "buy_get_free": "Beli {buy}, percuma {get}",
+    "buy_save": "Beli {qty}, jimat {saving}",
+    "buy_more_up_to": "Beli lagi, jimat sehingga {saving}",
+    "save_percent": "Jimat {value}%",
+    "save_amount": "Jimat {value}",
+    "each": "seunit",
+    "free": "Percuma",
+    "clear": "Kosongkan pilihan",
+    "preview": "Pratonton kedai langsung.",
+    "view_offers": "Lihat tawaran diskaun volum",
+    "widget": {
+      "heading": "Beli lagi, jimat lagi",
+      "loading": "Memuatkan tawaran...",
+      "powered_by": "Dikuasakan oleh BundleStack"
+    }
+  }
+}

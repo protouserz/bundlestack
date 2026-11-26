@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack množstevní slevy",
+    "settings": {
+      "heading": {
+        "label": "Nadpis"
+      },
+      "accent": {
+        "label": "Zvýraznění"
+      },
+      "background": {
+        "label": "Pozadí"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Pozadí vybrané úrovně"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack nabídky",
+    "settings": {
+      "heading": {
+        "label": "Nadpis"
+      },
+      "accent": {
+        "label": "Zvýraznění"
+      },
+      "background": {
+        "label": "Pozadí"
+      },
+      "text_color": {
+        "label": "Text"
+      },
+      "selected_background": {
+        "label": "Pozadí vybrané úrovně"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack štítek"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack štítek na fotkách"
+  }
+}

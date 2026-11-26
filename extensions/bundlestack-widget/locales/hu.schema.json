@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack mennyiségi kedvezmények",
+    "settings": {
+      "heading": {
+        "label": "Címsor"
+      },
+      "accent": {
+        "label": "Kiemelés"
+      },
+      "background": {
+        "label": "Háttér"
+      },
+      "text_color": {
+        "label": "Szöveg"
+      },
+      "selected_background": {
+        "label": "Kiválasztott szint háttere"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack ajánlatok",
+    "settings": {
+      "heading": {
+        "label": "Címsor"
+      },
+      "accent": {
+        "label": "Kiemelés"
+      },
+      "background": {
+        "label": "Háttér"
+      },
+      "text_color": {
+        "label": "Szöveg"
+      },
+      "selected_background": {
+        "label": "Kiválasztott szint háttere"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack ajánlatjelvény"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack jelvény a fotókon"
+  }
+}

@@ -15,6 +15,7 @@ import {
 import { applyOfferDiscountSync } from "../models/discount.server";
 import { OfferForm } from "../components/offer-form/OfferForm";
 import { SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
 import styles from "../components/offer-form/offer-form.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -49,9 +50,10 @@ export default function NewOffer() {
   const [formKey, setFormKey] = useState(0);
   const isSaving = navigation.state === "submitting";
   const formId = "create-offer-form";
+  const { t } = useI18n();
 
   return (
-    <SPage heading="Create offer">
+    <SPage heading={t("offers.createTitle")}>
       <Form
         id={formId}
         key={formKey}

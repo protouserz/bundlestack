@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "Diskon kuantitas BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Judul"
+      },
+      "accent": {
+        "label": "Aksen"
+      },
+      "background": {
+        "label": "Latar"
+      },
+      "text_color": {
+        "label": "Teks"
+      },
+      "selected_background": {
+        "label": "Latar tingkat terpilih"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "Penawaran BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Judul"
+      },
+      "accent": {
+        "label": "Aksen"
+      },
+      "background": {
+        "label": "Latar"
+      },
+      "text_color": {
+        "label": "Teks"
+      },
+      "selected_background": {
+        "label": "Latar tingkat terpilih"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "Lencana penawaran BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "Lencana BundleStack di foto"
+  }
+}

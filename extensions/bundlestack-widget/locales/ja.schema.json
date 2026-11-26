@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack まとめ買い割引",
+    "settings": {
+      "heading": {
+        "label": "見出し"
+      },
+      "accent": {
+        "label": "アクセント"
+      },
+      "background": {
+        "label": "背景"
+      },
+      "text_color": {
+        "label": "テキスト"
+      },
+      "selected_background": {
+        "label": "選択中の背景"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack オファー",
+    "settings": {
+      "heading": {
+        "label": "見出し"
+      },
+      "accent": {
+        "label": "アクセント"
+      },
+      "background": {
+        "label": "背景"
+      },
+      "text_color": {
+        "label": "テキスト"
+      },
+      "selected_background": {
+        "label": "選択中の背景"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack お得バッジ"
+  },
+  "bundle-badge-overlay": {
+    "name": "写真の BundleStack バッジ"
+  }
+}

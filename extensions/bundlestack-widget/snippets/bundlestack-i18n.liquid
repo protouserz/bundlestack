@@ -1,0 +1,23 @@
+{% doc %}
+  Injects current-locale storefront strings for widget, overlay, and badge JS.
+  Keep this out of the JS bundles so they stay under Shopify's 10KB asset limit.
+
+  @example
+  {% render 'bundlestack-i18n' %}
+{% enddoc %}
+<script>
+window.__bsI18n = window.__bsI18n || {
+  heading: {{ 'bundlestack.heading' | t | json }},
+  buy: {{ 'bundlestack.buy' | t | json }},
+  buyGetFree: {{ 'bundlestack.buy_get_free' | t | json }},
+  buySave: {{ 'bundlestack.buy_save' | t | json }},
+  buyMoreUpTo: {{ 'bundlestack.buy_more_up_to' | t | json }},
+  savePercent: {{ 'bundlestack.save_percent' | t | json }},
+  saveAmount: {{ 'bundlestack.save_amount' | t | json }},
+  each: {{ 'bundlestack.each' | t | json }},
+  free: {{ 'bundlestack.free' | t | json }},
+  clear: {{ 'bundlestack.clear' | t | json }},
+  preview: {{ 'bundlestack.preview' | t | json }},
+  viewOffers: {{ 'bundlestack.view_offers' | t | json }}
+};
+</script>

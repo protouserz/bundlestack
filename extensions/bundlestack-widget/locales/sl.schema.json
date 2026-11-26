@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack količinski popusti",
+    "settings": {
+      "heading": {
+        "label": "Naslov"
+      },
+      "accent": {
+        "label": "Poudarek"
+      },
+      "background": {
+        "label": "Ozadje"
+      },
+      "text_color": {
+        "label": "Besedilo"
+      },
+      "selected_background": {
+        "label": "Ozadje izbrane stopnje"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack ponudbe",
+    "settings": {
+      "heading": {
+        "label": "Naslov"
+      },
+      "accent": {
+        "label": "Poudarek"
+      },
+      "background": {
+        "label": "Ozadje"
+      },
+      "text_color": {
+        "label": "Besedilo"
+      },
+      "selected_background": {
+        "label": "Ozadje izbrane stopnje"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack značka ponudbe"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack značka na fotografijah"
+  }
+}

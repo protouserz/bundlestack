@@ -15,6 +15,7 @@ import { authenticate } from "../shopify.server";
 import { StatCard } from "../components/StatCard";
 import { toShopifyAdminProtocol } from "../components/AdminLink";
 import { SButton, SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
 import styles from "../components/ui.module.css";
 import {
   billingReturnUrl,
@@ -435,8 +436,10 @@ export default function BillingPage() {
     openBillingHandoff(fetcherData.exitIframePath);
   }, [fetcherData]);
 
+  const { t } = useI18n();
+
   return (
-    <SPage heading="Billing & uninstall">
+    <SPage heading={t("billing.title")}>
       <s-stack direction="block" gap="large">
         {errorMessage && (
           <s-banner tone="critical">{errorMessage}</s-banner>

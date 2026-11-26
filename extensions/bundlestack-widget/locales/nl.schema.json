@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack staffelkortingen",
+    "settings": {
+      "heading": {
+        "label": "Kop"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Achtergrond"
+      },
+      "text_color": {
+        "label": "Tekst"
+      },
+      "selected_background": {
+        "label": "Achtergrond geselecteerde staffel"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack-aanbiedingen",
+    "settings": {
+      "heading": {
+        "label": "Kop"
+      },
+      "accent": {
+        "label": "Accent"
+      },
+      "background": {
+        "label": "Achtergrond"
+      },
+      "text_color": {
+        "label": "Tekst"
+      },
+      "selected_background": {
+        "label": "Achtergrond geselecteerde staffel"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack dealbadge"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack-badge op foto’s"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "ซื้อมากขึ้น ประหยัดมากขึ้น",
+    "buy": "ซื้อ {qty}",
+    "buy_get_free": "ซื้อ {buy} แถม {get} ฟรี",
+    "buy_save": "ซื้อ {qty} ประหยัด {saving}",
+    "buy_more_up_to": "ซื้อเพิ่ม ประหยัดสูงสุด {saving}",
+    "save_percent": "ประหยัด {value}%",
+    "save_amount": "ประหยัด {value}",
+    "each": "ชิ้น",
+    "free": "ฟรี",
+    "clear": "ล้างการเลือก",
+    "preview": "ดูตัวอย่างร้านค้าจริง",
+    "view_offers": "ดูส่วนลดตามจำนวน",
+    "widget": {
+      "heading": "ซื้อมากขึ้น ประหยัดมากขึ้น",
+      "loading": "กำลังโหลดข้อเสนอ...",
+      "powered_by": "ขับเคลื่อนโดย BundleStack"
+    }
+  }
+}

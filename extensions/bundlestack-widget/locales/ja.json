@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "まとめ買いでさらにお得",
+    "buy": "{qty}点買う",
+    "buy_get_free": "{buy}点買うと{get}点無料",
+    "buy_save": "{qty}点買うと{saving}お得",
+    "buy_more_up_to": "もっと買うと最大{saving}お得",
+    "save_percent": "{value}%オフ",
+    "save_amount": "{value}お得",
+    "each": "あたり",
+    "free": "無料",
+    "clear": "選択を解除",
+    "preview": "公開ストアをプレビュー。",
+    "view_offers": "まとめ買い割引を見る",
+    "widget": {
+      "heading": "まとめ買いでさらにお得",
+      "loading": "オファーを読み込み中...",
+      "powered_by": "Powered by BundleStack"
+    }
+  }
+}

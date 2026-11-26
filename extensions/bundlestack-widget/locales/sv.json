@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Köp mer, spara mer",
+    "buy": "Köp {qty}",
+    "buy_get_free": "Köp {buy}, få {get} gratis",
+    "buy_save": "Köp {qty}, spara {saving}",
+    "buy_more_up_to": "Köp mer, spara upp till {saving}",
+    "save_percent": "Spara {value} %",
+    "save_amount": "Spara {value}",
+    "each": "st",
+    "free": "Gratis",
+    "clear": "Rensa val",
+    "preview": "Förhandsgranska den livebutiken.",
+    "view_offers": "Visa volymrabatter",
+    "widget": {
+      "heading": "Köp mer, spara mer",
+      "loading": "Laddar erbjudanden...",
+      "powered_by": "Drivs av BundleStack"
+    }
+  }
+}

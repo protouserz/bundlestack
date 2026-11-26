@@ -1,6 +1,7 @@
 import type { ElementType } from "react";
 import { AdminDeepLinkButton, ExternalLinkButton } from "../AdminLink";
 import { SButton } from "../polaris";
+import { useI18n } from "../../i18n/I18nProvider";
 import styles from "./dashboard.module.css";
 
 type SetupGuideProps = {
@@ -27,44 +28,45 @@ export function SetupGuide({
   productTitle,
   dismissFetcher,
 }: SetupGuideProps) {
+  const { t } = useI18n();
   const steps = hasOffers
     ? [
         {
           id: "offer",
           done: false,
-          title: "Change products and discounts",
-          body: "Checkout already runs Buy 2 save 10% and Buy 3 save 15% on every product. Pick specific products, change the percents, or switch to BOGO.",
+          title: t("setup.changeProductsTitle"),
+          body: t("setup.changeProductsBody"),
           action: (
             <SButton href={customizeOfferHref} variant="primary">
-              Customize offer
+              {t("dashboard.customizeOffer")}
             </SButton>
           ),
         },
         {
           id: "theme",
           done: false,
-          title: "Show this on product pages",
-          body: "Checkout already works. One Save in the theme editor puts the widget above Add to cart. Heading and colors are in the block settings.",
+          title: t("setup.showWidgetTitle"),
+          body: t("setup.showWidgetBody"),
           action: (
             <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
-              Show on product pages
+              {t("dashboard.showOnProductPages")}
             </AdminDeepLinkButton>
           ),
         },
         {
           id: "storefront",
           done: false,
-          title: "Confirm on a live product",
+          title: t("setup.confirmTitle"),
           body: productTitle
-            ? `After you save the theme, open ${productTitle}. The same widget should appear above Add to cart.`
-            : "After you save the theme, open any product. The same widget should appear above Add to cart.",
+            ? t("setup.confirmBodyNamed", { title: productTitle })
+            : t("setup.confirmBody"),
           action: storefrontProductUrl ? (
             <ExternalLinkButton href={storefrontProductUrl}>
-              Preview on a live product
+              {t("setup.previewLive")}
             </ExternalLinkButton>
           ) : (
             <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
-              Preview on a live product
+              {t("setup.previewLive")}
             </AdminDeepLinkButton>
           ),
         },
@@ -73,33 +75,32 @@ export function SetupGuide({
         {
           id: "offer",
           done: false,
-          title: "Create an offer",
-          body: "Set Buy 2 / Buy 3 quantity breaks or a buy-one-get-one-free deal, then set the offer to Active.",
+          title: t("setup.createTitle"),
+          body: t("setup.createBody"),
           action: (
             <SButton href="/app/offers/new" variant="primary">
-              Create offer
+              {t("dashboard.createOffer")}
             </SButton>
           ),
         },
         {
           id: "theme",
           done: false,
-          title: "Show offers on product pages",
-          body: "Checkout already works once an offer is active. One Save in the theme editor puts the widget on product pages.",
+          title: t("setup.showOffersTitle"),
+          body: t("setup.showOffersBody"),
           action: (
             <AdminDeepLinkButton href={themeEditorUrl} variant="secondary">
-              Show on product pages
+              {t("dashboard.showOnProductPages")}
             </AdminDeepLinkButton>
           ),
         },
       ];
 
   return (
-    <s-section heading="Make it yours">
+    <s-section heading={t("setup.heading")}>
       <div className={styles.setupGuideHeader}>
         <p className={styles.setupGuideSubtitle}>
-          The default offer is already live at checkout. Change products and
-          percents first, then optionally show the widget on product pages.
+          {t("setup.subtitle")}
         </p>
         <dismissFetcher.Form method="post">
           <input type="hidden" name="intent" value="dismiss-onboarding" />
@@ -108,7 +109,7 @@ export function SetupGuide({
             variant="tertiary"
             {...(dismissFetcher.state !== "idle" ? { loading: true } : {})}
           >
-            Dismiss
+            {t("common.dismiss")}
           </SButton>
         </dismissFetcher.Form>
       </div>

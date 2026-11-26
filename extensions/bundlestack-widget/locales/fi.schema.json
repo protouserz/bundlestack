@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "BundleStack-määräalennukset",
+    "settings": {
+      "heading": {
+        "label": "Otsikko"
+      },
+      "accent": {
+        "label": "Korostus"
+      },
+      "background": {
+        "label": "Tausta"
+      },
+      "text_color": {
+        "label": "Teksti"
+      },
+      "selected_background": {
+        "label": "Valitun tason tausta"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "BundleStack-tarjoukset",
+    "settings": {
+      "heading": {
+        "label": "Otsikko"
+      },
+      "accent": {
+        "label": "Korostus"
+      },
+      "background": {
+        "label": "Tausta"
+      },
+      "text_color": {
+        "label": "Teksti"
+      },
+      "selected_background": {
+        "label": "Valitun tason tausta"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "BundleStack-tarjousmerkki"
+  },
+  "bundle-badge-overlay": {
+    "name": "BundleStack-merkki kuvissa"
+  }
+}

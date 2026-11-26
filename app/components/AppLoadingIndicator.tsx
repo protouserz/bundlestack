@@ -1,7 +1,9 @@
 import { useNavigation } from "react-router";
+import { useI18n } from "../i18n/I18nProvider";
 
 export function AppLoadingIndicator() {
   const navigation = useNavigation();
+  const { t } = useI18n();
 
   if (navigation.state !== "loading") {
     return null;
@@ -11,7 +13,7 @@ export function AppLoadingIndicator() {
     <div
       role="status"
       aria-live="polite"
-      aria-label="Loading"
+      aria-label={t("common.loading")}
       style={{
         position: "sticky",
         top: 0,

@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Mua nhiều, tiết kiệm nhiều",
+    "buy": "Mua {qty}",
+    "buy_get_free": "Mua {buy}, tặng {get}",
+    "buy_save": "Mua {qty}, tiết kiệm {saving}",
+    "buy_more_up_to": "Mua thêm, tiết kiệm đến {saving}",
+    "save_percent": "Tiết kiệm {value}%",
+    "save_amount": "Tiết kiệm {value}",
+    "each": "mỗi cái",
+    "free": "Miễn phí",
+    "clear": "Xóa lựa chọn",
+    "preview": "Xem trước cửa hàng trực tiếp.",
+    "view_offers": "Xem ưu đãi theo số lượng",
+    "widget": {
+      "heading": "Mua nhiều, tiết kiệm nhiều",
+      "loading": "Đang tải ưu đãi...",
+      "powered_by": "Được cung cấp bởi BundleStack"
+    }
+  }
+}

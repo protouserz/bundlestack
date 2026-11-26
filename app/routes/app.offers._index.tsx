@@ -16,6 +16,7 @@ import {
 } from "../models/bundle.server";
 import { deleteShopifyDiscounts } from "../models/discount.server";
 import { SButton, SPage } from "../components/polaris";
+import { useI18n } from "../i18n/I18nProvider";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -53,23 +54,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 export default function OffersIndex() {
   const { offers } = useLoaderData<typeof loader>();
   const submit = useSubmit();
+  const { t, plural } = useI18n();
 
   const handleDeleteAll = () => {
     submit({ intent: "delete-all" }, { method: "post" });
   };
 
   return (
-    <SPage heading="Offers">
+    <SPage heading={t("offers.title")}>
       <SButton slot="primary-action" variant="primary" href="/app/offers/new">
-        Create offer
+        {t("offers.create")}
       </SButton>
 
       <s-stack direction="block" gap="large">
         <s-box padding="large" borderWidth="base" borderRadius="base" background="subdued">
           <s-stack direction="inline" gap="base">
             <s-text tone="neutral">
-              Quantity-break and buy-one-get-one offers encourage shoppers to
-              buy more — synced automatically as Shopify discounts at checkout.
+              {t("offers.intro")}
             </s-text>
             {offers.length > 0 && (
               <SButton
@@ -78,7 +79,7 @@ export default function OffersIndex() {
                 command="--show"
                 commandFor="delete-all-offers-modal"
               >
-                Delete all
+                {t("common.deleteAll")}
               </SButton>
             )}
           </s-stack>
@@ -86,13 +87,13 @@ export default function OffersIndex() {
 
         {offers.length === 0 ? (
           <EmptyState
-            heading="No offers yet"
-            description='Create a quantity-break offer — e.g. "Buy 2, save 10%" — or a buy-one-get-one-free deal, then assign it to products.'
-            actionLabel="Create offer"
+            heading={t("offers.emptyHeading")}
+            description={t("offers.emptyBody")}
+            actionLabel={t("offers.create")}
             actionHref="/app/offers/new"
           />
         ) : (
-          <s-section heading={`${offers.length} offer${offers.length === 1 ? "" : "s"}`}>
+          <s-section heading={plural("offers.count", offers.length)}>
             <s-stack direction="block" gap="base">
               {offers.map((offer) => (
                 <OfferCard
@@ -110,14 +111,12 @@ export default function OffersIndex() {
       {offers.length > 0 && (
         <s-modal
           id="delete-all-offers-modal"
-          heading="Delete all offers?"
-          accessibilityLabel="Confirm deleting all offers"
+          heading={t("offers.deleteAllTitle")}
+          accessibilityLabel={t("offers.deleteAllA11y")}
         >
           <s-stack direction="block" gap="base">
             <s-paragraph>
-              This will permanently delete {offers.length} offer
-              {offers.length === 1 ? "" : "s"} and remove all synced Shopify
-              discounts. This action cannot be undone.
+              {t("offers.deleteAllBody", { count: offers.length })}
             </s-paragraph>
           </s-stack>
 
@@ -127,7 +126,7 @@ export default function OffersIndex() {
             commandFor="delete-all-offers-modal"
             command="--hide"
           >
-            Cancel
+            {t("common.cancel")}
           </SButton>
           <SButton
             slot="primary-action"
@@ -135,7 +134,7 @@ export default function OffersIndex() {
             tone="critical"
             onClick={handleDeleteAll}
           >
-            Delete all
+            {t("common.deleteAll")}
           </SButton>
         </s-modal>
       )}

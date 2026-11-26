@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "ส่วนลดตามจำนวน BundleStack",
+    "settings": {
+      "heading": {
+        "label": "หัวข้อ"
+      },
+      "accent": {
+        "label": "สีเน้น"
+      },
+      "background": {
+        "label": "พื้นหลัง"
+      },
+      "text_color": {
+        "label": "ข้อความ"
+      },
+      "selected_background": {
+        "label": "พื้นหลังระดับที่เลือก"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "ข้อเสนอ BundleStack",
+    "settings": {
+      "heading": {
+        "label": "หัวข้อ"
+      },
+      "accent": {
+        "label": "สีเน้น"
+      },
+      "background": {
+        "label": "พื้นหลัง"
+      },
+      "text_color": {
+        "label": "ข้อความ"
+      },
+      "selected_background": {
+        "label": "พื้นหลังระดับที่เลือก"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "ป้ายดีล BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "ป้าย BundleStack บนรูป"
+  }
+}

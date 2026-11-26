@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "הנחות כמות BundleStack",
+    "settings": {
+      "heading": {
+        "label": "כותרת"
+      },
+      "accent": {
+        "label": "הדגשה"
+      },
+      "background": {
+        "label": "רקע"
+      },
+      "text_color": {
+        "label": "טקסט"
+      },
+      "selected_background": {
+        "label": "רקע הדרגה שנבחרה"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "מבצעי BundleStack",
+    "settings": {
+      "heading": {
+        "label": "כותרת"
+      },
+      "accent": {
+        "label": "הדגשה"
+      },
+      "background": {
+        "label": "רקע"
+      },
+      "text_color": {
+        "label": "טקסט"
+      },
+      "selected_background": {
+        "label": "רקע הדרגה שנבחרה"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "תג מבצע BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "מדבקת BundleStack על תמונות"
+  }
+}

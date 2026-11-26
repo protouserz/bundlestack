@@ -13,18 +13,8 @@ import { useLeaveWithSaveBar } from "../AdminLink";
 import { ProductPickerField, type SelectedProduct } from "../ProductPickerField";
 import { SButton } from "../polaris";
 import { WidgetLookCard } from "./WidgetLookCard";
+import { useI18n } from "../../i18n/I18nProvider";
 import styles from "./offer-form.module.css";
-
-const OFFER_TYPES = [
-  { value: "quantity_break", label: "Quantity discount" },
-  { value: "bogo", label: "Buy one get one free" },
-] as const;
-
-const STATUS_OPTIONS = [
-  { value: "active", label: "Active", help: "Offer will be active and available to customers." },
-  { value: "draft", label: "Draft", help: "Offer is saved but discounts are not synced yet." },
-  { value: "paused", label: "Paused", help: "Offer is paused and discounts will be removed." },
-] as const;
 
 export const DEFAULT_TIERS: DiscountTier[] = [
   { minQty: 2, discountType: "percentage", discountValue: 10, label: "Save 10%" },
@@ -46,16 +36,6 @@ type OfferFormProps = {
   deleteButton?: ReactNode;
   isSaving?: boolean;
 };
-
-function offerTypeLabel(value: string) {
-  return (
-    OFFER_TYPES.find((type) => type.value === value)?.label ?? "Quantity discount"
-  );
-}
-
-function statusHelp(status: string) {
-  return STATUS_OPTIONS.find((option) => option.value === status)?.help ?? "";
-}
 
 export function OfferForm({
   mode,
@@ -182,6 +162,33 @@ export function OfferForm({
   }, []);
 
   const leaveWithSaveBar = useLeaveWithSaveBar();
+  const { t, plural } = useI18n();
+  const offerTypes = [
+    { value: "quantity_break", label: t("offers.typeQuantity") },
+    { value: "bogo", label: t("offers.typeBogo") },
+  ] as const;
+  const statusOptions = [
+    {
+      value: "active",
+      label: t("status.active"),
+      help: t("status.activeHelpOffer"),
+    },
+    {
+      value: "draft",
+      label: t("status.draft"),
+      help: t("status.draftHelpOffer"),
+    },
+    {
+      value: "paused",
+      label: t("status.paused"),
+      help: t("status.pausedHelpOffer"),
+    },
+  ] as const;
+  const offerTypeLabel = (value: string) =>
+    offerTypes.find((type) => type.value === value)?.label ??
+    t("offers.typeQuantity");
+  const statusHelp =
+    statusOptions.find((option) => option.value === status)?.help ?? "";
 
   return (
     <>
@@ -193,7 +200,7 @@ export function OfferForm({
             void leaveWithSaveBar("/app/offers");
           }}
         >
-          ← Back to offers
+          {t("offers.back")}
         </SButton>
         <div className={styles.formActions}>
           <SButton
@@ -203,14 +210,14 @@ export function OfferForm({
               void leaveWithSaveBar("/app/offers");
             }}
           >
-            Cancel
+            {t("common.cancel")}
           </SButton>
           <SButton variant="primary" type="submit" disabled={isSaving}>
             {isSaving
-              ? "Saving…"
+              ? t("common.saving")
               : mode === "create"
-                ? "Create offer"
-                : "Save"}
+                ? t("offers.create")
+                : t("common.save")}
           </SButton>
         </div>
       </div>
@@ -232,27 +239,27 @@ export function OfferForm({
       <div className={styles.layout}>
         <div className={styles.main}>
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Offer details</h2>
+            <h2 className={styles.cardTitle}>{t("offers.details")}</h2>
             <div className={styles.fieldGrid}>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>Offer name</span>
+                <span className={styles.fieldLabel}>{t("offers.name")}</span>
                 <input
                   className={styles.input}
                   name="title"
                   required
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Volume Discount Offer"
+                  placeholder={t("offers.namePlaceholder")}
                 />
               </label>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>Offer type</span>
+                <span className={styles.fieldLabel}>{t("offers.type")}</span>
                 <select
                   className={styles.select}
                   value={offerType}
                   onChange={(event) => handleOfferTypeChange(event.target.value)}
                 >
-                  {OFFER_TYPES.map((type) => (
+                  {offerTypes.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
@@ -263,9 +270,9 @@ export function OfferForm({
           </section>
 
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Products</h2>
+            <h2 className={styles.cardTitle}>{t("offers.products")}</h2>
             <p className={styles.cardDescription}>
-              Apply this offer to the whole catalog, or pick specific products.
+              {t("offers.productsHelp")}
             </p>
             <label className={styles.checkboxRow}>
               <input
@@ -275,19 +282,19 @@ export function OfferForm({
                 checked={allProducts}
                 onChange={(event) => setAllProducts(event.target.checked)}
               />
-              <span>All products</span>
+              <span>{t("offers.allProducts")}</span>
             </label>
             {allProducts ? (
               <p className={styles.cardDescription}>
                 {isBogoOffer(offerType)
-                  ? "Shoppers get the free item on every product when they buy the required quantity."
-                  : "Shoppers see Buy 2 / Buy 3 tiers on every product page."}
+                  ? t("offers.allProductsBogo")
+                  : t("offers.allProductsQty")}
               </p>
             ) : (
               <ProductPickerField
                 initialProducts={initialProducts}
                 onProductsChange={handleProductsChange}
-                browseLabel="Browse products"
+                browseLabel={t("offers.browse")}
                 required
               />
             )}
@@ -295,17 +302,17 @@ export function OfferForm({
 
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>
-              {isBogoOffer(offerType) ? "Buy one get one" : "Quantity tiers"}
+              {isBogoOffer(offerType) ? t("offers.bogoSection") : t("offers.tiersSection")}
             </h2>
             <p className={styles.cardDescription}>
               {isBogoOffer(offerType)
-                ? "The cheapest matching units are free once the shopper buys the required quantity of the same product."
-                : "Set the quantity breaks and discount to apply."}
+                ? t("offers.bogoHelp")
+                : t("offers.tiersHelp")}
             </p>
             {isBogoOffer(offerType) ? (
               <div className={styles.fieldGrid}>
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Buy</span>
+                  <span className={styles.fieldLabel}>{t("offers.buy")}</span>
                   <input
                     className={styles.input}
                     type="number"
@@ -318,7 +325,7 @@ export function OfferForm({
                   />
                 </label>
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Get free</span>
+                  <span className={styles.fieldLabel}>{t("offers.getFree")}</span>
                   <input
                     className={styles.input}
                     type="number"
@@ -336,8 +343,8 @@ export function OfferForm({
             <table className={styles.tierTable}>
               <thead>
                 <tr>
-                  <th>Minimum quantity</th>
-                  <th>Discount</th>
+                  <th>{t("offers.minQty")}</th>
+                  <th>{t("offers.discount")}</th>
                   <th aria-label="Actions" />
                 </tr>
               </thead>
@@ -384,9 +391,9 @@ export function OfferForm({
                           variant="tertiary"
                           tone="critical"
                           onClick={() => removeTier(index)}
-                          accessibilityLabel={`Remove tier ${index + 1}`}
+                          accessibilityLabel={t("offers.removeTier", { n: index + 1 })}
                         >
-                          Remove
+                          {t("offers.remove")}
                         </SButton>
                       )}
                     </td>
@@ -396,7 +403,7 @@ export function OfferForm({
             </table>
             <div className={styles.addTierButton}>
               <SButton type="button" variant="secondary" onClick={addTier}>
-                Add tier
+                {t("offers.addTier")}
               </SButton>
             </div>
               </>
@@ -413,42 +420,42 @@ export function OfferForm({
 
         <aside className={styles.sidebar}>
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Summary</h2>
+            <h2 className={styles.cardTitle}>{t("offers.summary")}</h2>
             <ul className={styles.summaryList}>
               <li className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Offer type</span>
+                <span className={styles.summaryLabel}>{t("offers.type")}</span>
                 <span className={styles.summaryValue}>
                   {offerTypeLabel(offerType)}
                 </span>
               </li>
               <li className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Products</span>
+                <span className={styles.summaryLabel}>{t("offers.products")}</span>
                 <span className={styles.summaryValue}>
                   {allProducts
-                    ? "All products"
-                    : `${productCount} product${productCount === 1 ? "" : "s"}`}
+                    ? t("offers.allProducts")
+                    : plural("offers.productCount", productCount)}
                 </span>
               </li>
               <li className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>
-                  {isBogoOffer(offerType) ? "Deal" : "Quantity tiers"}
+                  {isBogoOffer(offerType) ? t("offers.deal") : t("offers.tiersSection")}
                 </span>
                 <span className={styles.summaryValue}>
                   {isBogoOffer(offerType)
                     ? bogoLabel(tiers[0]?.minQty ?? 1, tiers[0]?.getQty ?? 1)
-                    : `${tiers.length} tier${tiers.length === 1 ? "" : "s"}`}
+                    : plural("offers.tierCount", tiers.length)}
                 </span>
               </li>
               {mode === "edit" && (
                 <>
                   <li className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Redemptions</span>
+                    <span className={styles.summaryLabel}>{t("offers.redemptions")}</span>
                     <span className={styles.summaryValue}>
                       {discountUses ?? 0}
                     </span>
                   </li>
                   <li className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Discounts synced</span>
+                    <span className={styles.summaryLabel}>{t("offers.discountsSynced")}</span>
                     <span className={styles.summaryValue}>
                       {discountCount ?? 0}
                     </span>
@@ -459,7 +466,7 @@ export function OfferForm({
           </section>
 
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Status</h2>
+            <h2 className={styles.cardTitle}>{t("offers.status")}</h2>
             <label className={styles.field}>
               <select
                 className={styles.select}
@@ -467,21 +474,21 @@ export function OfferForm({
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
               >
-                {STATUS_OPTIONS.map((option) => (
+                {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
             </label>
-            <p className={styles.statusHelp}>{statusHelp(status)}</p>
+            <p className={styles.statusHelp}>{statusHelp}</p>
           </section>
 
           {deleteButton && (
             <section className={`${styles.card} ${styles.dangerCard}`}>
-              <h2 className={styles.cardTitle}>Danger zone</h2>
+              <h2 className={styles.cardTitle}>{t("offers.danger")}</h2>
               <p className={styles.dangerText}>
-                Permanently delete this offer and remove its Shopify discounts.
+                {t("offers.dangerBody")}
               </p>
               {deleteButton}
             </section>

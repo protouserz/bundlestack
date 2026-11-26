@@ -12,10 +12,14 @@
     }).format(cents / 100);
   }
 
+  function t(key, vars) {
+    return window.__bsT?.(key, vars) || "";
+  }
+
   function formatBadge(tier) {
     return tier.discountType === "percentage"
-      ? `Save ${tier.discountValue}%`
-      : `Save $${tier.discountValue}`;
+      ? t("savePercent", { value: tier.discountValue })
+      : t("saveAmount", { value: `$${tier.discountValue}` });
   }
 
   function unitPriceCents(baseCents, tier) {
@@ -29,18 +33,11 @@
     );
   }
 
-  function tierLabel(tier) {
-    if (tier.label && !/^save\s/i.test(tier.label.trim())) {
-      return tier.label;
-    }
-    return `Buy ${tier.minQty}`;
-  }
-
   function renderPrice(baseCents, tier, currency) {
     if (!baseCents) return "";
 
     const unitCents = unitPriceCents(baseCents, tier);
-    return `<span class="bundlestack-widget__tier-price">${escapeHtml(formatMoney(unitCents, currency))} <span class="bundlestack-widget__tier-price-each">each</span></span>`;
+    return `<span class="bundlestack-widget__tier-price">${escapeHtml(formatMoney(unitCents, currency))} <span class="bundlestack-widget__tier-price-each">${t("each")}</span></span>`;
   }
 
   function findProductContext(widgetRoot) {
@@ -475,7 +472,7 @@
       clearBtn = document.createElement("button");
       clearBtn.type = "button";
       clearBtn.className = "bundlestack-widget__clear";
-      clearBtn.textContent = "Clear selection";
+      clearBtn.textContent = t("clear");
       clearBtn.hidden = true;
       clearBtn.addEventListener("click", () => clearSelection(root));
       tiersEl.insertAdjacentElement("afterend", clearBtn);
@@ -550,7 +547,7 @@
     if (!productId || !proxyPath || !tiersEl) {
       if (tiersEl && !productId) {
         tiersEl.innerHTML =
-          '<p class="bundlestack-widget__empty">Preview the live store.</p>';
+          `<p class="bundlestack-widget__empty">${t("preview")}</p>`;
       }
       hideWidget(root);
       return;
@@ -589,12 +586,13 @@
                 ? {
                     discountType: "percentage",
                     discountValue: (100 * getQty) / cartQty,
-                    label: tier.label || `Buy ${minQty} get ${getQty} free`,
                   }
                 : {}),
             };
-            const label = tierLabel(display);
-            const badge = isBogo ? "Free" : formatBadge(display);
+            const label = isBogo
+              ? t("buyGetFree", { buy: minQty, get: getQty })
+              : t("buy", { qty: minQty });
+            const badge = isBogo ? t("free") : formatBadge(display);
             const price = renderPrice(priceCents, display, currency);
 
             return `<button type="button" class="bundlestack-widget__tier" data-min-qty="${cartQty}"><span class="bundlestack-widget__tier-radio" aria-hidden="true"></span><span class="bundlestack-widget__tier-label">${escapeHtml(label)}</span><span class="bundlestack-widget__tier-meta"><span class="bundlestack-widget__tier-badge">${escapeHtml(badge)}</span>${price}</span></button>`;

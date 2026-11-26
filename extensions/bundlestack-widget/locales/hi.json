@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "ज़्यादा खरीदें, ज़्यादा बचाएँ",
+    "buy": "{qty} खरीदें",
+    "buy_get_free": "{buy} खरीदें, {get} मुफ़्त पाएँ",
+    "buy_save": "{qty} खरीदें, {saving} बचाएँ",
+    "buy_more_up_to": "और खरीदें, {saving} तक बचाएँ",
+    "save_percent": "{value}% बचाएँ",
+    "save_amount": "{value} बचाएँ",
+    "each": "प्रति",
+    "free": "मुफ़्त",
+    "clear": "चयन हटाएँ",
+    "preview": "लाइव स्टोर का पूर्वावलोकन।",
+    "view_offers": "मात्रा छूट ऑफ़र देखें",
+    "widget": {
+      "heading": "ज़्यादा खरीदें, ज़्यादा बचाएँ",
+      "loading": "ऑफ़र लोड हो रहे हैं...",
+      "powered_by": "BundleStack द्वारा संचालित"
+    }
+  }
+}

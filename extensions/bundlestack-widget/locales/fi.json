@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Osta enemmän, säästä enemmän",
+    "buy": "Osta {qty}",
+    "buy_get_free": "Osta {buy}, saat {get} ilmaiseksi",
+    "buy_save": "Osta {qty}, säästä {saving}",
+    "buy_more_up_to": "Osta lisää, säästä jopa {saving}",
+    "save_percent": "Säästä {value} %",
+    "save_amount": "Säästä {value}",
+    "each": "kpl",
+    "free": "Ilmainen",
+    "clear": "Tyhjennä valinta",
+    "preview": "Esikatsele live-kauppaa.",
+    "view_offers": "Näytä määräalennukset",
+    "widget": {
+      "heading": "Osta enemmän, säästä enemmän",
+      "loading": "Ladataan tarjouksia...",
+      "powered_by": "Palvelun tarjoaa BundleStack"
+    }
+  }
+}

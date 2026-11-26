@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Vásároljon többet, spóroljon többet",
+    "buy": "Vásároljon {qty}",
+    "buy_get_free": "Vásároljon {buy} darabot, kapjon {get} ingyen",
+    "buy_save": "Vásároljon {qty}, spóroljon {saving}",
+    "buy_more_up_to": "Vásároljon többet, spóroljon akár {saving}",
+    "save_percent": "Spóroljon {value}%",
+    "save_amount": "Spóroljon {value}",
+    "each": "db",
+    "free": "Ingyenes",
+    "clear": "Kijelölés törlése",
+    "preview": "Az élő bolt előnézete.",
+    "view_offers": "Mennyiségi kedvezmények megtekintése",
+    "widget": {
+      "heading": "Vásároljon többet, spóroljon többet",
+      "loading": "Ajánlatok betöltése...",
+      "powered_by": "A BundleStack működteti"
+    }
+  }
+}

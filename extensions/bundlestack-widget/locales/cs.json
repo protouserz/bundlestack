@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Kupte více, ušetřete více",
+    "buy": "Kupte {qty}",
+    "buy_get_free": "Kupte {buy} a získejte {get} zdarma",
+    "buy_save": "Kupte {qty}, ušetřete {saving}",
+    "buy_more_up_to": "Kupte více, ušetřete až {saving}",
+    "save_percent": "Ušetřete {value} %",
+    "save_amount": "Ušetřete {value}",
+    "each": "ks",
+    "free": "Zdarma",
+    "clear": "Zrušit výběr",
+    "preview": "Náhled živého obchodu.",
+    "view_offers": "Zobrazit množstevní slevy",
+    "widget": {
+      "heading": "Kupte více, ušetřete více",
+      "loading": "Načítání nabídek...",
+      "powered_by": "Používá BundleStack"
+    }
+  }
+}

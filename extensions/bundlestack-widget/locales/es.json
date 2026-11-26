@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "Compra más, ahorra más",
+    "buy": "Compra {qty}",
+    "buy_get_free": "Compra {buy} y llévate {get} gratis",
+    "buy_save": "Compra {qty}, ahorra {saving}",
+    "buy_more_up_to": "Compra más, ahorra hasta {saving}",
+    "save_percent": "Ahorra {value}%",
+    "save_amount": "Ahorra {value}",
+    "each": "c/u",
+    "free": "Gratis",
+    "clear": "Borrar selección",
+    "preview": "Vista previa de la tienda.",
+    "view_offers": "Ver ofertas por volumen",
+    "widget": {
+      "heading": "Compra más, ahorra más",
+      "loading": "Cargando ofertas...",
+      "powered_by": "Con tecnología de BundleStack"
+    }
+  }
+}

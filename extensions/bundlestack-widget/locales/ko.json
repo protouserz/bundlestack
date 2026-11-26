@@ -1,0 +1,21 @@
+{
+  "bundlestack": {
+    "heading": "더 사고 더 아끼기",
+    "buy": "{qty}개 구매",
+    "buy_get_free": "{buy}개 구매 시 {get}개 무료",
+    "buy_save": "{qty}개 구매, {saving} 할인",
+    "buy_more_up_to": "더 구매하고 최대 {saving} 할인",
+    "save_percent": "{value}% 할인",
+    "save_amount": "{value} 할인",
+    "each": "개당",
+    "free": "무료",
+    "clear": "선택 해제",
+    "preview": "라이브 스토어 미리보기.",
+    "view_offers": "수량 할인 보기",
+    "widget": {
+      "heading": "더 사고 더 아끼기",
+      "loading": "오퍼 불러오는 중...",
+      "powered_by": "BundleStack 제공"
+    }
+  }
+}

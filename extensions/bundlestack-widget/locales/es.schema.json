@@ -1,0 +1,48 @@
+{
+  "bundle-widget-embed": {
+    "name": "Descuentos por cantidad BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Título"
+      },
+      "accent": {
+        "label": "Acento"
+      },
+      "background": {
+        "label": "Fondo"
+      },
+      "text_color": {
+        "label": "Texto"
+      },
+      "selected_background": {
+        "label": "Fondo del nivel seleccionado"
+      }
+    }
+  },
+  "bundle-offers": {
+    "name": "Ofertas BundleStack",
+    "settings": {
+      "heading": {
+        "label": "Título"
+      },
+      "accent": {
+        "label": "Acento"
+      },
+      "background": {
+        "label": "Fondo"
+      },
+      "text_color": {
+        "label": "Texto"
+      },
+      "selected_background": {
+        "label": "Fondo del nivel seleccionado"
+      }
+    }
+  },
+  "bundle-deal-badge": {
+    "name": "Insignia de oferta BundleStack"
+  },
+  "bundle-badge-overlay": {
+    "name": "Etiqueta BundleStack en fotos"
+  }
+}
